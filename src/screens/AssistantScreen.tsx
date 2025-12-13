@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -24,6 +24,15 @@ import { useChatStore, Conversation } from "../state/store";
 import { Avatar } from "../components/ui";
 import { shadowPresets } from "../utils/shadow";
 import * as Haptics from "expo-haptics";
+import { getOpenAITextResponse } from "../api/chat-service";
+import {
+  prepareMessagesForAPI,
+  getRandomFallbackMessage,
+  containsSensitiveTopic,
+  SENSITIVE_TOPIC_DISCLAIMER,
+  NATHIA_API_CONFIG,
+} from "../config/nathia";
+import { logger } from "../utils/logger";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -51,6 +60,7 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
   const conversations = useChatStore((s) => s.conversations);
   const currentConversationId = useChatStore((s) => s.currentConversationId);
   const isLoading = useChatStore((s) => s.isLoading);
+  const setLoading = useChatStore((s) => s.setLoading);
   const addMessage = useChatStore((s) => s.addMessage);
   const deleteConversation = useChatStore((s) => s.deleteConversation);
   const setCurrentConversation = useChatStore((s) => s.setCurrentConversation);
@@ -98,35 +108,90 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
     return groups.filter((g) => g.conversations.length > 0);
   }, [conversations]);
 
-  const handleSend = async () => {
-    if (!inputText.trim()) return;
+  const handleSend = useCallback(async () => {
+    if (!inputText.trim() || isLoading) return;
 
+    const userInput = inputText.trim();
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
+    // Criar mensagem do usuário
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: inputText.trim(),
+      content: userInput,
       createdAt: new Date().toISOString(),
     };
     addMessage(userMessage);
     setInputText("");
+    setLoading(true);
 
-    setTimeout(() => {
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content:
-          "Olá! Sou a NathIA, sua assistente de maternidade. Estou aqui para ajudar com dúvidas e oferecer apoio durante sua jornada. Lembre-se que minhas orientações não substituem o acompanhamento médico. Como posso ajudar você hoje?",
-        createdAt: new Date().toISOString(),
-      };
-      addMessage(aiMessage);
-    }, 1000);
-
+    // Scroll para o fim
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
-  };
+
+    try {
+      // Preparar histórico de mensagens para a API
+      const currentConv = conversations.find((c) => c.id === currentConversationId);
+      const messageHistory = currentConv?.messages || [];
+
+      // Converter para formato da API (incluindo a nova mensagem do usuário)
+      const conversationForAPI = [
+        ...messageHistory.map((msg) => ({
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+        })),
+        { role: "user" as const, content: userInput },
+      ];
+
+      // Preparar mensagens com system prompt da NathIA
+      const apiMessages = prepareMessagesForAPI(conversationForAPI);
+
+      // Chamar a API do OpenAI
+      const response = await getOpenAITextResponse(apiMessages, {
+        temperature: NATHIA_API_CONFIG.temperature,
+        maxTokens: NATHIA_API_CONFIG.maxTokens,
+      });
+
+      let aiContent = response.content;
+
+      // Verificar se é um tópico sensível e adicionar disclaimer
+      if (containsSensitiveTopic(userInput)) {
+        aiContent = aiContent + "\n\n" + SENSITIVE_TOPIC_DISCLAIMER;
+      }
+
+      // Criar mensagem da IA
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: aiContent,
+        createdAt: new Date().toISOString(),
+      };
+      addMessage(aiMessage);
+
+      logger.info("NathIA response generated", "AssistantScreen", {
+        inputLength: userInput.length,
+        outputLength: aiContent.length,
+        tokens: response.usage?.totalTokens,
+      });
+    } catch (error) {
+      // Em caso de erro, mostrar mensagem amigável
+      logger.error("NathIA API error", "AssistantScreen", error instanceof Error ? error : new Error(String(error)));
+
+      const fallbackMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: getRandomFallbackMessage(),
+        createdAt: new Date().toISOString(),
+      };
+      addMessage(fallbackMessage);
+    } finally {
+      setLoading(false);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [inputText, isLoading, conversations, currentConversationId, addMessage, setLoading]);
 
   const handleNewChat = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -673,15 +738,29 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
                     isNathIA={true}
                     style={{ marginRight: 8, marginBottom: 4 }}
                   />
-                  <View
-                    className="rounded-2xl rounded-bl-sm px-4 py-3"
-                    style={{ backgroundColor: "#F5F5F4" }}
-                  >
-                    <View className="flex-row items-center">
-                      <View className="w-2 h-2 rounded-full bg-warmGray-400 mr-1" />
-                      <View className="w-2 h-2 rounded-full bg-warmGray-300 mr-1" />
-                      <View className="w-2 h-2 rounded-full bg-warmGray-200" />
+                  <View>
+                    <View
+                      className="rounded-2xl rounded-bl-sm px-4 py-3"
+                      style={{ backgroundColor: "#F5F5F4" }}
+                    >
+                      <View className="flex-row items-center">
+                        <Animated.View
+                          entering={FadeIn.delay(0).duration(400)}
+                          className="w-2 h-2 rounded-full bg-rose-400 mr-1"
+                        />
+                        <Animated.View
+                          entering={FadeIn.delay(150).duration(400)}
+                          className="w-2 h-2 rounded-full bg-rose-300 mr-1"
+                        />
+                        <Animated.View
+                          entering={FadeIn.delay(300).duration(400)}
+                          className="w-2 h-2 rounded-full bg-rose-200"
+                        />
+                      </View>
                     </View>
+                    <Text className="text-warmGray-400 text-xs mt-1 ml-2">
+                      NathIA está pensando...
+                    </Text>
                   </View>
                 </View>
               </Animated.View>
