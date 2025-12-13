@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Pressable, TextInput, Share } from "react-native";
+import { View, Text, ScrollView, Pressable, TextInput, Share, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -92,12 +92,13 @@ export default function CommunityScreen({ navigation }: MainTabScreenProps<"Comm
   const addPost = useCommunityStore((s) => s.addPost);
   const userName = useAppStore((s) => s.user?.name);
 
-  const handleNewPost = (content: string, type: string) => {
+  const handleNewPost = (content: string, type: string, imageUrl?: string) => {
     const newPost: Post = {
       id: Date.now().toString(),
       authorId: "currentUser",
       authorName: userName || "Você",
       content,
+      imageUrl,
       likesCount: 0,
       commentsCount: 0,
       createdAt: new Date().toISOString(),
@@ -267,6 +268,20 @@ export default function CommunityScreen({ navigation }: MainTabScreenProps<"Comm
           <Text className="text-warmGray-700 leading-6 mb-4">
             {post.content}
           </Text>
+
+          {/* Image */}
+          {post.imageUrl && (
+            <View className="mb-4 rounded-xl overflow-hidden">
+              <Image
+                source={{ uri: post.imageUrl }}
+                className="w-full"
+                style={{ height: 300 }}
+                resizeMode="cover"
+                accessibilityRole="image"
+                accessibilityLabel="Imagem do post"
+              />
+            </View>
+          )}
 
           {/* Actions */}
           <View className="flex-row items-center pt-4 border-t border-warmGray-100">

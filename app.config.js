@@ -157,6 +157,7 @@ module.exports = {
       geminiApiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
       openaiApiKey: process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY || '',
       grokApiKey: process.env.EXPO_PUBLIC_VIBECODE_GROK_API_KEY || '',
+      imgurClientId: process.env.EXPO_PUBLIC_IMGUR_CLIENT_ID || '',
       stripePublishableKey: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
       oneSignalAppId: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || '',
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',

@@ -1,9 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
+import { View, Text, Pressable, TextInput, Image, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import { Avatar } from "./ui";
 import { useAppStore } from "../state/store";
+import { uploadImageToImgur } from "../api/imgur";
+import { logger } from "../utils/logger";
 import * as Haptics from "expo-haptics";
 
 const POST_TYPES = [
@@ -14,7 +17,7 @@ const POST_TYPES = [
 ];
 
 interface CommunityComposerProps {
-  onPost: (content: string, type: string) => void;
+  onPost: (content: string, type: string, imageUrl?: string) => void;
   onExpand?: () => void;
 }
 
@@ -22,6 +25,8 @@ export default function CommunityComposer({ onPost, onExpand }: CommunityCompose
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const user = useAppStore((s) => s.user);
 
   const handleExpand = async () => {
@@ -36,18 +41,76 @@ export default function CommunityComposer({ onPost, onExpand }: CommunityCompose
   };
 
   const handlePost = async () => {
-    if (!content.trim()) return;
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onPost(content.trim(), selectedType || "geral");
-    setContent("");
-    setSelectedType(null);
-    setIsExpanded(false);
+    if (!content.trim() && !selectedImage) return;
+    
+    setIsUploading(true);
+    let imageUrl: string | undefined;
+
+    try {
+      // Fazer upload da imagem se houver
+      if (selectedImage) {
+        logger.info("Iniciando upload de imagem", "CommunityComposer");
+        imageUrl = await uploadImageToImgur(selectedImage);
+        logger.info("Upload concluído", "CommunityComposer", { imageUrl });
+      }
+
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      onPost(content.trim(), selectedType || "geral", imageUrl);
+      setContent("");
+      setSelectedType(null);
+      setSelectedImage(null);
+      setIsExpanded(false);
+    } catch (error) {
+      logger.error("Erro ao publicar post", "CommunityComposer", error instanceof Error ? error : new Error(String(error)));
+      Alert.alert(
+        "Erro",
+        "Não foi possível publicar o post. Verifique sua conexão e tente novamente.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleCancel = () => {
     setContent("");
     setSelectedType(null);
+    setSelectedImage(null);
     setIsExpanded(false);
+  };
+
+  const handleImagePress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão necessária",
+          "Precisamos de acesso à sua galeria para adicionar fotos.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setSelectedImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      logger.error("Erro ao selecionar imagem", "CommunityComposer", error instanceof Error ? error : new Error(String(error)));
+      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
   };
 
   if (!isExpanded) {
@@ -208,10 +271,37 @@ export default function CommunityComposer({ onPost, onExpand }: CommunityCompose
         }}
       />
 
+      {/* Image Preview */}
+      {selectedImage && (
+        <View className="mb-4 relative">
+          <Image
+            source={{ uri: selectedImage }}
+            className="w-full rounded-xl"
+            style={{ height: 200 }}
+            resizeMode="cover"
+          />
+          <Pressable
+            onPress={handleRemoveImage}
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              borderRadius: 20,
+              padding: 8,
+            }}
+          >
+            <Ionicons name="close" size={20} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      )}
+
       {/* Actions */}
       <View className="flex-row items-center justify-between pt-4 border-t border-gray-100">
         <View className="flex-row items-center">
           <Pressable
+            onPress={handleImagePress}
+            disabled={isUploading}
             style={{
               width: 40,
               height: 40,
@@ -240,9 +330,9 @@ export default function CommunityComposer({ onPost, onExpand }: CommunityCompose
 
         <Pressable
           onPress={handlePost}
-          disabled={!content.trim()}
+          disabled={(!content.trim() && !selectedImage) || isUploading}
           style={{
-            backgroundColor: content.trim() ? "#E11D48" : "#F3F4F6",
+            backgroundColor: (content.trim() || selectedImage) && !isUploading ? "#E11D48" : "#F3F4F6",
             paddingHorizontal: 20,
             paddingVertical: 10,
             borderRadius: 20,
@@ -250,21 +340,38 @@ export default function CommunityComposer({ onPost, onExpand }: CommunityCompose
             alignItems: "center",
           }}
         >
-          <Text
-            style={{
-              color: content.trim() ? "#FFFFFF" : "#9CA3AF",
-              fontSize: 14,
-              fontWeight: "600",
-              marginRight: 4,
-            }}
-          >
-            Publicar
-          </Text>
-          <Ionicons
-            name="send"
-            size={16}
-            color={content.trim() ? "#FFFFFF" : "#9CA3AF"}
-          />
+          {isUploading ? (
+            <>
+              <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text
+                style={{
+                  color: "#FFFFFF",
+                  fontSize: 14,
+                  fontWeight: "600",
+                }}
+              >
+                Enviando...
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text
+                style={{
+                  color: (content.trim() || selectedImage) ? "#FFFFFF" : "#9CA3AF",
+                  fontSize: 14,
+                  fontWeight: "600",
+                  marginRight: 4,
+                }}
+              >
+                Publicar
+              </Text>
+              <Ionicons
+                name="send"
+                size={16}
+                color={(content.trim() || selectedImage) ? "#FFFFFF" : "#9CA3AF"}
+              />
+            </>
+          )}
         </Pressable>
       </View>
     </Animated.View>
