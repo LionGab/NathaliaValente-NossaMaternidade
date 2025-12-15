@@ -8,6 +8,7 @@ import { MainTabScreenProps } from "../types/navigation";
 import { useAppStore } from "../state/store";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "../hooks/useTheme";
+import { useSpacing } from "../hooks/useSpacing";
 
 interface MenuItem {
   id: string;
@@ -16,9 +17,20 @@ interface MenuItem {
   color: string;
 }
 
+/**
+ * ProfileScreen - Grid 8pt compliant
+ *
+ * Esta tela já segue o sistema de Grid 8pt através de:
+ * - Tailwind classes (px-6 = 24px, mb-8 = 32px, etc.)
+ * - Hook useSpacing disponível para valores dinâmicos
+ * - Todos os espaçamentos são múltiplos de 8px
+ *
+ * @see docs/8PT_GRID_SYSTEM.md
+ */
 export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profile">) {
   const insets = useSafeAreaInsets();
   const { colors, theme, setTheme } = useTheme();
+  const s = useSpacing();
   const user = useAppStore((s) => s.user);
   const setOnboardingComplete = useAppStore((s) => s.setOnboardingComplete);
 
