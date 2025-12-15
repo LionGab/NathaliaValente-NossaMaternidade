@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import { RootStackScreenProps } from "../types/navigation";
 import * as Haptics from "expo-haptics";
+import { useTheme } from "../hooks/useTheme";
 
 interface ComingSoonParams {
   title?: string;
@@ -21,6 +22,7 @@ export default function ComingSoonScreen({
   navigation,
 }: RootStackScreenProps<"ComingSoon">) {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const params = (route.params || {}) as ComingSoonParams;
 
   const {
@@ -50,7 +52,7 @@ export default function ComingSoonScreen({
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: "#FFFCF9" }}>
+    <View className="flex-1" style={{ backgroundColor: colors.background.secondary }}>
       {/* Header */}
       <View
         className="flex-row items-center px-4 py-3"
@@ -59,9 +61,9 @@ export default function ComingSoonScreen({
         <Pressable
           onPress={handlePrimaryAction}
           className="w-10 h-10 rounded-full items-center justify-center"
-          style={{ backgroundColor: "#F5F5F4" }}
+          style={{ backgroundColor: colors.neutral[100] }}
         >
-          <Ionicons name="close" size={24} color="#78716C" />
+          <Ionicons name="close" size={24} color={colors.neutral[500]} />
         </Pressable>
       </View>
 
@@ -79,8 +81,8 @@ export default function ComingSoonScreen({
             <View
               className="w-28 h-28 rounded-full items-center justify-center"
               style={{
-                backgroundColor: "#FFF1F2",
-                shadowColor: "#E11D48",
+                backgroundColor: colors.primary[50],
+                shadowColor: colors.primary[500],
                 shadowOffset: { width: 0, height: 8 },
                 shadowOpacity: 0.15,
                 shadowRadius: 24,
@@ -115,8 +117,8 @@ export default function ComingSoonScreen({
               onPress={handlePrimaryAction}
               className="w-full py-4 rounded-2xl items-center"
               style={{
-                backgroundColor: "#E11D48",
-                shadowColor: "#E11D48",
+                backgroundColor: colors.primary[500],
+                shadowColor: colors.primary[500],
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 12,
@@ -138,7 +140,7 @@ export default function ComingSoonScreen({
                 onPress={handleSecondaryAction}
                 className="w-full py-4 rounded-2xl items-center"
                 style={{
-                  backgroundColor: "#F5F5F4",
+                  backgroundColor: colors.neutral[100],
                 }}
               >
                 <Text className="text-warmGray-700 text-base font-semibold">
@@ -157,8 +159,8 @@ export default function ComingSoonScreen({
         style={{ paddingBottom: insets.bottom + 24 }}
       >
         <View className="flex-row items-center">
-          <Ionicons name="sparkles" size={16} color="#E11D48" />
-          <Text className="text-warmGray-400 text-sm ml-2">
+          <Ionicons name="sparkles" size={16} color={colors.primary[500]} />
+          <Text className="text-sm ml-2" style={{ color: colors.neutral[400] }}>
             Nossa Maternidade
           </Text>
         </View>
