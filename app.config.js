@@ -12,31 +12,31 @@
 
 // Design System Colors (Nossa Maternidade Theme - "Boa Noite Mãe")
 const COLORS = {
-  primary: '#f4258c', // Primary pink - Rosa vibrante
-  primaryDark: '#ec4899', // Rosa mais escuro
-  secondary: '#89CFF0', // Baby blue - Azul claro suave
-  background: '#f8f5f7', // Rosa muito claro
-  textDark: '#1a2b4b', // Azul escuro para textos
-  splash: '#f4258c', // Mesma cor primária
+  primary: "#f4258c", // Primary pink - Rosa vibrante
+  primaryDark: "#ec4899", // Rosa mais escuro
+  secondary: "#89CFF0", // Baby blue - Azul claro suave
+  background: "#f8f5f7", // Rosa muito claro
+  textDark: "#1a2b4b", // Azul escuro para textos
+  splash: "#f4258c", // Mesma cor primária
   // Cores de sentimentos
   feeling: {
-    sunny: '#eab308', // Amarelo - Bem
-    cloud: '#60a5fa', // Azul - Cansada
-    rainy: '#818cf8', // Índigo - Enjoada
-    heart: '#f4258c', // Rosa - Amada
+    sunny: "#eab308", // Amarelo - Bem
+    cloud: "#60a5fa", // Azul - Cansada
+    rainy: "#818cf8", // Índigo - Enjoada
+    heart: "#f4258c", // Rosa - Amada
   },
 };
 
 module.exports = {
   expo: {
-    name: 'Nossa Maternidade',
-    slug: 'nossa-maternidade',
-    version: '1.0.0',
-    orientation: 'portrait',
-    icon: './assets/icon.png',
-    userInterfaceStyle: 'automatic',
-    scheme: 'nossamaternidade',
-    owner: 'liongab',
+    name: "Nossa Maternidade",
+    slug: "nossa-maternidade",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/icon.png",
+    userInterfaceStyle: "automatic",
+    scheme: "nossamaternidade",
+    owner: "liongab",
     primaryColor: COLORS.primary,
     backgroundColor: COLORS.background,
 
@@ -44,39 +44,39 @@ module.exports = {
     newArchEnabled: true,
 
     splash: {
-      image: './assets/splash.png',
-      resizeMode: 'cover',
+      image: "./assets/splash.png",
+      resizeMode: "cover",
       backgroundColor: COLORS.splash,
     },
     updates: {
       enabled: true,
-      checkAutomatically: 'ON_LOAD',
+      checkAutomatically: "ON_LOAD",
       fallbackToCacheTimeout: 30000,
     },
-    assetBundlePatterns: ['**/*'],
+    assetBundlePatterns: ["**/*"],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.nossamaternidade.app',
-      buildNumber: '1',
-      icon: './assets/icon.png',
+      bundleIdentifier: "com.nossamaternidade.app",
+      buildNumber: "1",
+      icon: "./assets/icon.png",
       requireFullScreen: false,
       infoPlist: {
         NSMicrophoneUsageDescription:
-          'Precisamos acessar o microfone para você poder gravar mensagens de áudio para a IA e participar de videochamadas.',
+          "Precisamos acessar o microfone para você poder gravar mensagens de áudio para a IA e participar de videochamadas.",
         NSCameraUsageDescription:
-          'Precisamos acessar a câmera para você tirar fotos e compartilhar momentos especiais.',
+          "Precisamos acessar a câmera para você tirar fotos e compartilhar momentos especiais.",
         NSPhotoLibraryUsageDescription:
-          'Precisamos acessar suas fotos para você poder compartilhar com a comunidade.',
+          "Precisamos acessar suas fotos para você poder compartilhar com a comunidade.",
         NSPhotoLibraryAddUsageDescription:
-          'Precisamos de permissão para salvar fotos na sua galeria.',
+          "Precisamos de permissão para salvar fotos na sua galeria.",
         NSLocationWhenInUseUsageDescription:
-          'Precisamos da sua localização para conectar você com mães próximas.',
+          "Precisamos da sua localização para conectar você com mães próximas.",
         NSUserTrackingUsageDescription:
-          'Precisamos de sua permissão para personalizar sua experiência e melhorar o conteúdo oferecido.',
-        CFBundleDisplayName: 'Nossa Maternidade',
+          "Precisamos de sua permissão para personalizar sua experiência e melhorar o conteúdo oferecido.",
+        CFBundleDisplayName: "Nossa Maternidade",
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: ['fetch', 'remote-notification'],
-        UIStatusBarStyle: 'UIStatusBarStyleDefault',
+        UIBackgroundModes: ["fetch", "remote-notification"],
+        UIStatusBarStyle: "UIStatusBarStyleDefault",
       },
       config: {
         usesNonExemptEncryption: false,
@@ -85,123 +85,123 @@ module.exports = {
       privacyManifests: {
         NSPrivacyAccessedAPITypes: [
           {
-            NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategoryUserDefaults',
-            NSPrivacyAccessedAPITypeReasons: ['CA92.1'], // App Functionality
+            NSPrivacyAccessedAPIType: "NSPrivacyAccessedAPICategoryUserDefaults",
+            NSPrivacyAccessedAPITypeReasons: ["CA92.1"], // App Functionality
           },
         ],
       },
     },
     android: {
-      package: 'com.nossamaternidade.app',
+      package: "com.nossamaternidade.app",
       versionCode: 1,
       targetSdkVersion: 35,
       compileSdkVersion: 35,
       minSdkVersion: 24, // Android 7.0 (95%+ market coverage)
-      icon: './assets/icon.png',
+      icon: "./assets/icon.png",
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: COLORS.primary,
-        monochromeImage: './assets/adaptive-icon.png', // Android 13+ themed icons
+        monochromeImage: "./assets/adaptive-icon.png", // Android 13+ themed icons
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: true, // Android 14+ gesture navigation
       allowBackup: true,
       permissions: [
-        'android.permission.CAMERA',
-        'android.permission.RECORD_AUDIO',
-        'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE',
-        'android.permission.ACCESS_FINE_LOCATION',
-        'android.permission.ACCESS_COARSE_LOCATION',
-        'android.permission.VIBRATE',
-        'android.permission.INTERNET',
-        'android.permission.ACCESS_NETWORK_STATE',
-        'android.permission.POST_NOTIFICATIONS', // Android 13+ notifications
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.VIBRATE",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.POST_NOTIFICATIONS", // Android 13+ notifications
       ],
       splash: {
         backgroundColor: COLORS.splash,
-        resizeMode: 'cover',
-        image: './assets/splash.png',
+        resizeMode: "cover",
+        image: "./assets/splash.png",
       },
       intentFilters: [
         {
-          action: 'VIEW',
+          action: "VIEW",
           autoVerify: true,
           data: [
             {
-              scheme: 'https',
-              host: 'nossamaternidade.com.br',
-              pathPrefix: '/',
+              scheme: "https",
+              host: "nossamaternidade.com.br",
+              pathPrefix: "/",
             },
           ],
-          category: ['BROWSABLE', 'DEFAULT'],
+          category: ["BROWSABLE", "DEFAULT"],
         },
       ],
     },
     web: {
-      favicon: './assets/favicon.png',
+      favicon: "./assets/favicon.png",
     },
     notification: {
-      icon: './assets/notification-icon.png',
+      icon: "./assets/notification-icon.png",
       color: COLORS.primary,
       iosDisplayInForeground: true,
-      androidMode: 'default',
-      androidCollapsedTitle: 'Nossa Maternidade',
+      androidMode: "default",
+      androidCollapsedTitle: "Nossa Maternidade",
     },
     extra: {
       // Variáveis de ambiente públicas (EXPO_PUBLIC_*)
       // Estas são automaticamente expostas via process.env no app
-      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || '',
-      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
-      supabaseFunctionsUrl: process.env.EXPO_PUBLIC_SUPABASE_FUNCTIONS_URL || '',
-      geminiApiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
-      openaiApiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY || '',
-      grokApiKey: process.env.EXPO_PUBLIC_GROK_API_KEY || '',
-      imgurClientId: process.env.EXPO_PUBLIC_IMGUR_CLIENT_ID || '',
-      stripePublishableKey: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
-      oneSignalAppId: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || '',
-      sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL || "",
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || "",
+      supabaseFunctionsUrl: process.env.EXPO_PUBLIC_SUPABASE_FUNCTIONS_URL || "",
+      geminiApiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || "",
+      openaiApiKey: process.env.EXPO_PUBLIC_OPENAI_API_KEY || "",
+      grokApiKey: process.env.EXPO_PUBLIC_GROK_API_KEY || "",
+      imgurClientId: process.env.EXPO_PUBLIC_IMGUR_CLIENT_ID || "",
+      stripePublishableKey: process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
+      oneSignalAppId: process.env.EXPO_PUBLIC_ONESIGNAL_APP_ID || "",
+      sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || "",
       // RevenueCat API keys (Premium/IAP)
-      revenueCatIosKey: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || '',
-      revenueCatAndroidKey: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || '',
+      revenueCatIosKey: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || "",
+      revenueCatAndroidKey: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || "",
       // Feature flags
-      enableAIFeatures: process.env.EXPO_PUBLIC_ENABLE_AI_FEATURES === 'true' || false,
-      enableGamification: process.env.EXPO_PUBLIC_ENABLE_GAMIFICATION === 'true' || false,
-      enableAnalytics: process.env.EXPO_PUBLIC_ENABLE_ANALYTICS === 'true' || false,
-      // EAS Project ID (será configurado via eas init)
+      enableAIFeatures: process.env.EXPO_PUBLIC_ENABLE_AI_FEATURES === "true" || false,
+      enableGamification: process.env.EXPO_PUBLIC_ENABLE_GAMIFICATION === "true" || false,
+      enableAnalytics: process.env.EXPO_PUBLIC_ENABLE_ANALYTICS === "true" || false,
+      // EAS Project ID
       eas: {
-        projectId: process.env.EAS_PROJECT_ID || '',
+        projectId: "ceee9479-e404-47b8-bc37-4f913c18f270",
       },
-      backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL || '',
+      backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL || "",
     },
     plugins: [
-      'expo-secure-store',
-      'expo-font',
-      'expo-localization',
+      "expo-secure-store",
+      "expo-font",
+      "expo-localization",
       [
-        'expo-splash-screen',
+        "expo-splash-screen",
         {
           backgroundColor: COLORS.splash,
-          image: './assets/splash-icon.png',
+          image: "./assets/splash-icon.png",
           dark: {
-            backgroundColor: '#1A1A2E',
-            image: './assets/splash-icon.png',
+            backgroundColor: "#1A1A2E",
+            image: "./assets/splash-icon.png",
           },
           imageWidth: 200,
         },
       ],
       [
-        'expo-image-picker',
+        "expo-image-picker",
         {
           photosPermission:
-            'O app precisa acessar suas fotos para você compartilhar na comunidade.',
-          cameraPermission: 'O app precisa da câmera para você tirar fotos.',
+            "O app precisa acessar suas fotos para você compartilhar na comunidade.",
+          cameraPermission: "O app precisa da câmera para você tirar fotos.",
         },
       ],
       [
-        'expo-notifications',
+        "expo-notifications",
         {
-          icon: './assets/notification-icon.png',
+          icon: "./assets/notification-icon.png",
           color: COLORS.primary,
           sounds: [],
         },
@@ -215,4 +215,3 @@ module.exports = {
     },
   },
 };
-
