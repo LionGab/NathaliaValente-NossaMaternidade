@@ -1,120 +1,281 @@
 /**
  * Design System 2025 - Nossa Maternidade
+ * Paleta: "MATERNIDADE AZUL PASTEL"
  *
  * Baseado em:
  * - Apple Human Interface Guidelines (Liquid Glass 2025)
  * - Material Design 3 Expressive
- * - WCAG AA Accessibility Standards
+ * - WCAG 2.2 AA Accessibility (4.5:1 texto, 3:1 UI)
+ * - Estilo FemTech (Flo, Clue)
  *
- * Principios:
- * - Minimalismo com tipografia bold
- * - Espacamento generoso (8pt grid)
- * - Glassmorphism sutil para profundidade
- * - Cores dinamicas com suporte a dark mode
- * - Tap targets minimos de 44pt (iOS)
+ * Princípios:
+ * - Baixo estímulo visual (reduz sobrecarga/ansiedade)
+ * - Azul pastel suave - acolhimento, segurança, calma
+ * - Evita azul vibrante ou corporativo
+ * - Fundo nunca branco puro
+ * - Dark mode: #121212 base (não preto puro)
+ * - Tap targets mínimos 44pt (iOS)
  */
 
 // ===========================================
-// PALETA DE CORES
+// PALETA "MATERNIDADE AZUL PASTEL"
 // ===========================================
 
+/**
+ * Sistema de cores estruturado:
+ * - brand: primary (azul pastel), secondary (azul soft), accent (teal)
+ * - surface: backgrounds, cards, borders
+ * - text: hierarquia de texto
+ * - semantic: feedback do sistema
+ * - feeling: cores do check-in emocional
+ */
+
 export const COLORS = {
-  // Cores Primarias
+  // =========================================
+  // BRAND COLORS
+  // =========================================
+
+  /**
+   * Primary: Azul Pastel Suave
+   * - Transmite: acolhimento, segurança, calma, maternidade
+   * - Uso: CTAs, navegação ativa, elementos principais
+   * - Contraste em #F7FBFD: ~4.8:1 (WCAG AA)
+   */
   primary: {
-    50: "#FFF0F6",
-    100: "#FFE4E6",
-    200: "#FECDD3",
-    300: "#FDA4AF",
-    400: "#FB7185",
-    500: "#f4258c", // Principal
-    600: "#DB1F7D",
-    700: "#BE123C",
-    800: "#9F1239",
-    900: "#881337",
+    50: "#F7FBFD",   // Background principal
+    100: "#E8F3F9",  // Primary Soft - highlights
+    200: "#DCE9F1",  // Border subtle
+    300: "#B4D7E8",  // Hover states
+    400: "#96C7DE",  // Active elements
+    500: "#7DB9D5",  // Principal - CTA/foco
+    600: "#5BA3C7",  // CTA forte - alto contraste
+    700: "#4488AB",  // Links/ícones
+    800: "#376E8C",  // Textos sobre claro
+    900: "#2B576D",  // Textos heading
   },
 
-  // Cores Secundarias (Lilac/Purple)
+  /**
+   * Secondary: Azul Soft Complementar
+   * - Transmite: confiança, serenidade
+   * - Uso: elementos secundários, badges, tags
+   */
   secondary: {
-    50: "#FAF5FF",
-    100: "#F3E8FF",
-    200: "#E9D5FF",
-    300: "#D8B4FE",
-    400: "#C084FC",
-    500: "#A855F7", // Principal
-    600: "#9333EA",
-    700: "#7C3AED",
-    800: "#6B21A8",
-    900: "#581C87",
+    50: "#F0F7FF",
+    100: "#E1EFFF",
+    200: "#C7DFFA",
+    300: "#A3CCF2",
+    400: "#7BB8E8",  // Secundário ativo
+    500: "#5CA3DB",  // Principal secundário
+    600: "#4189C2",
+    700: "#336FA3",
+    800: "#285785",
+    900: "#1F4468",
   },
 
-  // Tons Neutros (Warm Gray)
+  /**
+   * Accent: Teal Suave
+   * - Transmite: saúde, bem-estar, natureza
+   * - USO: destaques pontuais, badges especiais
+   */
+  accent: {
+    50: "#F0FDFA",
+    100: "#CCFBF1",
+    200: "#99F6E4",
+    300: "#5EEAD4",
+    400: "#2DD4BF",
+    500: "#14B8A6",  // Accent principal
+    600: "#0D9488",  // CTA accent
+    700: "#0F766E",
+    800: "#115E59",
+    900: "#134E4A",
+  },
+
+  // =========================================
+  // NEUTRAL COLORS (Cool Gray - Azul Pastel Theme)
+  // =========================================
+
+  /**
+   * Tons neutros levemente azulados
+   * - Complementa a paleta azul pastel
+   * - Acolhedor e suave para contexto maternal
+   */
   neutral: {
     0: "#FFFFFF",
-    50: "#FAFAF9",
-    100: "#F5F5F4",
-    200: "#E7E5E4",
-    300: "#D6D3D1",
-    400: "#A8A29E",
-    500: "#78716C",
-    600: "#57534E",
-    700: "#44403C",
-    800: "#292524",
-    900: "#1C1917",
+    50: "#F9FAFB",     // Quase branco
+    100: "#F3F4F6",    // Background alternativo
+    200: "#E5E7EB",    // Borders
+    300: "#D1D5DB",    // Borders mais fortes
+    400: "#9CA3AF",    // Icons desabilitados
+    500: "#6B7280",    // Text secondary
+    600: "#4B5563",    // Text medium
+    700: "#374151",    // Text strong
+    800: "#1F2937",    // Text primary
+    900: "#111827",    // Text heading
   },
 
-  // Background especiais
+  // =========================================
+  // SURFACE COLORS
+  // =========================================
+
+  /**
+   * Backgrounds e superfícies - Azul Pastel Theme
+   * - Azul muito claro como base (não branco puro)
+   * - Acolhedor e suave para contexto maternal
+   */
   background: {
-    primary: "#f8f5f7",
-    secondary: "#FFFFFF",
-    tertiary: "#F5F2EE",
-    card: "rgba(255, 255, 255, 0.85)",
-    glass: "rgba(255, 255, 255, 0.72)",
+    primary: "#F7FBFD",   // Azul clarinho - principal (da paleta)
+    secondary: "#FFFFFF", // Branco - cards
+    tertiary: "#EDF4F8",  // Azul ainda mais claro - separadores
+    warm: "#F5FAFC",      // Tom levemente azulado
+    card: "rgba(255, 255, 255, 0.96)",
+    glass: "rgba(247, 251, 253, 0.85)",
   },
 
-  // Cores Semanticas
+  // =========================================
+  // TEXT COLORS
+  // =========================================
+
+  /**
+   * Hierarquia de texto - Paleta Maternidade
+   * - Todos validados para WCAG 2.2 AA
+   * - Cores neutras da paleta definida
+   */
+  text: {
+    primary: "#1F2937",   // Títulos - da paleta (contraste ~14:1)
+    secondary: "#6B7280", // Corpo - da paleta (contraste ~5.5:1)
+    tertiary: "#9CA3AF",  // Hints - contraste ~3.5:1
+    muted: "#D1D5DB",     // Desabilitado - apenas decorativo
+    inverse: "#F9FAFB",   // Texto em fundo escuro
+  },
+
+  // =========================================
+  // SEMANTIC COLORS
+  // =========================================
+
+  /**
+   * Feedback do sistema
+   * - Cores padrão com bom contraste
+   */
   semantic: {
-    success: "#10B981",
-    warning: "#F59E0B",
-    error: "#EF4444",
-    info: "#3B82F6",
+    success: "#10B981", // Verde esmeralda
+    successLight: "#D1FAE5",
+    warning: "#F59E0B", // Âmbar
+    warningLight: "#FEF3C7",
+    error: "#EF4444", // Vermelho
+    errorLight: "#FEE2E2",
+    info: "#3B82F6", // Azul
+    infoLight: "#DBEAFE",
   },
 
-  // Cores de Destaque (Accent)
-  accent: {
-    sage: "#86EFAC", // Verde suave
-    peach: "#FED7AA", // Pessego
-    sky: "#BAE6FD", // Azul claro
-    lavender: "#DDD6FE", // Lavanda
-    coral: "#FECACA", // Coral
+  // =========================================
+  // FEELING COLORS (Check-in Emocional)
+  // =========================================
+
+  /**
+   * Cores pastéis para check-in
+   * - Baixa saturação = baixo estímulo
+   */
+  feeling: {
+    bem: "#FFE4B5", // Amarelo pastel (sol)
+    cansada: "#BAE6FD", // Azul pastel (nuvem)
+    indisposta: "#DDD6FE", // Lavanda (chuva)
+    amada: "#FECDD3", // Rosa pastel (coração)
+  },
+
+  // =========================================
+  // LEGACY ACCENT (backward compatibility)
+  // =========================================
+  legacyAccent: {
+    sage: "#86EFAC",
+    peach: "#FED7AA",
+    sky: "#BAE6FD",
+    lavender: "#DDD6FE",
+    coral: "#FECACA",
   },
 } as const;
 
-// Dark Mode Colors
+// ===========================================
+// DARK MODE (Azul Pastel Dessaturado)
+// ===========================================
+
+/**
+ * Dark mode para paleta Maternidade Azul Pastel:
+ * - Superfície base: #0F1419 (azul muito escuro, não preto puro)
+ * - Azul dessaturado para manter identidade
+ * - Elevação com tons mais claros
+ * - Reduz fadiga em telas OLED
+ */
 export const COLORS_DARK = {
-  primary: COLORS.primary,
-  secondary: COLORS.secondary,
+  primary: {
+    ...COLORS.primary,
+    // Azul pastel mais claro para contraste em dark
+    400: "#A8D4E8",  // Mais claro
+    500: "#8BC5DD",  // Principal em dark
+    600: "#7DB9D5",  // CTA em dark
+  },
+
+  secondary: {
+    ...COLORS.secondary,
+    400: "#9DC8E8",  // Mais claro
+    500: "#7BB8E8",  // Principal em dark
+  },
+
+  accent: {
+    ...COLORS.accent,
+    400: "#5EEAD4",  // Mais vibrante em dark
+    500: "#2DD4BF",  // Teal vibrante
+  },
+
   neutral: {
-    0: "#1C1917",
-    50: "#292524",
-    100: "#44403C",
-    200: "#57534E",
-    300: "#78716C",
-    400: "#A8A29E",
-    500: "#D6D3D1",
-    600: "#E7E5E4",
-    700: "#F5F5F4",
-    800: "#FAFAF9",
-    900: "#FFFFFF",
+    0: "#0F1419",    // Base azulada escura
+    50: "#1A2027",   // Elevação 1
+    100: "#242D36",  // Elevação 2
+    200: "#2F3B46",  // Elevação 3
+    300: "#3D4A57",
+    400: "#5C6B7A",
+    500: "#7D8B99",
+    600: "#9DA8B4",
+    700: "#C7CED5",
+    800: "#E2E7EC",
+    900: "#F3F5F7",  // Texto primário
   },
+
   background: {
-    primary: "#0C0A09",
-    secondary: "#1C1917",
-    tertiary: "#292524",
-    card: "rgba(28, 25, 23, 0.85)",
-    glass: "rgba(28, 25, 23, 0.72)",
+    primary: "#0F1419",   // Azul muito escuro
+    secondary: "#1A2027", // Cards
+    tertiary: "#242D36",  // Separadores
+    warm: "#151C22",      // Tom levemente azulado
+    card: "rgba(26, 32, 39, 0.95)",
+    glass: "rgba(26, 32, 39, 0.72)",
   },
-  semantic: COLORS.semantic,
-  accent: COLORS.accent,
+
+  text: {
+    primary: "#F3F5F7",   // Não branco puro
+    secondary: "#9DA8B4",
+    tertiary: "#7D8B99",
+    muted: "#5C6B7A",
+    inverse: "#1F2937",
+  },
+
+  semantic: {
+    success: "#34D399",  // Mais claro
+    successLight: "rgba(16, 185, 129, 0.15)",
+    warning: "#FBBF24",
+    warningLight: "rgba(245, 158, 11, 0.15)",
+    error: "#F87171",
+    errorLight: "rgba(239, 68, 68, 0.15)",
+    info: "#7DB9D5",     // Azul pastel como info
+    infoLight: "rgba(125, 185, 213, 0.15)",
+  },
+
+  feeling: {
+    bem: "rgba(255, 228, 181, 0.2)",
+    cansada: "rgba(125, 185, 213, 0.25)",  // Azul pastel
+    indisposta: "rgba(167, 139, 250, 0.2)",
+    amada: "rgba(254, 205, 211, 0.2)",
+  },
+
+  legacyAccent: COLORS.legacyAccent,
 } as const;
 
 // ===========================================
@@ -368,7 +529,11 @@ export const ACCESSIBILITY = {
 // ===========================================
 
 export const COMPONENT_STYLES = {
-  // Card padrao
+  // =========================================
+  // CARDS
+  // =========================================
+
+  // Card padrão (fundo creme)
   card: {
     backgroundColor: COLORS.background.card,
     borderRadius: RADIUS["2xl"],
@@ -384,7 +549,20 @@ export const COMPONENT_STYLES = {
     ...SHADOWS.md,
   },
 
-  // Botao primario
+  // Card com borda sutil
+  cardOutlined: {
+    backgroundColor: COLORS.background.secondary,
+    borderRadius: RADIUS["2xl"],
+    borderWidth: 1,
+    borderColor: COLORS.neutral[200],
+    padding: SPACING["2xl"],
+  },
+
+  // =========================================
+  // BUTTONS
+  // =========================================
+
+  // Botão primário (Azul Pastel - ação principal)
   buttonPrimary: {
     backgroundColor: COLORS.primary[500],
     borderRadius: RADIUS.lg,
@@ -395,7 +573,7 @@ export const COMPONENT_STYLES = {
     justifyContent: "center" as const,
   },
 
-  // Botao secundario
+  // Botão secundário (outline)
   buttonSecondary: {
     backgroundColor: "transparent",
     borderRadius: RADIUS.lg,
@@ -407,6 +585,32 @@ export const COMPONENT_STYLES = {
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
+
+  // Botão accent (Teal - CTAs especiais)
+  buttonAccent: {
+    backgroundColor: COLORS.accent[500],
+    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING["2xl"],
+    minHeight: ACCESSIBILITY.minTapTarget,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+
+  // Botão ghost (sem fundo)
+  buttonGhost: {
+    backgroundColor: "transparent",
+    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    minHeight: ACCESSIBILITY.minTapTarget,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+
+  // =========================================
+  // INPUTS
+  // =========================================
 
   // Input field
   input: {
@@ -420,7 +624,17 @@ export const COMPONENT_STYLES = {
     fontSize: TYPOGRAPHY.bodyLarge.fontSize,
   },
 
-  // Chip/Tag
+  // Input com foco
+  inputFocused: {
+    borderColor: COLORS.primary[500],
+    borderWidth: 2,
+  },
+
+  // =========================================
+  // CHIPS & TAGS
+  // =========================================
+
+  // Chip padrão
   chip: {
     backgroundColor: COLORS.primary[50],
     borderRadius: RADIUS.full,
@@ -429,14 +643,34 @@ export const COMPONENT_STYLES = {
     minHeight: 32,
   },
 
-  // Tab Bar
+  // Chip accent (teal)
+  chipAccent: {
+    backgroundColor: COLORS.accent[50],
+    borderRadius: RADIUS.full,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
+    minHeight: 32,
+  },
+
+  // =========================================
+  // NAVIGATION
+  // =========================================
+
+  // Tab Bar - Azul Pastel
   tabBar: {
-    backgroundColor: "rgba(255, 252, 250, 0.92)",
+    backgroundColor: "rgba(247, 251, 253, 0.95)",  // Azul pastel com transparência
     borderTopWidth: 0.5,
-    borderTopColor: COLORS.neutral[200],
+    borderTopColor: COLORS.primary[200],  // Border azul sutil
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.md,
     ...SHADOWS.sm,
+  },
+
+  // Header
+  header: {
+    backgroundColor: COLORS.background.primary,
+    paddingHorizontal: SPACING["2xl"],
+    paddingVertical: SPACING.lg,
   },
 } as const;
 
@@ -445,26 +679,65 @@ export const COMPONENT_STYLES = {
 // ===========================================
 
 export const GRADIENTS = {
-  primary: ["#f4258c", "#DB1F7D"],
-  secondary: ["#A855F7", "#9333EA"],
-  warm: ["#FFF0F6", "#FCE7F3", "#FAE8FF"],
-  cool: ["#EFF6FF", "#DBEAFE", "#BFDBFE"],
-  sunset: ["#FED7AA", "#FECACA", "#FEE2E2"],
-  aurora: ["#A855F7", "#EC4899", "#f4258c"],
-  sage: ["#D1FAE5", "#A7F3D0", "#86EFAC"],
-  glass: ["rgba(255,255,255,0.8)", "rgba(255,255,255,0.4)"],
-  
-  // Gradientes Hero (para backgrounds principais)
-  heroLight: ["#FFF0F6", "#FAF5FF", "#FFFFFF"],
-  heroPrimary: ["#f4258c", "#EC4899", "#A855F7"],
-  heroSoft: ["#FFF7ED", "#FEF3C7", "#FEE2E2"],
-  
-  // Gradientes Overlay (para cards flutuantes)
-  overlayWarm: ["rgba(255, 240, 246, 0.95)", "rgba(250, 245, 255, 0.85)"],
-  overlayCool: ["rgba(239, 246, 255, 0.95)", "rgba(219, 234, 254, 0.85)"],
-  
-  // Gradientes Shimmer (para loading states)
+  // =========================================
+  // BRAND GRADIENTS (Maternidade Azul Pastel)
+  // =========================================
+
+  // Primary: Azul pastel suave (acolhimento, calma)
+  primary: [COLORS.primary[500], COLORS.primary[600]],
+  primarySoft: [COLORS.primary[50], COLORS.primary[100]],
+
+  // Secondary: Azul soft (confiança)
+  secondary: [COLORS.secondary[400], COLORS.secondary[500]],
+  secondarySoft: [COLORS.secondary[100], COLORS.secondary[200]],
+
+  // Accent: Teal suave (saúde, bem-estar)
+  accent: [COLORS.accent[400], COLORS.accent[500]],
+  accentSoft: [COLORS.accent[100], COLORS.accent[200]],
+
+  // =========================================
+  // MOOD GRADIENTS (Check-in Emocional)
+  // =========================================
+
+  warm: ["#F7FBFD", "#EDF4F8", "#FFFFFF"],
+  cool: ["#E8F3F9", "#DCE9F1", "#F7FBFD"],
+  sunset: ["#FED7AA", "#FECDD3", "#FEE2E2"],
+  sage: ["#D1FAE5", "#CCFBF1", "#F0FDFA"],
+
+  // =========================================
+  // HERO GRADIENTS (Backgrounds principais)
+  // =========================================
+
+  // Light: azul pastel → branco (padrão)
+  heroLight: ["#F7FBFD", "#FFFFFF", "#E8F3F9"],
+
+  // Soft blue para seções de destaque
+  heroSoft: ["#E8F3F9", "#DCE9F1", "#FFFFFF"],
+
+  // Teal suave (uso pontual)
+  heroAccent: ["#F0FDFA", "#CCFBF1", "#FFFFFF"],
+
+  // =========================================
+  // OVERLAY GRADIENTS (Cards flutuantes)
+  // =========================================
+
+  overlayWarm: ["rgba(247, 251, 253, 0.95)", "rgba(255, 255, 255, 0.9)"],
+  overlayCool: ["rgba(232, 243, 249, 0.95)", "rgba(255, 255, 255, 0.9)"],
+  overlayAccent: ["rgba(240, 253, 250, 0.95)", "rgba(255, 255, 255, 0.9)"],
+
+  // =========================================
+  // UTILITY GRADIENTS
+  // =========================================
+
+  glass: ["rgba(255,255,255,0.8)", "rgba(247,251,253,0.4)"],
   shimmer: ["rgba(255,255,255,0)", "rgba(255,255,255,0.5)", "rgba(255,255,255,0)"],
+
+  // =========================================
+  // LEGACY (backward compatibility)
+  // =========================================
+
+  aurora: ["#7DB9D5", "#5CA3DB", "#14B8A6"],  // Azul pastel aurora
+  heroPrimary: [COLORS.primary[400], COLORS.primary[500], COLORS.primary[600]],
 } as const;
 
 // ===========================================

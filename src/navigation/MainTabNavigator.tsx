@@ -245,7 +245,7 @@ export default function MainTabNavigator() {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarLabel: "Mundo da Nath",
+          tabBarLabel: "MundoNath",
           tabBarAccessibilityLabel: "Mundo da Nath - Conteúdo exclusivo da Nathalia",
           tabBarIcon: ({ color, focused }) => (
             <AnimatedTabIcon

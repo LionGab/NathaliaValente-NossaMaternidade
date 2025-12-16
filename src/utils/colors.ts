@@ -44,13 +44,13 @@ export const Colors = {
 
   // Azul Pastel Suave (mapeado para accent.sky)
   bluePastel: {
-    DEFAULT: COLORS.accent.sky, // #BAE6FD
+    DEFAULT: COLORS.legacyAccent.sky, // #BAE6FD
     50: "#F0F9FF",
     100: "#E0F2FE",
     200: "#BAE6FD",
     300: "#7DD3FC",
     400: "#38BDF8",
-    500: COLORS.accent.sky,
+    500: COLORS.legacyAccent.sky,
     600: "#0EA5E9",
     700: "#0284C7",
     800: "#0369A1",
@@ -65,12 +65,12 @@ export const Colors = {
       label: "Bem",
     },
     cloud: {
-      color: COLORS.accent.sky, // Azul pastel - Cansada
+      color: COLORS.legacyAccent.sky, // Azul pastel - Cansada
       activeColor: "#D4E9FD",
       label: "Cansada",
     },
     rainy: {
-      color: COLORS.accent.lavender, // Roxo pastel - Enjoada
+      color: COLORS.legacyAccent.lavender, // Roxo pastel - Enjoada
       activeColor: "#EDE9FE",
       label: "Enjoada",
     },
@@ -103,9 +103,9 @@ export const Colors = {
   // Cores de Categorias
   category: {
     nutricao: COLORS.primary[400],
-    exercicio: COLORS.accent.sky,
-    saude: COLORS.accent.lavender,
-    bemestar: COLORS.accent.peach,
+    exercicio: COLORS.legacyAccent.sky,
+    saude: COLORS.legacyAccent.lavender,
+    bemestar: COLORS.legacyAccent.peach,
   },
 
   // Gradientes
@@ -131,7 +131,7 @@ export const Colors = {
     border: COLORS.neutral[200],
     borderLight: COLORS.neutral[100],
     borderPink: COLORS.primary[200],
-    borderBlue: COLORS.accent.sky,
+    borderBlue: COLORS.legacyAccent.sky,
     shadow: "rgba(244, 37, 140, 0.15)", // Sombra rosa vibrante
     shadowStrong: "rgba(244, 37, 140, 0.25)",
     shadowBlue: "rgba(186, 230, 253, 0.15)",
@@ -169,13 +169,13 @@ export const ColorsDark = {
   },
 
   bluePastel: {
-    DEFAULT: COLORS.accent.sky,
+    DEFAULT: COLORS.legacyAccent.sky,
     50: COLORS.neutral[900],
     100: COLORS.neutral[800],
     200: COLORS.neutral[700],
     300: COLORS.neutral[600],
     400: "#38BDF8",
-    500: COLORS.accent.sky,
+    500: COLORS.legacyAccent.sky,
     600: "#7DD3FC",
     700: "#BAE6FD",
     800: "#E0F2FE",
@@ -189,12 +189,12 @@ export const ColorsDark = {
       label: "Bem",
     },
     cloud: {
-      color: COLORS.accent.sky,
+      color: COLORS.legacyAccent.sky,
       activeColor: "#D4E9FD",
       label: "Cansada",
     },
     rainy: {
-      color: COLORS.accent.lavender,
+      color: COLORS.legacyAccent.lavender,
       activeColor: "#EDE9FE",
       label: "Enjoada",
     },
@@ -224,9 +224,9 @@ export const ColorsDark = {
 
   category: {
     nutricao: COLORS.primary[400],
-    exercicio: COLORS.accent.sky,
-    saude: COLORS.accent.lavender,
-    bemestar: COLORS.accent.peach,
+    exercicio: COLORS.legacyAccent.sky,
+    saude: COLORS.legacyAccent.lavender,
+    bemestar: COLORS.legacyAccent.peach,
   },
 
   gradients: {

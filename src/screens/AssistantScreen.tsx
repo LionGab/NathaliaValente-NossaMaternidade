@@ -1,3 +1,16 @@
+/**
+ * AssistantScreen - NathIA Chat Interface
+ *
+ * DESIGN: Claude/ChatGPT/Gemini mobile app style
+ * PALETTE: Azul Pastel Maternidade (#7DB9D5)
+ * FEATURES:
+ * - Sidebar com histórico de conversas agrupado por data
+ * - Header minimalista com toggle de sidebar
+ * - Empty state elegante com sugestões
+ * - Input moderno estilo pill
+ * - Mensagens com design clean
+ */
+
 import React, { useState, useRef, useMemo, useCallback } from "react";
 import {
   View,
@@ -10,6 +23,7 @@ import {
   Platform,
   Modal,
   Dimensions,
+  StyleSheet,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,7 +38,6 @@ import { MainTabScreenProps, ChatMessage } from "../types/navigation";
 import { useChatStore, Conversation, useAppStore } from "../state/store";
 import { useIsPremium } from "../state/premium-store";
 import { Avatar } from "../components/ui";
-import { shadowPresets } from "../utils/shadow";
 import * as Haptics from "expo-haptics";
 import {
   getNathIAResponse,
@@ -40,39 +53,99 @@ import {
 import { logger } from "../utils/logger";
 import { VoiceMessagePlayer } from "../components/VoiceMessagePlayer";
 import { useVoicePremiumGate } from "../hooks/useVoice";
-import { COLORS } from "../theme/design-system";
+import { SHADOWS } from "../theme/design-system";
 import { useTheme } from "../hooks/useTheme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const PRIMARY_COLOR = COLORS.primary[500];
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// ============================================
+// DESIGN TOKENS - Azul Pastel Maternidade
+// Função para retornar tokens baseados no tema
+// ============================================
+const getThemeColors = (isDark: boolean) => ({
+  // Primary colors (Azul Pastel #7DB9D5)
+  primary: isDark ? "#8BC5DD" : "#7DB9D5",
+  primaryLight: isDark ? "#1A2027" : "#E8F3F9",
+  primaryLighter: isDark ? "#0F1419" : "#F7FBFD",
+  primaryDark: isDark ? "#7DB9D5" : "#5BA3C7",
+
+  // Backgrounds
+  bgPrimary: isDark ? "#0F1419" : "#F7FBFD",
+  bgSecondary: isDark ? "#1A2027" : "#FFFFFF",
+  bgTertiary: isDark ? "#242D36" : "#EDF4F8",
+  bgSidebar: isDark ? "#1A2027" : "#FFFFFF",
+
+  // Text
+  textPrimary: isDark ? "#F3F5F7" : "#1F2937",
+  textSecondary: isDark ? "#9DA8B4" : "#6B7280",
+  textTertiary: isDark ? "#7D8B99" : "#9CA3AF",
+  textMuted: isDark ? "#5C6B7A" : "#D1D5DB",
+
+  // Borders
+  border: isDark ? "#2F3B46" : "#DCE9F1",
+  borderLight: isDark ? "#242D36" : "#E8F3F9",
+
+  // Message bubbles
+  userBubble: isDark ? "#5BA3C7" : "#7DB9D5",
+  aiBubble: isDark ? "#1A2027" : "#FFFFFF",
+});
+
+// Default para StyleSheet estático (light mode)
+const THEME_LIGHT = getThemeColors(false);
+
+// ============================================
+// SUGGESTED PROMPTS
+// ============================================
 interface SuggestedPrompt {
   icon: keyof typeof Ionicons.glyphMap;
-  text: string;
-  color: string;
+  title: string;
+  subtitle: string;
 }
 
 const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
-  { icon: "nutrition-outline", text: "O que posso comer na gravidez?", color: "#10B981" },
-  { icon: "fitness-outline", text: "Exercícios seguros na gestação", color: "#8B5CF6" },
-  { icon: "medical-outline", text: "Quando devo ir ao médico?", color: "#F59E0B" },
-  { icon: "heart-outline", text: "Dicas para aliviar enjoos", color: "#EC4899" },
+  {
+    icon: "nutrition-outline",
+    title: "Alimentação",
+    subtitle: "O que posso comer na gravidez?"
+  },
+  {
+    icon: "fitness-outline",
+    title: "Exercícios",
+    subtitle: "Atividades seguras para gestantes"
+  },
+  {
+    icon: "medical-outline",
+    title: "Sintomas",
+    subtitle: "Quando devo procurar um médico?"
+  },
+  {
+    icon: "heart-outline",
+    title: "Bem-estar",
+    subtitle: "Dicas para aliviar enjoos"
+  },
 ];
 
-const QUICK_SUGGESTIONS = [
-  "Como está meu bebê agora?",
+const QUICK_CHIPS = [
+  "Como está meu bebê?",
   "Posso tomar café?",
   "Dicas de sono",
   "Preparar enxoval",
 ];
 
+// ============================================
+// CONSTANTS
+// ============================================
 const FREE_MESSAGE_LIMIT = 10;
 const MESSAGE_COUNT_KEY = "nathia_message_count";
 
+// ============================================
+// MAIN COMPONENT
+// ============================================
 export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assistant">) {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { isDark } = useTheme();
+  const THEME = useMemo(() => getThemeColors(isDark), [isDark]);
   const flatListRef = useRef<FlatList>(null);
   const [inputText, setInputText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
@@ -118,7 +191,7 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
     loadMessageCount();
   }, [isPremium, user?.id]);
 
-  // Handler para quando voz premium e necessaria
+  // Handler para quando voz premium é necessária
   const handleVoicePremiumRequired = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("Paywall", { source: "voice_nathia" });
@@ -141,8 +214,8 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
     const groups: { title: string; conversations: Conversation[] }[] = [
       { title: "Hoje", conversations: [] },
       { title: "Ontem", conversations: [] },
-      { title: "Últimos 7 dias", conversations: [] },
-      { title: "Mais antigas", conversations: [] },
+      { title: "Esta semana", conversations: [] },
+      { title: "Anteriores", conversations: [] },
     ];
 
     conversations.forEach((conv) => {
@@ -161,15 +234,16 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
     return groups.filter((g) => g.conversations.length > 0);
   }, [conversations]);
 
+  // ============================================
+  // HANDLERS
+  // ============================================
   const handleSend = useCallback(async () => {
     if (!inputText.trim() || isLoading) return;
 
     // Verificar limite de mensagens para usuários free
     if (!isPremium && messageCount >= FREE_MESSAGE_LIMIT) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      navigation.navigate("Paywall", {
-        source: "chat_limit_reached",
-      });
+      navigation.navigate("Paywall", { source: "chat_limit_reached" });
       return;
     }
 
@@ -209,7 +283,7 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
       const currentConv = conversations.find((c) => c.id === currentConversationId);
       const messageHistory = currentConv?.messages || [];
 
-      // Converter para formato da API (incluindo a nova mensagem do usuário)
+      // Converter para formato da API
       const conversationForAPI = [
         ...messageHistory.map((msg) => ({
           role: msg.role as "user" | "assistant",
@@ -225,7 +299,7 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
       const estimated = estimateTokens(apiMessages);
       const requiresGrounding = detectMedicalQuestion(userInput);
 
-      // Chamar a Edge Function segura (Claude/Gemini com JWT)
+      // Chamar a Edge Function segura
       const response = await getNathIAResponse(apiMessages, {
         estimatedTokens: estimated,
         requiresGrounding,
@@ -233,12 +307,12 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
 
       let aiContent = response.content;
 
-      // Verificar se é um tópico sensível e adicionar disclaimer
+      // Verificar se é um tópico sensível
       if (containsSensitiveTopic(userInput)) {
         aiContent = aiContent + "\n\n" + SENSITIVE_TOPIC_DISCLAIMER;
       }
 
-      // Se tem grounding, adicionar citations ao final
+      // Se tem grounding, adicionar citations
       if (response.grounding?.citations && response.grounding.citations.length > 0) {
         aiContent += "\n\n📚 Fontes:\n";
         response.grounding.citations.slice(0, 3).forEach((citation, i) => {
@@ -260,19 +334,10 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
         outputLength: aiContent.length,
         tokens: response.usage?.totalTokens,
         provider: response.provider,
-        grounding: requiresGrounding,
-        latency: response.latency,
       });
-
-      // Log se usou fallback
-      if (response.fallback) {
-        logger.warn("AI fallback activated (Claude offline)", "AssistantScreen");
-      }
     } catch (error) {
-      // Em caso de erro, mostrar mensagem amigável
       logger.error("NathIA API error", "AssistantScreen", error instanceof Error ? error : new Error(String(error)));
 
-      // Mensagens de erro específicas
       let errorMessage = getRandomFallbackMessage();
 
       if (error instanceof Error) {
@@ -322,10 +387,9 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
 
   const handleMicPress = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // Mic is not yet implemented - show Coming Soon
     navigation.navigate("ComingSoon", {
       title: "Mensagem de Voz",
-      description: "Em breve você poderá enviar mensagens de voz para a NathIA. Por enquanto, use o teclado.",
+      description: "Em breve você poderá enviar mensagens de voz para a NathIA.",
       emoji: "🎙️",
       primaryCtaLabel: "Voltar",
     });
@@ -339,341 +403,217 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
 
   const handleDeclineAITerms = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.goBack();
+    // Navigate to Home tab instead of goBack() for consistent behavior in TabNavigator
+    navigation.navigate("Home");
   };
 
   const handleAttachment = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("ComingSoon", {
       title: "Anexos",
-      description: "Em breve você poderá enviar fotos, documentos e áudios para a NathIA analisar e ajudar melhor você.",
+      description: "Em breve você poderá enviar fotos e documentos para a NathIA analisar.",
       emoji: "📎",
       primaryCtaLabel: "Voltar",
     });
   };
 
-// Renderizar mensagem individual (memoizado)
-const MessageBubble = React.memo(({ message, index, hasVoiceAccess, onPremiumRequired }: {
-  message: ChatMessage;
-  index: number;
-  hasVoiceAccess: boolean;
-  onPremiumRequired: () => void;
-}) => {
-  const isUser = message.role === "user";
-  return (
-    <Animated.View
-      entering={FadeInUp.delay(index * 30).duration(300)}
-      className={`mb-4 ${isUser ? "items-end" : "items-start"}`}
-    >
-      <View className="flex-row items-end max-w-[85%]">
+  // ============================================
+  // MESSAGE BUBBLE COMPONENT
+  // ============================================
+  const MessageBubble = React.memo(({ message, index }: {
+    message: ChatMessage;
+    index: number;
+  }) => {
+    const isUser = message.role === "user";
+
+    return (
+      <Animated.View
+        entering={FadeInUp.delay(index * 20).duration(300)}
+        style={[styles.messageContainer, isUser ? styles.messageUser : styles.messageAI]}
+      >
+        {/* AI Avatar */}
         {!isUser && (
           <Avatar
-            size={32}
+            size={28}
             isNathIA={true}
-            style={{ marginRight: 8, marginBottom: 4 }}
+            style={styles.messageAvatar}
           />
         )}
-        <View
-          className={`rounded-2xl px-4 py-3 ${isUser ? "rounded-br-sm" : "rounded-bl-sm"}`}
-          style={{
-            backgroundColor: isUser ? colors.primary[500] : colors.background.card,
-            flex: 1,
-            ...(isUser ? {
-              shadowColor: colors.primary[500],
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 2,
-            } : {
-              shadowColor: colors.neutral[900],
-              shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.05,
-              shadowRadius: 2,
-              elevation: 1,
-            }),
-          }}
-        >
-          <Text className={`text-base leading-6 ${isUser ? "text-white" : "text-warmGray-800"}`}>
+
+        {/* Message Bubble */}
+        <View style={[
+          styles.messageBubble,
+          isUser
+            ? [styles.bubbleUser, { backgroundColor: THEME.userBubble }]
+            : [styles.bubbleAI, { backgroundColor: THEME.aiBubble }]
+        ]}>
+          <Text style={[
+            styles.messageText,
+            isUser ? styles.textUser : [styles.textAI, { color: THEME.textPrimary }]
+          ]}>
             {message.content}
           </Text>
 
           {/* Voice Player - Apenas para mensagens da NathIA */}
-          {!isUser && (
-            <View className="flex-row items-center justify-between mt-3 pt-2 border-t border-warmGray-200">
-              <View className="flex-row items-center">
-                <Ionicons name="volume-medium-outline" size={14} color="#78716C" />
-                <Text className="text-warmGray-500 text-xs ml-1">
-                  {hasVoiceAccess ? "Ouvir resposta" : "Voz Premium"}
-                </Text>
-              </View>
+          {!isUser && hasVoiceAccess && (
+            <View style={[styles.voiceContainer, { borderTopColor: THEME.borderLight }]}>
               <VoiceMessagePlayer
                 messageId={message.id}
                 text={message.content}
-                onPremiumRequired={onPremiumRequired}
+                onPremiumRequired={handleVoicePremiumRequired}
                 size="small"
                 compact
-                iconColor={PRIMARY_COLOR}
+                iconColor={THEME.primary}
               />
             </View>
           )}
         </View>
-      </View>
-      <Text className={`text-warmGray-400 text-xs mt-1 ${isUser ? "mr-2" : "ml-12"}`}>
-        {new Date(message.createdAt).toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </Text>
-    </Animated.View>
-  );
-});
-MessageBubble.displayName = 'MessageBubble';
+      </Animated.View>
+    );
+  });
+  MessageBubble.displayName = "MessageBubble";
 
+  // ============================================
+  // EMPTY STATE
+  // ============================================
   const renderEmptyState = () => (
-    <Animated.View entering={FadeIn.duration(600)} className="flex-1 justify-center items-center px-6">
+    <Animated.View entering={FadeIn.duration(600)} style={styles.emptyContainer}>
       {/* Logo/Avatar */}
-      <Animated.View entering={FadeInDown.delay(100).duration(600).springify()} className="mb-8">
-        <Avatar
-          size={80}
-          isNathIA={true}
-          style={shadowPresets.colored("#E11D48", 0.3)}
-        />
+      <Animated.View entering={FadeInDown.delay(100).duration(600).springify()}>
+        <View style={styles.emptyAvatarContainer}>
+          <Avatar
+            size={72}
+            isNathIA={true}
+          />
+        </View>
       </Animated.View>
 
       {/* Title */}
       <Animated.Text
         entering={FadeInDown.delay(200).duration(600).springify()}
-        className="text-warmGray-900 text-2xl font-semibold text-center mb-2"
-        accessibilityRole="header"
+        style={styles.emptyTitle}
       >
-        Olá, sou a NathIA
+        NathIA
       </Animated.Text>
       <Animated.Text
         entering={FadeInDown.delay(300).duration(600).springify()}
-        className="text-warmGray-500 text-base text-center mb-10 px-4"
+        style={styles.emptySubtitle}
       >
-        Sua assistente de maternidade. Como posso ajudar você hoje?
+        Sua assistente inteligente 24h
       </Animated.Text>
 
-      {/* Suggested Prompts - Grid Style like ChatGPT */}
-      <Animated.View entering={FadeInUp.delay(400).duration(600).springify()} className="w-full">
-        <View className="flex-row flex-wrap -mx-1.5">
-          {SUGGESTED_PROMPTS.map((prompt, index) => (
-            <Animated.View
-              key={index}
-              entering={FadeInUp.delay(500 + index * 80)
-                .duration(500)
-                .springify()}
-              className="w-1/2 px-1.5 mb-3"
-            >
-              <Pressable
-                onPress={() => handleSuggestedPrompt(prompt.text)}
-                className="rounded-2xl p-4 h-28 justify-between active:opacity-70"
-                style={{
-                  backgroundColor: "#FFF",
-                  borderWidth: 1,
-                  borderColor: "#E7E5E4",
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={prompt.text}
-                accessibilityHint="Usa esta sugestão como mensagem para a NathIA"
-              >
-                <View
-                  className="w-9 h-9 rounded-xl items-center justify-center"
-                  style={{ backgroundColor: `${prompt.color}15` }}
-                >
-                  <Ionicons name={prompt.icon} size={20} color={prompt.color} />
-                </View>
-                <Text className="text-warmGray-700 text-sm leading-5" numberOfLines={2}>
-                  {prompt.text}
-                </Text>
-              </Pressable>
-            </Animated.View>
-          ))}
+      {/* Welcome Message */}
+      <Animated.View
+        entering={FadeInUp.delay(400).duration(600).springify()}
+        style={styles.welcomeCard}
+      >
+        <View style={styles.welcomeIcon}>
+          <Ionicons name="sparkles" size={20} color={THEME.primary} />
         </View>
+        <Text style={styles.welcomeText}>
+          Olá! Eu sou a NathIA. ✨ Estou aqui para tirar suas dúvidas, te acalmar e conversar sobre essa fase incrível. O que você gostaria de saber hoje?
+        </Text>
+      </Animated.View>
+
+      {/* Suggested Prompts Grid */}
+      <Animated.View entering={FadeInUp.delay(500).duration(600).springify()} style={styles.promptsGrid}>
+        {SUGGESTED_PROMPTS.map((prompt, index) => (
+          <Animated.View
+            key={index}
+            entering={FadeInUp.delay(600 + index * 80).duration(400)}
+            style={styles.promptCard}
+          >
+            <Pressable
+              onPress={() => handleSuggestedPrompt(prompt.subtitle)}
+              style={styles.promptPressable}
+            >
+              <View style={styles.promptIconContainer}>
+                <Ionicons name={prompt.icon} size={20} color={THEME.primary} />
+              </View>
+              <Text style={styles.promptTitle}>{prompt.title}</Text>
+              <Text style={styles.promptSubtitle} numberOfLines={2}>
+                {prompt.subtitle}
+              </Text>
+            </Pressable>
+          </Animated.View>
+        ))}
       </Animated.View>
     </Animated.View>
   );
 
-  // AI Consent Modal - Required for compliance
+  // ============================================
+  // AI CONSENT MODAL
+  // ============================================
   const renderAIConsentModal = () => (
     <Modal visible={showAIConsent} animationType="fade" transparent statusBarTranslucent>
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 24,
-        }}
-      >
-        <Animated.View
-          entering={FadeInUp.duration(400).springify()}
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: 24,
-            padding: 24,
-            width: "100%",
-            maxWidth: 340,
-          }}
-        >
+      <View style={styles.modalOverlay}>
+        <Animated.View entering={FadeInUp.duration(400).springify()} style={styles.consentCard}>
           {/* Header */}
-          <View style={{ alignItems: "center", marginBottom: 20 }}>
-            <View
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 32,
-                backgroundColor: "#FEE2E2",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <Ionicons name="sparkles" size={28} color="#E11D48" />
+          <View style={styles.consentHeader}>
+            <View style={styles.consentIconContainer}>
+              <Ionicons name="sparkles" size={28} color={THEME.primary} />
             </View>
-            <Text
-              style={{
-                fontSize: 20,
-                fontWeight: "600",
-                color: "#1F2937",
-                textAlign: "center",
-              }}
-            >
-              Antes de começar
-            </Text>
+            <Text style={styles.consentTitle}>Antes de começar</Text>
           </View>
 
           {/* Content */}
-          <Text
-            style={{
-              fontSize: 15,
-              color: "#6B7280",
-              textAlign: "center",
-              lineHeight: 22,
-              marginBottom: 16,
-            }}
-          >
+          <Text style={styles.consentText}>
             A NathIA utiliza inteligência artificial para oferecer apoio. Suas conversas são processadas para gerar respostas personalizadas.
           </Text>
 
           {/* Links */}
-          <View style={{ marginBottom: 20 }}>
+          <View style={styles.consentLinks}>
             <Pressable
               onPress={() => navigation.navigate("Legal")}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 10,
-                borderBottomWidth: 1,
-                borderBottomColor: "#F3F4F6",
-              }}
-              accessibilityRole="link"
-              accessibilityLabel="Ver Política de Privacidade"
+              style={styles.consentLink}
             >
-              <Ionicons name="shield-checkmark-outline" size={18} color="#6366F1" />
-              <Text style={{ fontSize: 14, color: "#6366F1", marginLeft: 10 }}>
+              <Ionicons name="shield-checkmark-outline" size={18} color={THEME.primary} />
+              <Text style={[styles.consentLinkText, { color: THEME_LIGHT.primary }]}>
                 Política de Privacidade
               </Text>
-              <Ionicons name="chevron-forward" size={16} color="#6366F1" style={{ marginLeft: "auto" }} />
+              <Ionicons name="chevron-forward" size={16} color={THEME.primary} />
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate("Legal")}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 10,
-                borderBottomWidth: 1,
-                borderBottomColor: "#F3F4F6",
-              }}
-              accessibilityRole="link"
-              accessibilityLabel="Ver Termos de Uso"
+              style={styles.consentLink}
             >
-              <Ionicons name="document-text-outline" size={18} color="#8B5CF6" />
-              <Text style={{ fontSize: 14, color: "#8B5CF6", marginLeft: 10 }}>
+              <Ionicons name="document-text-outline" size={18} color={THEME.primary} />
+              <Text style={[styles.consentLinkText, { color: THEME_LIGHT.primary }]}>
                 Termos de Uso
               </Text>
-              <Ionicons name="chevron-forward" size={16} color="#8B5CF6" style={{ marginLeft: "auto" }} />
-            </Pressable>
-            <Pressable
-              onPress={() => navigation.navigate("Legal")}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: 10,
-              }}
-              accessibilityRole="link"
-              accessibilityLabel="Ver informações sobre uso de IA"
-            >
-              <Ionicons name="sparkles-outline" size={18} color="#EC4899" />
-              <Text style={{ fontSize: 14, color: "#EC4899", marginLeft: 10 }}>
-                Uso de Inteligência Artificial
-              </Text>
-              <Ionicons name="chevron-forward" size={16} color="#EC4899" style={{ marginLeft: "auto" }} />
+              <Ionicons name="chevron-forward" size={16} color={THEME.primary} />
             </Pressable>
           </View>
 
           {/* Disclaimer */}
-          <View
-            style={{
-              backgroundColor: "#FEF3C7",
-              borderRadius: 12,
-              padding: 12,
-              marginBottom: 20,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              <Ionicons name="medkit-outline" size={16} color="#B45309" style={{ marginTop: 2 }} />
-              <Text style={{ fontSize: 12, color: "#92400E", marginLeft: 8, flex: 1, lineHeight: 18 }}>
-                A NathIA não substitui atendimento médico. Em caso de emergência, procure ajuda profissional.
-              </Text>
-            </View>
+          <View style={styles.consentDisclaimer}>
+            <Ionicons name="medkit-outline" size={16} color="#B45309" style={{ marginTop: 2 }} />
+            <Text style={styles.disclaimerText}>
+              A NathIA não substitui atendimento médico. Em caso de emergência, procure ajuda profissional.
+            </Text>
           </View>
 
           {/* Buttons */}
-          <Pressable
-            onPress={handleAcceptAITerms}
-            style={{
-              backgroundColor: "#E11D48",
-              borderRadius: 16,
-              paddingVertical: 14,
-              alignItems: "center",
-              marginBottom: 10,
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Aceitar termos e continuar"
-          >
-            <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "600" }}>
-              Aceito e quero continuar
-            </Text>
+          <Pressable onPress={handleAcceptAITerms} style={styles.consentButtonPrimary}>
+            <Text style={styles.consentButtonPrimaryText}>Aceito e quero continuar</Text>
           </Pressable>
-          <Pressable
-            onPress={handleDeclineAITerms}
-            style={{
-              backgroundColor: "#F5F5F4",
-              borderRadius: 16,
-              paddingVertical: 14,
-              alignItems: "center",
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Não aceitar e voltar"
-          >
-            <Text style={{ color: "#78716C", fontSize: 16, fontWeight: "500" }}>
-              Não, obrigada
-            </Text>
+          <Pressable onPress={handleDeclineAITerms} style={styles.consentButtonSecondary}>
+            <Text style={styles.consentButtonSecondaryText}>Não, obrigada</Text>
           </Pressable>
         </Animated.View>
       </View>
     </Modal>
   );
 
-  // History Sidebar Modal
+  // ============================================
+  // HISTORY SIDEBAR
+  // ============================================
   const renderHistorySidebar = () => (
     <Modal visible={showHistory} animationType="none" transparent statusBarTranslucent>
-      <View className="flex-1 flex-row">
+      <View style={styles.sidebarOverlay}>
         {/* Backdrop */}
         <Pressable
-          className="absolute inset-0 bg-black/40"
+          style={StyleSheet.absoluteFill}
           onPress={() => setShowHistory(false)}
         />
 
@@ -681,93 +621,70 @@ MessageBubble.displayName = 'MessageBubble';
         <Animated.View
           entering={SlideInLeft.duration(300)}
           exiting={SlideOutLeft.duration(300)}
-          style={{ width: SCREEN_WIDTH * 0.8, paddingTop: insets.top }}
-          className="bg-white h-full"
+          style={[styles.sidebar, { paddingTop: insets.top }]}
         >
           {/* Sidebar Header */}
-          <View className="px-4 py-4 border-b border-warmGray-100">
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-warmGray-900 text-xl font-semibold">Histórico</Text>
+          <View style={styles.sidebarHeader}>
+            <Text style={styles.sidebarTitle}>Conversas</Text>
             <Pressable
               onPress={() => setShowHistory(false)}
-              className="w-9 h-9 rounded-full bg-warmGray-100 items-center justify-center"
-              accessibilityRole="button"
-              accessibilityLabel="Fechar histórico"
-              accessibilityHint="Fecha o painel de histórico de conversas"
+              style={styles.sidebarCloseButton}
             >
-              <Ionicons name="close" size={20} color="#78716C" />
-            </Pressable>
-            </View>
-
-            {/* New Chat Button */}
-            <Pressable
-              onPress={handleNewChat}
-              className="flex-row items-center justify-center py-3 rounded-xl active:opacity-80"
-              style={{ backgroundColor: "#E11D48" }}
-              accessibilityRole="button"
-              accessibilityLabel="Nova conversa"
-              accessibilityHint="Inicia uma nova conversa com a NathIA"
-            >
-              <Ionicons name="add" size={20} color="#FFF" />
-              <Text className="text-white font-semibold ml-2">Nova conversa</Text>
+              <Ionicons name="close" size={20} color={THEME.textSecondary} />
             </Pressable>
           </View>
 
+          {/* New Chat Button */}
+          <Pressable onPress={handleNewChat} style={styles.newChatButton}>
+            <Ionicons name="add" size={20} color="#FFF" />
+            <Text style={styles.newChatText}>Nova conversa</Text>
+          </Pressable>
+
           {/* Conversations List */}
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.sidebarList} showsVerticalScrollIndicator={false}>
             {groupedConversations.length === 0 ? (
-              <View className="flex-1 items-center justify-center py-20">
-                <Ionicons name="chatbubbles-outline" size={48} color="#D6D3D1" />
-                <Text className="text-warmGray-400 text-base mt-4">Nenhuma conversa ainda</Text>
+              <View style={styles.sidebarEmpty}>
+                <Ionicons name="chatbubbles-outline" size={48} color={THEME.border} />
+                <Text style={styles.sidebarEmptyText}>Nenhuma conversa ainda</Text>
               </View>
             ) : (
               groupedConversations.map((group) => (
-                <View key={group.title} className="px-4 py-3">
-                  <Text className="text-warmGray-400 text-xs font-medium uppercase tracking-wider mb-2">
-                    {group.title}
-                  </Text>
+                <View key={group.title} style={styles.sidebarGroup}>
+                  <Text style={styles.sidebarGroupTitle}>{group.title}</Text>
                   {group.conversations.map((conv) => (
                     <Pressable
                       key={conv.id}
                       onPress={() => handleSelectConversation(conv.id)}
-                      className="flex-row items-center py-3 px-3 rounded-xl mb-1"
-                      style={{
-                        backgroundColor:
-                          conv.id === currentConversationId ? "#FEE2E2" : "transparent",
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Conversa: ${conv.title}`}
-                      accessibilityHint="Abre esta conversa do histórico"
-                      accessibilityState={{ selected: conv.id === currentConversationId }}
+                      style={[
+                        styles.sidebarItem,
+                        conv.id === currentConversationId && styles.sidebarItemActive
+                      ]}
                     >
                       <Ionicons
                         name="chatbubble-outline"
-                        size={18}
-                        color={conv.id === currentConversationId ? "#E11D48" : "#A8A29E"}
+                        size={16}
+                        color={conv.id === currentConversationId ? THEME_LIGHT.primary : THEME_LIGHT.textMuted}
                       />
-                      <View className="flex-1 ml-3">
+                      <View style={styles.sidebarItemContent}>
                         <Text
-                          className="text-warmGray-800 text-sm font-medium"
+                          style={[
+                            styles.sidebarItemTitle,
+                            conv.id === currentConversationId && { color: THEME_LIGHT.primary }
+                          ]}
                           numberOfLines={1}
-                          style={{
-                            color: conv.id === currentConversationId ? "#E11D48" : "#44403C",
-                          }}
                         >
                           {conv.title}
                         </Text>
-                        <Text className="text-warmGray-400 text-xs mt-0.5">
+                        <Text style={styles.sidebarItemSubtitle}>
                           {conv.messages.length} mensagens
                         </Text>
                       </View>
                       <Pressable
                         onPress={() => handleDeleteConversation(conv.id)}
-                        className="p-2 -mr-2"
+                        style={styles.sidebarItemDelete}
                         hitSlop={8}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Excluir conversa ${conv.title}`}
-                        accessibilityHint="Remove esta conversa do histórico"
                       >
-                        <Ionicons name="trash-outline" size={16} color="#A8A29E" />
+                        <Ionicons name="trash-outline" size={14} color={THEME.textMuted} />
                       </Pressable>
                     </Pressable>
                   ))}
@@ -777,20 +694,11 @@ MessageBubble.displayName = 'MessageBubble';
           </ScrollView>
 
           {/* Sidebar Footer */}
-          <View
-            className="px-4 py-4 border-t border-warmGray-100"
-            style={{ paddingBottom: insets.bottom + 16 }}
-          >
-            <View className="flex-row items-center">
-              <Avatar
-                size={40}
-                isNathIA={true}
-                style={{ marginRight: 12 }}
-              />
-              <View>
-                <Text className="text-warmGray-800 text-sm font-semibold">NathIA</Text>
-                <Text className="text-warmGray-400 text-xs">Sua assistente</Text>
-              </View>
+          <View style={[styles.sidebarFooter, { paddingBottom: insets.bottom + 16 }]}>
+            <Avatar size={36} isNathIA={true} style={{ marginRight: 12 }} />
+            <View>
+              <Text style={styles.sidebarFooterTitle}>NathIA</Text>
+              <Text style={styles.sidebarFooterSubtitle}>Sua assistente</Text>
             </View>
           </View>
         </Animated.View>
@@ -798,53 +706,37 @@ MessageBubble.displayName = 'MessageBubble';
     </Modal>
   );
 
+  // ============================================
+  // MAIN RENDER
+  // ============================================
   return (
-    <View className="flex-1" style={{ backgroundColor: "#FAFAF9" }}>
-      {/* Header - Minimal like Claude/ChatGPT */}
-      <View style={{ paddingTop: insets.top }} className="bg-white border-b border-warmGray-100">
-        <View className="flex-row items-center justify-between px-4 py-3">
-          <View className="flex-row items-center">
-            {/* History Toggle */}
-            <Pressable
-              onPress={() => setShowHistory(true)}
-              className="w-9 h-9 rounded-full items-center justify-center mr-3"
-              style={{ backgroundColor: "#F5F5F4" }}
-              accessibilityRole="button"
-              accessibilityLabel="Abrir histórico de conversas"
-              accessibilityHint="Mostra o histórico de conversas anteriores"
-            >
-              <Ionicons name="menu" size={20} color="#78716C" />
-            </Pressable>
-            <Avatar
-              size={36}
-              isNathIA={true}
-              style={{ marginRight: 12 }}
-            />
-            <View>
-              <Text className="text-warmGray-900 text-lg font-semibold">NathIA</Text>
-              <Text className="text-warmGray-400 text-xs">Assistente de Maternidade</Text>
-            </View>
+    <View style={[styles.container, { backgroundColor: THEME.bgPrimary }]}>
+      {/* Header - Clean, minimal */}
+      <View style={[styles.header, { paddingTop: insets.top, backgroundColor: THEME.bgSecondary, borderBottomColor: THEME.borderLight }]}>
+        <View style={styles.headerContent}>
+          {/* Menu Button */}
+          <Pressable
+            onPress={() => setShowHistory(true)}
+            style={styles.headerButton}
+          >
+            <Ionicons name="menu-outline" size={24} color={THEME.textSecondary} />
+          </Pressable>
+
+          {/* Title - Centered */}
+          <View style={styles.headerCenter}>
+            <Avatar size={28} isNathIA={true} style={{ marginRight: 8 }} />
+            <Text style={[styles.headerTitle, { color: THEME.textPrimary }]}>NathIA</Text>
           </View>
-          <View className="flex-row items-center">
+
+          {/* Actions */}
+          <View style={styles.headerActions}>
             {currentMessages.length > 0 && (
-              <Pressable
-                onPress={clearCurrentChat}
-                className="p-2 mr-1"
-                accessibilityRole="button"
-                accessibilityLabel="Limpar conversa atual"
-                accessibilityHint="Remove todas as mensagens da conversa atual"
-              >
-                <Ionicons name="trash-outline" size={22} color="#A8A29E" />
+              <Pressable onPress={clearCurrentChat} style={styles.headerButton}>
+                <Ionicons name="trash-outline" size={22} color={THEME.textMuted} />
               </Pressable>
             )}
-            <Pressable
-              onPress={handleNewChat}
-              className="p-2"
-              accessibilityRole="button"
-              accessibilityLabel="Nova conversa"
-              accessibilityHint="Inicia uma nova conversa com a NathIA"
-            >
-              <Ionicons name="create-outline" size={22} color="#78716C" />
+            <Pressable onPress={handleNewChat} style={styles.headerButton}>
+              <Ionicons name="create-outline" size={22} color={THEME.textSecondary} />
             </Pressable>
           </View>
         </View>
@@ -853,13 +745,12 @@ MessageBubble.displayName = 'MessageBubble';
       {/* Messages Area */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        style={styles.messagesContainer}
         keyboardVerticalOffset={0}
       >
         {currentMessages.length === 0 ? (
           <ScrollView
-            className="flex-1"
-            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", paddingBottom: 20 }}
+            contentContainerStyle={styles.emptyScrollContent}
             showsVerticalScrollIndicator={false}
           >
             {renderEmptyState()}
@@ -870,49 +761,21 @@ MessageBubble.displayName = 'MessageBubble';
             data={currentMessages}
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
-              <MessageBubble
-                message={item}
-                index={index}
-                hasVoiceAccess={hasVoiceAccess}
-                onPremiumRequired={handleVoicePremiumRequired}
-              />
+              <MessageBubble message={item} index={index} />
             )}
-            className="flex-1 px-4"
-            contentContainerStyle={{ paddingVertical: 16 }}
+            style={styles.messagesList}
+            contentContainerStyle={styles.messagesListContent}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             ListFooterComponent={
               isLoading ? (
-                <Animated.View entering={FadeIn.duration(300)} className="items-start mb-4">
-                  <View className="flex-row items-end">
-                    <Avatar
-                      size={32}
-                      isNathIA={true}
-                      style={{ marginRight: 8, marginBottom: 4 }}
-                    />
-                    <View>
-                      <View
-                        className="rounded-2xl rounded-bl-sm px-4 py-3"
-                        style={{ backgroundColor: "#F5F5F4" }}
-                      >
-                        <View className="flex-row items-center">
-                          <Animated.View
-                            entering={FadeIn.delay(0).duration(400)}
-                            className="w-2 h-2 rounded-full bg-rose-400 mr-1"
-                          />
-                          <Animated.View
-                            entering={FadeIn.delay(150).duration(400)}
-                            className="w-2 h-2 rounded-full bg-rose-300 mr-1"
-                          />
-                          <Animated.View
-                            entering={FadeIn.delay(300).duration(400)}
-                            className="w-2 h-2 rounded-full bg-rose-200"
-                          />
-                        </View>
-                      </View>
-                      <Text className="text-warmGray-400 text-xs mt-1 ml-2">
-                        NathIA está pensando...
-                      </Text>
+                <Animated.View entering={FadeIn.duration(300)} style={styles.loadingContainer}>
+                  <Avatar size={28} isNathIA={true} style={styles.messageAvatar} />
+                  <View style={[styles.loadingBubble, { backgroundColor: THEME.aiBubble }]}>
+                    <View style={styles.loadingDots}>
+                      <Animated.View entering={FadeIn.delay(0).duration(400)} style={[styles.loadingDot, { backgroundColor: THEME.primary }]} />
+                      <Animated.View entering={FadeIn.delay(150).duration(400)} style={[styles.loadingDot, { backgroundColor: THEME.primaryLight }]} />
+                      <Animated.View entering={FadeIn.delay(300).duration(400)} style={[styles.loadingDot, { backgroundColor: THEME.border }]} />
                     </View>
                   </View>
                 </Animated.View>
@@ -925,118 +788,567 @@ MessageBubble.displayName = 'MessageBubble';
           />
         )}
 
-        {/* Input Area - ChatGPT/Claude Style */}
-        <View className="px-4 pt-2" style={{ paddingBottom: insets.bottom + 8 }}>
-          {/* Quick Suggestions - Show when there are messages */}
+        {/* Input Area */}
+        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 8, backgroundColor: THEME.bgPrimary }]}>
+          {/* Quick Chips - Show when there are messages */}
           {currentMessages.length > 0 && !inputText.trim() && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              className="mb-3"
-              contentContainerStyle={{ paddingRight: 8 }}
+              style={styles.chipsScroll}
+              contentContainerStyle={styles.chipsContent}
             >
-                {QUICK_SUGGESTIONS.map((suggestion, index) => (
+              {QUICK_CHIPS.map((chip, index) => (
                 <Pressable
                   key={index}
-                  onPress={() => handleSuggestedPrompt(suggestion)}
-                  className="mr-2 px-4 py-2 rounded-full"
-                  style={{
-                    backgroundColor: "#FFF",
-                    borderWidth: 1,
-                    borderColor: "#E7E5E4",
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={suggestion}
-                  accessibilityHint="Usa esta sugestão como mensagem"
+                  onPress={() => handleSuggestedPrompt(chip)}
+                  style={[styles.chip, { backgroundColor: THEME.bgSecondary, borderColor: THEME.border }]}
                 >
-                  <Text className="text-warmGray-600 text-sm">{suggestion}</Text>
+                  <Text style={[styles.chipText, { color: THEME.textSecondary }]}>{chip}</Text>
                 </Pressable>
               ))}
             </ScrollView>
           )}
 
-          {/* Input Container */}
-          <View
-            className="rounded-3xl flex-row items-end"
-            style={{
-              backgroundColor: "#FFF",
-              borderWidth: 1,
-              borderColor: "#E7E5E4",
-              minHeight: 52,
-              maxHeight: 140,
-            }}
-          >
-            {/* Attachment Button */}
-            <Pressable
-              onPress={handleAttachment}
-              className="p-3 pl-4"
-              accessibilityRole="button"
-              accessibilityLabel="Anexar arquivo"
-              accessibilityHint="Abre opções para anexar imagens ou documentos"
-            >
-              <Ionicons name="add-circle-outline" size={26} color="#A8A29E" />
+          {/* Input Box */}
+          <View style={[styles.inputBox, { backgroundColor: THEME.bgSecondary, borderColor: THEME.border }]}>
+            {/* Attachment */}
+            <Pressable onPress={handleAttachment} style={styles.inputButton}>
+              <Ionicons name="add-circle-outline" size={26} color={THEME.textMuted} />
             </Pressable>
 
             {/* Text Input */}
             <TextInput
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Mensagem para NathIA..."
-              placeholderTextColor="#A8A29E"
+              placeholder="Pergunte qualquer coisa..."
+              placeholderTextColor={THEME.textMuted}
               multiline
               maxLength={2000}
-              className="flex-1 text-base text-warmGray-800 py-3 pr-2"
-              style={{ maxHeight: 100 }}
-              accessibilityLabel="Campo de mensagem para NathIA"
-              accessibilityHint="Digite sua mensagem ou pergunta para a assistente"
+              style={[styles.textInput, { color: THEME.textPrimary }]}
             />
 
-            {/* Voice/Send Button */}
+            {/* Send/Mic Button */}
             {inputText.trim() ? (
-              <Pressable
-                onPress={handleSend}
-                className="p-2 pr-3 mb-1"
-                accessibilityRole="button"
-                accessibilityLabel="Enviar mensagem"
-                accessibilityHint="Envia a mensagem para a NathIA"
-              >
-                <View
-                  className="w-9 h-9 rounded-full items-center justify-center"
-                  style={{ backgroundColor: "#E11D48" }}
-                >
-                  <Ionicons name="arrow-up" size={20} color="#FFF" />
-                </View>
+              <Pressable onPress={handleSend} style={[styles.sendButton, { backgroundColor: THEME.primary }]}>
+                <Ionicons name="send" size={18} color="#FFF" />
               </Pressable>
             ) : (
-              <Pressable
-                onPress={handleMicPress}
-                className="p-2 pr-3 mb-1"
-                accessibilityRole="button"
-                accessibilityLabel="Mensagem de voz (em breve)"
-                accessibilityHint="Abre informações sobre mensagens de voz"
-              >
-                <View
-                  className="w-9 h-9 rounded-full items-center justify-center"
-                  style={{ backgroundColor: "#F5F5F4" }}
-                >
-                  <Ionicons name="mic" size={20} color="#78716C" />
-                </View>
+              <Pressable onPress={handleMicPress} style={styles.micButton}>
+                <Ionicons name="mic-outline" size={22} color={THEME.textMuted} />
               </Pressable>
             )}
           </View>
 
           {/* Disclaimer */}
-          <Text className="text-warmGray-400 text-xs text-center mt-2 px-4">
+          <Text style={[styles.disclaimer, { color: THEME.textMuted }]}>
             NathIA pode cometer erros. Consulte sempre seu médico.
           </Text>
         </View>
       </KeyboardAvoidingView>
 
-      {/* History Sidebar */}
+      {/* Modals */}
       {renderHistorySidebar()}
-
-      {/* AI Consent Modal */}
       {renderAIConsentModal()}
     </View>
   );
 }
+
+// ============================================
+// STYLES (usa THEME_LIGHT como base - dark mode via inline styles)
+// ============================================
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+
+  // Header
+  header: {
+    borderBottomWidth: 1,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+    position: "absolute",
+    left: 0,
+    right: 0,
+    justifyContent: "center",
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  // Messages
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesList: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  messagesListContent: {
+    paddingVertical: 16,
+  },
+  messageContainer: {
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "flex-end",
+  },
+  messageUser: {
+    justifyContent: "flex-end",
+  },
+  messageAI: {
+    justifyContent: "flex-start",
+  },
+  messageAvatar: {
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  messageBubble: {
+    maxWidth: "80%",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  bubbleUser: {
+    backgroundColor: THEME_LIGHT.userBubble,
+    borderBottomRightRadius: 4,
+  },
+  bubbleAI: {
+    backgroundColor: THEME_LIGHT.aiBubble,
+    borderBottomLeftRadius: 4,
+    ...SHADOWS.sm,
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  textUser: {
+    color: "#FFFFFF",
+  },
+  textAI: {
+    color: THEME_LIGHT.textPrimary,
+  },
+  voiceContainer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: THEME_LIGHT.borderLight,
+  },
+
+  // Loading
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginBottom: 16,
+  },
+  loadingBubble: {
+    backgroundColor: THEME_LIGHT.aiBubble,
+    borderRadius: 20,
+    borderBottomLeftRadius: 4,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    ...SHADOWS.sm,
+  },
+  loadingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  loadingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 2,
+  },
+
+  // Empty State
+  emptyScrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingBottom: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  emptyAvatarContainer: {
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: THEME_LIGHT.textPrimary,
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: THEME_LIGHT.textSecondary,
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  welcomeCard: {
+    backgroundColor: THEME_LIGHT.primaryLight,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  welcomeIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME_LIGHT.bgSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  welcomeText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    color: THEME_LIGHT.textSecondary,
+  },
+  promptsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -6,
+    width: "100%",
+  },
+  promptCard: {
+    width: "50%",
+    paddingHorizontal: 6,
+    marginBottom: 12,
+  },
+  promptPressable: {
+    backgroundColor: THEME_LIGHT.bgSecondary,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: THEME_LIGHT.border,
+    minHeight: 100,
+  },
+  promptIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: THEME_LIGHT.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  promptTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: THEME_LIGHT.textPrimary,
+    marginBottom: 4,
+  },
+  promptSubtitle: {
+    fontSize: 12,
+    color: THEME_LIGHT.textSecondary,
+    lineHeight: 16,
+  },
+
+  // Input
+  inputContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    backgroundColor: THEME_LIGHT.bgPrimary,
+  },
+  chipsScroll: {
+    marginBottom: 8,
+  },
+  chipsContent: {
+    paddingRight: 16,
+  },
+  chip: {
+    backgroundColor: THEME_LIGHT.bgSecondary,
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: THEME_LIGHT.border,
+  },
+  chipText: {
+    fontSize: 13,
+    color: THEME_LIGHT.textSecondary,
+  },
+  inputBox: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    backgroundColor: THEME_LIGHT.bgSecondary,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: THEME_LIGHT.border,
+    minHeight: 48,
+    maxHeight: 120,
+  },
+  inputButton: {
+    padding: 11,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 15,
+    color: THEME_LIGHT.textPrimary,
+    paddingVertical: 12,
+    paddingRight: 8,
+    maxHeight: 100,
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME_LIGHT.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 6,
+    marginBottom: 6,
+  },
+  micButton: {
+    padding: 11,
+  },
+  disclaimer: {
+    fontSize: 11,
+    color: THEME_LIGHT.textMuted,
+    textAlign: "center",
+    marginTop: 8,
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  consentCard: {
+    backgroundColor: THEME_LIGHT.bgSecondary,
+    borderRadius: 24,
+    padding: 24,
+    width: "100%",
+    maxWidth: 340,
+  },
+  consentHeader: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  consentIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: THEME_LIGHT.primaryLight,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  consentTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: THEME_LIGHT.textPrimary,
+    textAlign: "center",
+  },
+  consentText: {
+    fontSize: 15,
+    color: THEME_LIGHT.textSecondary,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  consentLinks: {
+    marginBottom: 16,
+  },
+  consentLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME_LIGHT.borderLight,
+  },
+  consentLinkText: {
+    fontSize: 14,
+    marginLeft: 10,
+    flex: 1,
+  },
+  consentDisclaimer: {
+    backgroundColor: "#FEF3C7",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 20,
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  disclaimerText: {
+    fontSize: 12,
+    color: "#92400E",
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 18,
+  },
+  consentButtonPrimary: {
+    backgroundColor: THEME_LIGHT.primary,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  consentButtonPrimaryText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  consentButtonSecondary: {
+    backgroundColor: THEME_LIGHT.bgTertiary,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  consentButtonSecondaryText: {
+    color: THEME_LIGHT.textSecondary,
+    fontSize: 16,
+    fontWeight: "500",
+  },
+
+  // Sidebar
+  sidebarOverlay: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
+  sidebar: {
+    width: SCREEN_WIDTH * 0.82,
+    backgroundColor: THEME_LIGHT.bgSidebar,
+    height: "100%",
+  },
+  sidebarHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: THEME_LIGHT.borderLight,
+  },
+  sidebarTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: THEME_LIGHT.textPrimary,
+  },
+  sidebarCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: THEME_LIGHT.bgTertiary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  newChatButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: THEME_LIGHT.primary,
+    marginHorizontal: 20,
+    marginVertical: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  newChatText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  sidebarList: {
+    flex: 1,
+  },
+  sidebarEmpty: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+  sidebarEmptyText: {
+    fontSize: 14,
+    color: THEME_LIGHT.textMuted,
+    marginTop: 12,
+  },
+  sidebarGroup: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  sidebarGroupTitle: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: THEME_LIGHT.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  sidebarItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    marginBottom: 4,
+  },
+  sidebarItemActive: {
+    backgroundColor: THEME_LIGHT.primaryLight,
+  },
+  sidebarItemContent: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  sidebarItemTitle: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: THEME_LIGHT.textPrimary,
+  },
+  sidebarItemSubtitle: {
+    fontSize: 12,
+    color: THEME_LIGHT.textMuted,
+    marginTop: 2,
+  },
+  sidebarItemDelete: {
+    padding: 8,
+  },
+  sidebarFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: THEME_LIGHT.borderLight,
+  },
+  sidebarFooterTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: THEME_LIGHT.textPrimary,
+  },
+  sidebarFooterSubtitle: {
+    fontSize: 12,
+    color: THEME_LIGHT.textMuted,
+  },
+});
