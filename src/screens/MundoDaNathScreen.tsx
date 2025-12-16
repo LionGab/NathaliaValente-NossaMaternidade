@@ -8,35 +8,38 @@
  * - Modo admin para a própria Nath criar conteúdos
  */
 
-import React, { useState, useCallback, useMemo } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  FlatList,
-  Pressable,
-  TextInput,
-  Modal,
-  KeyboardAvoidingView,
-  Platform,
-  Image,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
+import React, { useCallback, useMemo, useState } from "react";
+import {
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+
+// URL da foto da Nathalia Valente
+const NATHALIA_AVATAR_URL = "https://i.imgur.com/37dbPJE.jpg";
 import Animated, {
   FadeIn,
   FadeInDown,
-  FadeInUp,
   FadeInRight,
+  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
-import * as ImagePicker from "expo-image-picker";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
-import { COLORS, SPACING, RADIUS, GRADIENTS } from "../theme/design-system";
+import { COLORS, GRADIENTS, RADIUS, SPACING } from "../theme/design-system";
 import { RootStackScreenProps } from "../types/navigation";
 
 // Types
@@ -61,21 +64,22 @@ interface NathStory {
   isNew?: boolean;
 }
 
-// Mock Data
+// Mock Data - Calm FemTech: todas com mesma cor base, sem arco-íris
 const MOCK_STORIES: NathStory[] = [
-  { id: "1", title: "Rotina", emoji: "☀️", thumbnailColor: COLORS.semantic.warning, isNew: true },
-  { id: "2", title: "Dicas", emoji: "💡", thumbnailColor: COLORS.primary[500] },
-  { id: "3", title: "Q&A", emoji: "❓", thumbnailColor: COLORS.secondary[500] },
-  { id: "4", title: "Receitas", emoji: "🥗", thumbnailColor: COLORS.semantic.success },
-  { id: "5", title: "Bebês", emoji: "👶", thumbnailColor: COLORS.accent[500] },
-  { id: "6", title: "Fitness", emoji: "💪", thumbnailColor: "#8B5CF6" },
+  { id: "1", title: "Rotina", emoji: "☀️", thumbnailColor: COLORS.primary[100], isNew: true },
+  { id: "2", title: "Dicas", emoji: "💡", thumbnailColor: COLORS.primary[100] },
+  { id: "3", title: "Q&A", emoji: "❓", thumbnailColor: COLORS.primary[100] },
+  { id: "4", title: "Receitas", emoji: "🥗", thumbnailColor: COLORS.primary[100] },
+  { id: "5", title: "Bebês", emoji: "👶", thumbnailColor: COLORS.primary[100] },
+  { id: "6", title: "Fitness", emoji: "💪", thumbnailColor: COLORS.primary[100] },
 ];
 
 const MOCK_POSTS: NathPost[] = [
   {
     id: "1",
     type: "announcement",
-    content: "Oii meninas! 💕 Bem-vindas ao meu cantinho especial no app! Aqui vou compartilhar conteúdos exclusivos, dicas e muito mais. Fico muito feliz em ter vocês comigo nessa jornada!",
+    content:
+      "Oii meninas! 💕 Bem-vindas ao meu cantinho especial no app! Aqui vou compartilhar conteúdos exclusivos, dicas e muito mais. Fico muito feliz em ter vocês comigo nessa jornada!",
     likesCount: 1234,
     commentsCount: 89,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
@@ -85,7 +89,8 @@ const MOCK_POSTS: NathPost[] = [
   {
     id: "2",
     type: "tip",
-    content: "Dica do dia: Lembre de beber pelo menos 2L de água! Durante a gestação e amamentação, a hidratação é fundamental. Eu deixo uma garrafinha sempre por perto 💧",
+    content:
+      "Dica do dia: Lembre de beber pelo menos 2L de água! Durante a gestação e amamentação, a hidratação é fundamental. Eu deixo uma garrafinha sempre por perto 💧",
     likesCount: 456,
     commentsCount: 34,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
@@ -94,7 +99,8 @@ const MOCK_POSTS: NathPost[] = [
   {
     id: "3",
     type: "image",
-    content: "Nosso momento de conexão de hoje 🥰 Cada dia ao lado dele é uma benção. Aproveitem cada segundo, mães!",
+    content:
+      "Nosso momento de conexão de hoje 🥰 Cada dia ao lado dele é uma benção. Aproveitem cada segundo, mães!",
     imageUrl: "https://images.unsplash.com/photo-1544126592-807ade215a0b?w=800",
     likesCount: 2341,
     commentsCount: 156,
@@ -104,7 +110,8 @@ const MOCK_POSTS: NathPost[] = [
   {
     id: "4",
     type: "text",
-    content: "Ser mãe é descobrir forças que você nem sabia que tinha. É chorar de cansaço e de amor ao mesmo tempo. É não dormir e ainda assim sorrir quando vê aquele rostinho. É uma jornada difícil, mas incrivelmente recompensadora. Vocês são incríveis! 💪✨",
+    content:
+      "Ser mãe é descobrir forças que você nem sabia que tinha. É chorar de cansaço e de amor ao mesmo tempo. É não dormir e ainda assim sorrir quando vê aquele rostinho. É uma jornada difícil, mas incrivelmente recompensadora. Vocês são incríveis! 💪✨",
     likesCount: 892,
     commentsCount: 67,
     createdAt: new Date(Date.now() - 28800000).toISOString(),
@@ -113,21 +120,14 @@ const MOCK_POSTS: NathPost[] = [
   {
     id: "5",
     type: "tip",
-    content: "Preparo pro parto: Estou fazendo exercícios de respiração todos os dias. 5 minutos de manhã e 5 à noite. Ajuda muito com a ansiedade e prepara o corpo. Quem quer que eu faça um vídeo mostrando?",
+    content:
+      "Preparo pro parto: Estou fazendo exercícios de respiração todos os dias. 5 minutos de manhã e 5 à noite. Ajuda muito com a ansiedade e prepara o corpo. Quem quer que eu faça um vídeo mostrando?",
     likesCount: 678,
     commentsCount: 234,
     createdAt: new Date(Date.now() - 43200000).toISOString(),
     isLiked: true,
   },
 ];
-
-const POST_TYPE_CONFIG: Record<string, { emoji: string; label: string; gradient: readonly [string, string] }> = {
-  announcement: { emoji: "📢", label: "Novidade", gradient: GRADIENTS.primary as [string, string] },
-  tip: { emoji: "💡", label: "Dica da Nath", gradient: [COLORS.semantic.warning, "#F59E0B"] as const },
-  image: { emoji: "📸", label: "Momento", gradient: [COLORS.accent[400], COLORS.accent[600]] as const },
-  video: { emoji: "🎬", label: "Vídeo", gradient: ["#8B5CF6", "#7C3AED"] as const },
-  text: { emoji: "💭", label: "Reflexão", gradient: [COLORS.secondary[400], COLORS.secondary[600]] as const },
-};
 
 type Props = RootStackScreenProps<"MundoDaNath">;
 
@@ -151,29 +151,28 @@ const StoryItem: React.FC<{
     scale.value = withSpring(1, { damping: 10 });
   };
 
+  // Calm FemTech: fundo surface.card, borda primary apenas quando ativo
   return (
     <Animated.View
       entering={FadeInRight.delay(index * 60).duration(400)}
       style={[{ marginRight: SPACING.sm }, animatedStyle]}
     >
-      <Pressable
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-      >
+      <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
         <View
           style={{
             width: 56,
             height: 56,
             borderRadius: 28,
             padding: 2,
-            backgroundColor: story.isNew ? COLORS.primary[500] : COLORS.neutral[300],
+            borderWidth: story.isNew ? 2 : 1,
+            borderColor: story.isNew ? COLORS.primary[400] : COLORS.neutral[200],
+            backgroundColor: COLORS.neutral[0],
           }}
         >
           <View
             style={{
               flex: 1,
-              borderRadius: 26,
+              borderRadius: 24,
               backgroundColor: story.thumbnailColor,
               alignItems: "center",
               justifyContent: "center",
@@ -185,10 +184,10 @@ const StoryItem: React.FC<{
         <Text
           style={{
             fontSize: 10,
-            fontWeight: "500",
-            color: COLORS.text.secondary,
+            fontWeight: story.isNew ? "600" : "500",
+            color: story.isNew ? COLORS.primary[600] : COLORS.text.secondary,
             textAlign: "center",
-            marginTop: 2,
+            marginTop: 4,
           }}
           numberOfLines={1}
         >
@@ -208,7 +207,6 @@ const PostCard: React.FC<{
   onShare: (id: string) => void;
   isDark: boolean;
 }> = ({ post, index, onLike, onComment, onShare, isDark }) => {
-  const config = POST_TYPE_CONFIG[post.type];
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -260,84 +258,98 @@ const PostCard: React.FC<{
         animatedStyle,
       ]}
     >
-      {/* Pinned indicator */}
+      {/* Pinned indicator - Calm FemTech: sutil */}
       {post.isPinned && (
-        <LinearGradient
-          colors={GRADIENTS.primary as unknown as readonly [string, string]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
+        <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
             paddingVertical: SPACING.xs,
+            backgroundColor: COLORS.primary[50],
+            borderBottomWidth: 1,
+            borderBottomColor: COLORS.primary[100],
           }}
         >
-          <Ionicons name="pin" size={12} color="#FFFFFF" />
-          <Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "600", marginLeft: SPACING.xs }}>
-            Fixado
-          </Text>
-        </LinearGradient>
-      )}
-
-      {/* Header */}
-      <View style={{ padding: SPACING.md }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm }}>
-          {/* Avatar da Nath */}
-          <LinearGradient
-            colors={GRADIENTS.primary as unknown as readonly [string, string]}
+          <Ionicons name="pin" size={12} color={COLORS.primary[500]} />
+          <Text
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: SPACING.sm,
+              color: COLORS.primary[600],
+              fontSize: 10,
+              fontWeight: "600",
+              marginLeft: SPACING.xs,
             }}
           >
-            <Text style={{ fontSize: 16, color: "#FFFFFF", fontWeight: "700" }}>N</Text>
-          </LinearGradient>
+            Fixado
+          </Text>
+        </View>
+      )}
+
+      {/* Header - Calm FemTech: simplificado */}
+      <View style={{ padding: SPACING.md }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm }}>
+          {/* Avatar da Nath - foto real com zoom para mostrar ela e o bb */}
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              marginRight: SPACING.sm,
+              borderWidth: 1,
+              borderColor: COLORS.primary[200],
+              overflow: "hidden",
+            }}
+          >
+            <Image
+              source={{ uri: NATHALIA_AVATAR_URL }}
+              style={{
+                width: 56,
+                height: 56,
+                marginTop: -8,
+                marginLeft: -8,
+              }}
+              resizeMode="cover"
+            />
+          </View>
 
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Text style={{ fontSize: 14, fontWeight: "700", color: textPrimary }}>
                 Nathalia Valente
               </Text>
-              <View
-                style={{
-                  backgroundColor: COLORS.primary[100],
-                  borderRadius: RADIUS.full,
-                  paddingHorizontal: SPACING.xs,
-                  paddingVertical: 1,
-                  marginLeft: SPACING.xs,
-                }}
-              >
-                <Text style={{ fontSize: 8, fontWeight: "600", color: COLORS.primary[600] }}>
-                  ✓ Criadora
-                </Text>
-              </View>
+              {/* Verificado discreto (ícone apenas) */}
+              <Ionicons
+                name="checkmark-circle"
+                size={14}
+                color={COLORS.primary[500]}
+                style={{ marginLeft: 4 }}
+              />
             </View>
             <Text style={{ fontSize: 12, color: textSecondary, marginTop: 2 }}>
               {formatTimeAgo(post.createdAt)}
             </Text>
           </View>
 
-          {/* Post Type Badge */}
-          <LinearGradient
-            colors={config.gradient}
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: SPACING.sm,
-              paddingVertical: 2,
-              borderRadius: RADIUS.full,
-            }}
-          >
-            <Text style={{ fontSize: 10, marginRight: 2 }}>{config.emoji}</Text>
-            <Text style={{ fontSize: 9, fontWeight: "600", color: "#FFFFFF" }}>
-              {config.label}
-            </Text>
-          </LinearGradient>
+          {/* Badge apenas para "tip" (Dica da Nath) */}
+          {post.type === "tip" && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: SPACING.sm,
+                paddingVertical: 4,
+                borderRadius: RADIUS.full,
+                backgroundColor: COLORS.primary[50],
+                borderWidth: 1,
+                borderColor: COLORS.primary[200],
+              }}
+            >
+              <Text style={{ fontSize: 10, marginRight: 2 }}>💡</Text>
+              <Text style={{ fontSize: 10, fontWeight: "600", color: COLORS.primary[600] }}>
+                Dica
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Content */}
@@ -402,15 +414,19 @@ const PostCard: React.FC<{
           style={{ flexDirection: "row", alignItems: "center", marginRight: SPACING.xl }}
         >
           <Ionicons name="chatbubble-outline" size={16} color={textSecondary} />
-          <Text style={{ fontSize: 12, fontWeight: "500", marginLeft: SPACING.xs, color: textSecondary }}>
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: "500",
+              marginLeft: SPACING.xs,
+              color: textSecondary,
+            }}
+          >
             {post.commentsCount}
           </Text>
         </Pressable>
 
-        <Pressable
-          onPress={() => onShare(post.id)}
-          style={{ marginLeft: "auto" }}
-        >
+        <Pressable onPress={() => onShare(post.id)} style={{ marginLeft: "auto" }}>
           <Ionicons name="share-outline" size={16} color={textSecondary} />
         </Pressable>
       </View>
@@ -499,9 +515,7 @@ const NewPostModal: React.FC<{
               borderRadius: RADIUS.full,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#FFFFFF" }}>
-              Publicar
-            </Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: "#FFFFFF" }}>Publicar</Text>
           </Pressable>
         </View>
 
@@ -511,7 +525,14 @@ const NewPostModal: React.FC<{
           keyboardShouldPersistTaps="handled"
         >
           {/* Post Type Selection */}
-          <Text style={{ fontSize: 14, fontWeight: "600", color: COLORS.text.secondary, marginBottom: SPACING.md }}>
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "600",
+              color: COLORS.text.secondary,
+              marginBottom: SPACING.md,
+            }}
+          >
             Tipo de conteúdo
           </Text>
           <ScrollView
@@ -530,9 +551,11 @@ const NewPostModal: React.FC<{
                   paddingVertical: SPACING.md,
                   borderRadius: RADIUS.full,
                   marginRight: SPACING.sm,
-                  backgroundColor: selectedType === item.type ? COLORS.primary[500] : COLORS.neutral[100],
+                  backgroundColor:
+                    selectedType === item.type ? COLORS.primary[500] : COLORS.neutral[100],
                   borderWidth: 1,
-                  borderColor: selectedType === item.type ? COLORS.primary[500] : COLORS.neutral[200],
+                  borderColor:
+                    selectedType === item.type ? COLORS.primary[500] : COLORS.neutral[200],
                 }}
               >
                 <Text style={{ fontSize: 16, marginRight: SPACING.xs }}>{item.emoji}</Text>
@@ -621,7 +644,9 @@ const NewPostModal: React.FC<{
               }}
             >
               <Ionicons name="image-outline" size={20} color={COLORS.primary[500]} />
-              <Text style={{ marginLeft: SPACING.sm, fontWeight: "500", color: COLORS.primary[500] }}>
+              <Text
+                style={{ marginLeft: SPACING.sm, fontWeight: "500", color: COLORS.primary[500] }}
+              >
                 Adicionar foto
               </Text>
             </Pressable>
@@ -660,29 +685,35 @@ export default function MundoDaNathScreen({ navigation }: Props) {
     );
   }, []);
 
-  const handleComment = useCallback(async (_postId: string) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    // TODO: Navigate to comments/post detail with _postId
-    navigation.navigate("ComingSoon", {
-      title: "Comentários",
-      description: "Em breve você poderá comentar nos posts da Nath!",
-      emoji: "💬",
-    });
-  }, [navigation]);
+  const handleComment = useCallback(
+    async (_postId: string) => {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      // TODO: Navigate to comments/post detail with _postId
+      navigation.navigate("ComingSoon", {
+        title: "Comentários",
+        description: "Em breve você poderá comentar nos posts da Nath!",
+        emoji: "💬",
+      });
+    },
+    [navigation]
+  );
 
   const handleShare = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Share functionality
   }, []);
 
-  const handleStoryPress = useCallback(async (story: NathStory) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate("ComingSoon", {
-      title: story.title,
-      description: `Conteúdos de ${story.title} da Nath em breve!`,
-      emoji: story.emoji,
-    });
-  }, [navigation]);
+  const handleStoryPress = useCallback(
+    async (story: NathStory) => {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      navigation.navigate("ComingSoon", {
+        title: story.title,
+        description: `Conteúdos de ${story.title} da Nath em breve!`,
+        emoji: story.emoji,
+      });
+    },
+    [navigation]
+  );
 
   const handleNewPost = useCallback(
     (content: string, type: NathPost["type"], imageUri?: string) => {
@@ -710,65 +741,49 @@ export default function MundoDaNathScreen({ navigation }: Props) {
 
   const renderHeader = () => (
     <>
-      {/* Hero Header */}
+      {/* Hero Header - Calm FemTech: gradiente suave, sem back (é TAB) */}
       <LinearGradient
-        colors={GRADIENTS.primary as unknown as readonly [string, string]}
+        colors={[COLORS.primary[100], COLORS.primary[50], COLORS.background.primary]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
         style={{
-          paddingTop: insets.top + SPACING.sm,
+          paddingTop: SPACING.md,
           paddingHorizontal: SPACING.lg,
-          paddingBottom: SPACING.xl,
-          borderBottomLeftRadius: RADIUS["2xl"],
-          borderBottomRightRadius: RADIUS["2xl"],
+          paddingBottom: SPACING.lg,
         }}
       >
-        {/* Back Button */}
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: "rgba(255,255,255,0.2)",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: SPACING.md,
-          }}
-        >
-          <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-        </Pressable>
-
-        {/* Profile Section */}
-        <Animated.View
-          entering={FadeIn.duration(600)}
-          style={{ alignItems: "center" }}
-        >
+        {/* Profile Section - compacto */}
+        <Animated.View entering={FadeIn.duration(600)} style={{ alignItems: "center" }}>
           <View
             style={{
               width: 72,
               height: 72,
               borderRadius: 36,
-              backgroundColor: "#FFFFFF",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: SPACING.md,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
+              marginBottom: SPACING.sm,
+              borderWidth: 2,
+              borderColor: COLORS.primary[200],
+              overflow: "hidden",
             }}
           >
-            <Text style={{ fontSize: 36, fontWeight: "700", color: COLORS.primary[500] }}>N</Text>
+            <Image
+              source={{ uri: NATHALIA_AVATAR_URL }}
+              style={{
+                width: 100,
+                height: 100,
+                marginTop: -14,
+                marginLeft: -14,
+              }}
+              resizeMode="cover"
+            />
           </View>
 
           <Text
             style={{
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: "800",
-              color: "#FFFFFF",
+              color: textPrimary,
               marginBottom: 2,
-              fontFamily: "DMSerifDisplay-Regular",
+              fontFamily: "Manrope_800ExtraBold",
             }}
           >
             Mundo da Nath
@@ -776,42 +791,30 @@ export default function MundoDaNathScreen({ navigation }: Props) {
           <Text
             style={{
               fontSize: 13,
-              color: "rgba(255,255,255,0.9)",
+              color: textSecondary,
               textAlign: "center",
-              maxWidth: 260,
             }}
           >
-            Conteúdos exclusivos da Nathalia Valente 💕
+            Conteúdos exclusivos da Nathalia Valente
           </Text>
 
-          {/* Stats */}
-          <View
+          {/* Stats - linha única com separadores */}
+          <Text
             style={{
-              flexDirection: "row",
-              marginTop: SPACING.lg,
-              backgroundColor: "rgba(255,255,255,0.15)",
-              borderRadius: RADIUS.lg,
-              paddingHorizontal: SPACING.lg,
-              paddingVertical: SPACING.sm,
+              fontSize: 12,
+              color: textSecondary,
+              marginTop: SPACING.sm,
             }}
           >
-            <View style={{ alignItems: "center", marginRight: SPACING["2xl"] }}>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
-                {posts.length}
-              </Text>
-              <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>Posts</Text>
-            </View>
-            <View style={{ alignItems: "center", marginRight: SPACING["2xl"] }}>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>12.5K</Text>
-              <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>Seguidores</Text>
-            </View>
-            <View style={{ alignItems: "center" }}>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#FFFFFF" }}>
-                {posts.reduce((acc, p) => acc + p.likesCount, 0).toLocaleString()}
-              </Text>
-              <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.8)" }}>Curtidas</Text>
-            </View>
-          </View>
+            <Text style={{ fontWeight: "700", color: textPrimary }}>{posts.length}</Text> posts
+            {"  •  "}
+            <Text style={{ fontWeight: "700", color: textPrimary }}>12.5K</Text> seguidores
+            {"  •  "}
+            <Text style={{ fontWeight: "700", color: textPrimary }}>
+              {posts.reduce((acc, p) => acc + p.likesCount, 0).toLocaleString()}
+            </Text>{" "}
+            curtidas
+          </Text>
         </Animated.View>
       </LinearGradient>
 
@@ -858,12 +861,8 @@ export default function MundoDaNathScreen({ navigation }: Props) {
           paddingHorizontal: SPACING.lg,
         }}
       >
-        <Text style={{ fontSize: 15, fontWeight: "700", color: textPrimary }}>
-          Publicações
-        </Text>
-        <Text style={{ fontSize: 12, color: textSecondary }}>
-          {posts.length} posts
-        </Text>
+        <Text style={{ fontSize: 15, fontWeight: "700", color: textPrimary }}>Publicações</Text>
+        <Text style={{ fontSize: 12, color: textSecondary }}>{posts.length} posts</Text>
       </View>
 
       {/* Pinned Posts */}
@@ -883,71 +882,73 @@ export default function MundoDaNathScreen({ navigation }: Props) {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: bgPrimary }}>
-      <FlatList
-        data={regularPosts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
-          <View style={{ paddingHorizontal: SPACING.lg }}>
-            <PostCard
-              post={item}
-              index={index + pinnedPosts.length}
-              onLike={handleLike}
-              onComment={handleComment}
-              onShare={handleShare}
-              isDark={isDark}
-            />
-          </View>
-        )}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={<View style={{ height: 80 }} />}
-        showsVerticalScrollIndicator={false}
-      />
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgPrimary }} edges={["top"]}>
+      <View style={{ flex: 1, backgroundColor: bgPrimary }}>
+        <FlatList
+          data={regularPosts}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => (
+            <View style={{ paddingHorizontal: SPACING.lg }}>
+              <PostCard
+                post={item}
+                index={index + pinnedPosts.length}
+                onLike={handleLike}
+                onComment={handleComment}
+                onShare={handleShare}
+                isDark={isDark}
+              />
+            </View>
+          )}
+          ListHeaderComponent={renderHeader}
+          ListFooterComponent={<View style={{ height: 80 }} />}
+          showsVerticalScrollIndicator={false}
+        />
 
-      {/* Admin FAB - Criar novo post */}
-      {isAdmin && (
-        <Animated.View
-          entering={FadeInUp.delay(500).duration(400)}
-          style={{
-            position: "absolute",
-            bottom: insets.bottom + SPACING.lg,
-            right: SPACING.lg,
-          }}
-        >
-          <Pressable
-            onPress={() => setIsNewPostModalVisible(true)}
+        {/* Admin FAB - Criar novo post */}
+        {isAdmin && (
+          <Animated.View
+            entering={FadeInUp.delay(500).duration(400)}
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 26,
-              shadowColor: COLORS.primary[500],
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
-              shadowRadius: 8,
-              elevation: 8,
+              position: "absolute",
+              bottom: insets.bottom + SPACING.lg,
+              right: SPACING.lg,
             }}
           >
-            <LinearGradient
-              colors={GRADIENTS.primary as unknown as readonly [string, string]}
+            <Pressable
+              onPress={() => setIsNewPostModalVisible(true)}
               style={{
-                flex: 1,
+                width: 52,
+                height: 52,
                 borderRadius: 26,
-                alignItems: "center",
-                justifyContent: "center",
+                shadowColor: COLORS.primary[500],
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 8,
               }}
             >
-              <Ionicons name="add" size={26} color="#FFFFFF" />
-            </LinearGradient>
-          </Pressable>
-        </Animated.View>
-      )}
+              <LinearGradient
+                colors={GRADIENTS.primary as unknown as readonly [string, string]}
+                style={{
+                  flex: 1,
+                  borderRadius: 26,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="add" size={26} color="#FFFFFF" />
+              </LinearGradient>
+            </Pressable>
+          </Animated.View>
+        )}
 
-      {/* New Post Modal */}
-      <NewPostModal
-        visible={isNewPostModalVisible}
-        onClose={() => setIsNewPostModalVisible(false)}
-        onSubmit={handleNewPost}
-      />
-    </View>
+        {/* New Post Modal */}
+        <NewPostModal
+          visible={isNewPostModalVisible}
+          onClose={() => setIsNewPostModalVisible(false)}
+          onSubmit={handleNewPost}
+        />
+      </View>
+    </SafeAreaView>
   );
 }

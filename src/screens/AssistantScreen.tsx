@@ -11,55 +11,44 @@
  * - Mensagens com design clean
  */
 
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
+  Dimensions,
   FlatList,
-  Pressable,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
-  Modal,
-  Dimensions,
+  Pressable,
+  ScrollView,
   StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import Animated, {
-  FadeIn,
-  FadeInUp,
-  FadeInDown,
-  SlideInLeft,
-  SlideOutLeft,
-} from "react-native-reanimated";
-import { MainTabScreenProps, ChatMessage } from "../types/navigation";
-import { useChatStore, Conversation, useAppStore } from "../state/store";
-import { useIsPremium } from "../state/premium-store";
-import { Avatar } from "../components/ui";
-import * as Haptics from "expo-haptics";
-import {
-  getNathIAResponse,
-  estimateTokens,
-  detectMedicalQuestion,
-} from "../api/ai-service";
-import {
-  prepareMessagesForAPI,
-  getRandomFallbackMessage,
-  containsSensitiveTopic,
-  SENSITIVE_TOPIC_DISCLAIMER,
-} from "../config/nathia";
-import { logger } from "../utils/logger";
-import { VoiceMessagePlayer } from "../components/VoiceMessagePlayer";
-import { useVoicePremiumGate } from "../hooks/useVoice";
-import { SHADOWS, COLORS as DS_COLORS, COLORS_DARK } from "../theme/design-system";
-import { useTheme } from "../hooks/useTheme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { detectMedicalQuestion, estimateTokens, getNathIAResponse } from "../api/ai-service";
+import { AIConsentModal } from "../components/chat/AIConsentModal";
 import { ChatEmptyState } from "../components/chat/ChatEmptyState";
 import { ChatHistorySidebar } from "../components/chat/ChatHistorySidebar";
-import { AIConsentModal } from "../components/chat/AIConsentModal";
+import { Avatar } from "../components/ui";
+import { VoiceMessagePlayer } from "../components/VoiceMessagePlayer";
+import {
+  containsSensitiveTopic,
+  getRandomFallbackMessage,
+  prepareMessagesForAPI,
+  SENSITIVE_TOPIC_DISCLAIMER,
+} from "../config/nathia";
 import { useChatHandlers } from "../hooks/useChatHandlers";
+import { useTheme } from "../hooks/useTheme";
+import { useVoicePremiumGate } from "../hooks/useVoice";
+import { useIsPremium } from "../state/premium-store";
+import { Conversation, useAppStore, useChatStore } from "../state/store";
+import { COLORS_DARK, COLORS as DS_COLORS, SHADOWS } from "../theme/design-system";
+import { ChatMessage, MainTabScreenProps } from "../types/navigation";
+import { logger } from "../utils/logger";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -121,6 +110,7 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
   const { isDark } = useTheme();
   const THEME = useMemo(() => getThemeColors(isDark), [isDark]);
   const flatListRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
   const [inputText, setInputText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -159,7 +149,11 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
         const count = await AsyncStorage.getItem(key);
         setMessageCount(count ? parseInt(count, 10) : 0);
       } catch (error) {
-        logger.error("Failed to load message count", "AssistantScreen", error instanceof Error ? error : new Error(String(error)));
+        logger.error(
+          "Failed to load message count",
+          "AssistantScreen",
+          error instanceof Error ? error : new Error(String(error))
+        );
       }
     };
     loadMessageCount();
@@ -247,7 +241,11 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
         const key = `${MESSAGE_COUNT_KEY}_${user?.id || "anonymous"}`;
         await AsyncStorage.setItem(key, newCount.toString());
       } catch (error) {
-        logger.error("Failed to save message count", "AssistantScreen", error instanceof Error ? error : new Error(String(error)));
+        logger.error(
+          "Failed to save message count",
+          "AssistantScreen",
+          error instanceof Error ? error : new Error(String(error))
+        );
       }
     }
 
@@ -314,15 +312,27 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
         provider: response.provider,
       });
     } catch (error) {
-      logger.error("NathIA API error", "AssistantScreen", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "NathIA API error",
+        "AssistantScreen",
+        error instanceof Error ? error : new Error(String(error))
+      );
 
       let errorMessage = getRandomFallbackMessage();
 
       if (error instanceof Error) {
-        if (error.message.includes("não autenticado") || error.message.includes("Sessão expirada")) {
-          errorMessage = "Sua sessão expirou. Faça login novamente para continuar conversando comigo. 🔒";
-        } else if (error.message.includes("muitas mensagens") || error.message.includes("Rate limit")) {
-          errorMessage = "Você está enviando muitas mensagens! Aguarde um minutinho e voltamos a conversar. ⏱️";
+        if (
+          error.message.includes("não autenticado") ||
+          error.message.includes("Sessão expirada")
+        ) {
+          errorMessage =
+            "Sua sessão expirou. Faça login novamente para continuar conversando comigo. 🔒";
+        } else if (
+          error.message.includes("muitas mensagens") ||
+          error.message.includes("Rate limit")
+        ) {
+          errorMessage =
+            "Você está enviando muitas mensagens! Aguarde um minutinho e voltamos a conversar. ⏱️";
         }
       }
 
@@ -339,7 +349,18 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
-  }, [inputText, isLoading, conversations, currentConversationId, addMessage, setLoading, isPremium, messageCount, navigation, user]);
+  }, [
+    inputText,
+    isLoading,
+    conversations,
+    currentConversationId,
+    addMessage,
+    setLoading,
+    isPremium,
+    messageCount,
+    navigation,
+    user,
+  ]);
 
   // Handlers usando hook customizado
   const handleNewChat = useCallback(async () => {
@@ -356,7 +377,20 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
   );
 
   const handleDeleteConversation = handlers.handleDeleteConversation;
-  const handleSuggestedPrompt = handlers.handleSuggestedPrompt;
+  const handleSuggestedPromptBase = handlers.handleSuggestedPrompt;
+
+  // Wrapper para handleSuggestedPrompt que preenche + foca input
+  const handleSuggestedPrompt = useCallback(
+    async (text: string) => {
+      await handleSuggestedPromptBase(text);
+      // Focar o input após um pequeno delay para garantir que o texto foi preenchido
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    },
+    [handleSuggestedPromptBase]
+  );
+
   const handleMicPress = handlers.handleMicPress;
   const handleAttachment = handlers.handleAttachment;
 
@@ -376,221 +410,247 @@ export default function AssistantScreen({ navigation }: MainTabScreenProps<"Assi
   // ============================================
   // MESSAGE BUBBLE COMPONENT
   // ============================================
-  const MessageBubble = React.memo(({ message, index }: {
-    message: ChatMessage;
-    index: number;
-  }) => {
-    const isUser = message.role === "user";
+  const MessageBubble = React.memo(
+    ({ message, index }: { message: ChatMessage; index: number }) => {
+      const isUser = message.role === "user";
 
-    return (
-      <Animated.View
-        entering={FadeInUp.delay(index * 20).duration(300)}
-        style={[styles.messageContainer, isUser ? styles.messageUser : styles.messageAI]}
-      >
-        {/* AI Avatar */}
-        {!isUser && (
-          <Avatar
-            size={28}
-            isNathIA={true}
-            style={styles.messageAvatar}
-          />
-        )}
+      return (
+        <Animated.View
+          entering={FadeInUp.delay(index * 20).duration(300)}
+          style={[styles.messageContainer, isUser ? styles.messageUser : styles.messageAI]}
+        >
+          {/* AI Avatar */}
+          {!isUser && <Avatar size={28} isNathIA={true} style={styles.messageAvatar} />}
 
-        {/* Message Bubble */}
-        <View style={[
-          styles.messageBubble,
-          isUser
-            ? [styles.bubbleUser, { backgroundColor: THEME.userBubble }]
-            : [styles.bubbleAI, { backgroundColor: THEME.aiBubble }]
-        ]}>
-          <Text style={[
-            styles.messageText,
-            isUser ? styles.textUser : [styles.textAI, { color: THEME.textPrimary }]
-          ]}>
-            {message.content}
-          </Text>
+          {/* Message Bubble */}
+          <View
+            style={[
+              styles.messageBubble,
+              isUser
+                ? [styles.bubbleUser, { backgroundColor: THEME.userBubble }]
+                : [styles.bubbleAI, { backgroundColor: THEME.aiBubble }],
+            ]}
+          >
+            <Text
+              style={[
+                styles.messageText,
+                isUser ? styles.textUser : [styles.textAI, { color: THEME.textPrimary }],
+              ]}
+            >
+              {message.content}
+            </Text>
 
-          {/* Voice Player - Apenas para mensagens da NathIA */}
-          {!isUser && hasVoiceAccess && (
-            <View style={[styles.voiceContainer, { borderTopColor: THEME.borderLight }]}>
-              <VoiceMessagePlayer
-                messageId={message.id}
-                text={message.content}
-                onPremiumRequired={handleVoicePremiumRequired}
-                size="small"
-                compact
-                iconColor={THEME.primary}
-              />
-            </View>
-          )}
-        </View>
-      </Animated.View>
-    );
-  });
+            {/* Voice Player - Apenas para mensagens da NathIA */}
+            {!isUser && hasVoiceAccess && (
+              <View style={[styles.voiceContainer, { borderTopColor: THEME.borderLight }]}>
+                <VoiceMessagePlayer
+                  messageId={message.id}
+                  text={message.content}
+                  onPremiumRequired={handleVoicePremiumRequired}
+                  size="small"
+                  compact
+                  iconColor={THEME.primary}
+                />
+              </View>
+            )}
+          </View>
+        </Animated.View>
+      );
+    }
+  );
   MessageBubble.displayName = "MessageBubble";
-
-
-
 
   // ============================================
   // MAIN RENDER
   // ============================================
   return (
-    <View style={[styles.container, { backgroundColor: THEME.bgPrimary }]}>
-      {/* Header - Clean, minimal */}
-      <View style={[styles.header, { paddingTop: insets.top, backgroundColor: THEME.bgSecondary, borderBottomColor: THEME.borderLight }]}>
-        <View style={styles.headerContent}>
-          {/* Menu Button */}
-          <Pressable
-            onPress={() => setShowHistory(true)}
-            style={styles.headerButton}
-          >
-            <Ionicons name="menu-outline" size={24} color={THEME.textSecondary} />
-          </Pressable>
-
-          {/* Title - Centered */}
-          <View style={styles.headerCenter}>
-            <Avatar size={28} isNathIA={true} style={{ marginRight: 8 }} />
-            <Text style={[styles.headerTitle, { color: THEME.textPrimary }]}>NathIA</Text>
-          </View>
-
-          {/* Actions */}
-          <View style={styles.headerActions}>
-            {currentMessages.length > 0 && (
-              <Pressable onPress={handlers.handleClearChat} style={styles.headerButton}>
-                <Ionicons name="trash-outline" size={22} color={THEME.textMuted} />
-              </Pressable>
-            )}
-            <Pressable onPress={handleNewChat} style={styles.headerButton}>
-              <Ionicons name="create-outline" size={22} color={THEME.textSecondary} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bgPrimary }} edges={["top"]}>
+      <View style={[styles.container, { flex: 1, backgroundColor: THEME.bgPrimary }]}>
+        {/* Header - Clean, minimal */}
+        <View
+          style={[
+            styles.header,
+            {
+              paddingTop: insets.top,
+              backgroundColor: THEME.bgSecondary,
+              borderBottomColor: THEME.borderLight,
+            },
+          ]}
+        >
+          <View style={styles.headerContent}>
+            {/* Menu Button */}
+            <Pressable onPress={() => setShowHistory(true)} style={styles.headerButton}>
+              <Ionicons name="menu-outline" size={24} color={THEME.textSecondary} />
             </Pressable>
+
+            {/* Title - Centered */}
+            <View style={styles.headerCenter}>
+              <Avatar size={28} isNathIA={true} style={{ marginRight: 8 }} />
+              <Text style={[styles.headerTitle, { color: THEME.textPrimary }]}>NathIA</Text>
+            </View>
+
+            {/* Actions */}
+            <View style={styles.headerActions}>
+              {currentMessages.length > 0 && (
+                <Pressable onPress={handlers.handleClearChat} style={styles.headerButton}>
+                  <Ionicons name="trash-outline" size={22} color={THEME.textMuted} />
+                </Pressable>
+              )}
+              <Pressable onPress={handleNewChat} style={styles.headerButton}>
+                <Ionicons name="create-outline" size={22} color={THEME.textSecondary} />
+              </Pressable>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Messages Area */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.messagesContainer}
-        keyboardVerticalOffset={0}
-      >
-        {currentMessages.length === 0 ? (
-          <ScrollView
-            contentContainerStyle={styles.emptyScrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <ChatEmptyState onSuggestedPrompt={handleSuggestedPrompt} />
-          </ScrollView>
-        ) : (
-          <FlatList
-            ref={flatListRef}
-            data={currentMessages}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item, index }) => (
-              <MessageBubble message={item} index={index} />
-            )}
-            style={styles.messagesList}
-            contentContainerStyle={styles.messagesListContent}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            ListFooterComponent={
-              isLoading ? (
-                <Animated.View entering={FadeIn.duration(300)} style={styles.loadingContainer}>
-                  <Avatar size={28} isNathIA={true} style={styles.messageAvatar} />
-                  <View style={[styles.loadingBubble, { backgroundColor: THEME.aiBubble }]}>
-                    <View style={styles.loadingDots}>
-                      <Animated.View entering={FadeIn.delay(0).duration(400)} style={[styles.loadingDot, { backgroundColor: THEME.primary }]} />
-                      <Animated.View entering={FadeIn.delay(150).duration(400)} style={[styles.loadingDot, { backgroundColor: THEME.primaryLight }]} />
-                      <Animated.View entering={FadeIn.delay(300).duration(400)} style={[styles.loadingDot, { backgroundColor: THEME.border }]} />
-                    </View>
-                  </View>
-                </Animated.View>
-              ) : null
-            }
-            initialNumToRender={10}
-            maxToRenderPerBatch={5}
-            windowSize={7}
-            removeClippedSubviews={true}
-          />
-        )}
-
-        {/* Input Area */}
-        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 8, backgroundColor: THEME.bgPrimary }]}>
-          {/* Quick Chips - Show when there are messages */}
-          {currentMessages.length > 0 && !inputText.trim() && (
+        {/* Messages Area */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.messagesContainer}
+          keyboardVerticalOffset={0}
+        >
+          {currentMessages.length === 0 ? (
             <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.chipsScroll}
-              contentContainerStyle={styles.chipsContent}
+              contentContainerStyle={styles.emptyScrollContent}
+              showsVerticalScrollIndicator={false}
             >
-              {QUICK_CHIPS.map((chip, index) => (
-                <Pressable
-                  key={index}
-                  onPress={() => handleSuggestedPrompt(chip)}
-                  style={[styles.chip, { backgroundColor: THEME.bgSecondary, borderColor: THEME.border }]}
-                >
-                  <Text style={[styles.chipText, { color: THEME.textSecondary }]}>{chip}</Text>
-                </Pressable>
-              ))}
+              <ChatEmptyState onSuggestedPrompt={handleSuggestedPrompt} />
             </ScrollView>
+          ) : (
+            <FlatList
+              ref={flatListRef}
+              data={currentMessages}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item, index }) => <MessageBubble message={item} index={index} />}
+              style={styles.messagesList}
+              contentContainerStyle={styles.messagesListContent}
+              showsVerticalScrollIndicator={false}
+              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              ListFooterComponent={
+                isLoading ? (
+                  <Animated.View entering={FadeIn.duration(300)} style={styles.loadingContainer}>
+                    <Avatar size={28} isNathIA={true} style={styles.messageAvatar} />
+                    <View style={[styles.loadingBubble, { backgroundColor: THEME.aiBubble }]}>
+                      <View style={styles.loadingDots}>
+                        <Animated.View
+                          entering={FadeIn.delay(0).duration(400)}
+                          style={[styles.loadingDot, { backgroundColor: THEME.primary }]}
+                        />
+                        <Animated.View
+                          entering={FadeIn.delay(150).duration(400)}
+                          style={[styles.loadingDot, { backgroundColor: THEME.primaryLight }]}
+                        />
+                        <Animated.View
+                          entering={FadeIn.delay(300).duration(400)}
+                          style={[styles.loadingDot, { backgroundColor: THEME.border }]}
+                        />
+                      </View>
+                    </View>
+                  </Animated.View>
+                ) : null
+              }
+              initialNumToRender={10}
+              maxToRenderPerBatch={5}
+              windowSize={7}
+              removeClippedSubviews={true}
+            />
           )}
 
-          {/* Input Box */}
-          <View style={[styles.inputBox, { backgroundColor: THEME.bgSecondary, borderColor: THEME.border }]}>
-            {/* Attachment */}
-            <Pressable onPress={handleAttachment} style={styles.inputButton}>
-              <Ionicons name="add-circle-outline" size={26} color={THEME.textMuted} />
-            </Pressable>
-
-            {/* Text Input */}
-            <TextInput
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Pergunte qualquer coisa..."
-              placeholderTextColor={THEME.textMuted}
-              multiline
-              maxLength={2000}
-              style={[styles.textInput, { color: THEME.textPrimary }]}
-            />
-
-            {/* Send/Mic Button */}
-            {inputText.trim() ? (
-              <Pressable onPress={handleSend} style={[styles.sendButton, { backgroundColor: THEME.primary }]}>
-                <Ionicons name="send" size={18} color={DS_COLORS.text.inverse} />
-              </Pressable>
-            ) : (
-              <Pressable onPress={handleMicPress} style={styles.micButton}>
-                <Ionicons name="mic-outline" size={22} color={THEME.textMuted} />
-              </Pressable>
+          {/* Input Area */}
+          <View
+            style={[
+              styles.inputContainer,
+              { paddingBottom: insets.bottom + 8, backgroundColor: THEME.bgPrimary },
+            ]}
+          >
+            {/* Quick Chips - Show when there are messages */}
+            {currentMessages.length > 0 && !inputText.trim() && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipsScroll}
+                contentContainerStyle={styles.chipsContent}
+              >
+                {QUICK_CHIPS.map((chip, index) => (
+                  <Pressable
+                    key={index}
+                    onPress={() => handleSuggestedPrompt(chip)}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: THEME.bgSecondary, borderColor: THEME.border },
+                    ]}
+                  >
+                    <Text style={[styles.chipText, { color: THEME.textSecondary }]}>{chip}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
             )}
+
+            {/* Input Box */}
+            <View
+              style={[
+                styles.inputBox,
+                { backgroundColor: THEME.bgSecondary, borderColor: THEME.border },
+              ]}
+            >
+              {/* Attachment */}
+              <Pressable onPress={handleAttachment} style={styles.inputButton}>
+                <Ionicons name="add-circle-outline" size={26} color={THEME.textMuted} />
+              </Pressable>
+
+              {/* Text Input */}
+              <TextInput
+                ref={inputRef}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Pergunte qualquer coisa..."
+                placeholderTextColor={THEME.textMuted}
+                multiline
+                maxLength={2000}
+                style={[styles.textInput, { color: THEME.textPrimary }]}
+              />
+
+              {/* Send/Mic Button */}
+              {inputText.trim() ? (
+                <Pressable
+                  onPress={handleSend}
+                  style={[styles.sendButton, { backgroundColor: THEME.primary }]}
+                >
+                  <Ionicons name="send" size={18} color={DS_COLORS.text.inverse} />
+                </Pressable>
+              ) : (
+                <Pressable onPress={handleMicPress} style={styles.micButton}>
+                  <Ionicons name="mic-outline" size={22} color={THEME.textMuted} />
+                </Pressable>
+              )}
+            </View>
+
+            {/* Disclaimer */}
+            <Text style={[styles.disclaimer, { color: THEME.textMuted }]}>
+              NathIA pode cometer erros. Consulte sempre seu médico.
+            </Text>
           </View>
+        </KeyboardAvoidingView>
 
-          {/* Disclaimer */}
-          <Text style={[styles.disclaimer, { color: THEME.textMuted }]}>
-            NathIA pode cometer erros. Consulte sempre seu médico.
-          </Text>
-        </View>
-      </KeyboardAvoidingView>
-
-      {/* Modals */}
-      <ChatHistorySidebar
-        visible={showHistory}
-        conversations={conversations}
-        currentConversationId={currentConversationId}
-        groupedConversations={groupedConversations}
-        onClose={() => setShowHistory(false)}
-        onNewChat={handleNewChat}
-        onSelectConversation={handleSelectConversation}
-        onDeleteConversation={handleDeleteConversation}
-      />
-      <AIConsentModal
-        visible={showAIConsent}
-        onAccept={handleAcceptAITerms}
-        onDecline={handleDeclineAITerms}
-        onNavigateToLegal={() => navigation.navigate("Legal")}
-      />
-    </View>
+        {/* Modals */}
+        <ChatHistorySidebar
+          visible={showHistory}
+          conversations={conversations}
+          currentConversationId={currentConversationId}
+          groupedConversations={groupedConversations}
+          onClose={() => setShowHistory(false)}
+          onNewChat={handleNewChat}
+          onSelectConversation={handleSelectConversation}
+          onDeleteConversation={handleDeleteConversation}
+        />
+        <AIConsentModal
+          visible={showAIConsent}
+          onAccept={handleAcceptAITerms}
+          onDecline={handleDeclineAITerms}
+          onNavigateToLegal={() => navigation.navigate("Legal")}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 

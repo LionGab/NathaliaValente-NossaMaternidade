@@ -8,19 +8,19 @@
  * - Animação suave (FadeIn)
  */
 
+import * as Haptics from "expo-haptics";
 import React, { useCallback } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useTheme } from "../../hooks/useTheme";
 import { useCheckInStore } from "../../state/store";
-import { COLORS, SPACING, RADIUS, SHADOWS, ACCESSIBILITY } from "../../theme/design-system";
+import { ACCESSIBILITY, RADIUS, SPACING } from "../../theme/design-system";
+import { brand, neutral, surface } from "../../theme/tokens";
 
 // Tipos de mood
 type MoodType = "bem" | "cansada" | "indisposta" | "amada";
@@ -29,9 +29,6 @@ interface MoodOption {
   id: MoodType;
   label: string;
   emoji: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: string;
-  activeColor: string;
   message: string;
 }
 
@@ -40,41 +37,29 @@ const MOOD_OPTIONS: MoodOption[] = [
     id: "bem",
     label: "Bem",
     emoji: "😊",
-    icon: "sunny",
-    color: "#FFD89B",
-    activeColor: "#FFE5B8",
-    message: "Que bom te ver assim. Aproveita esse respiro. 💛",
+    message: "Que bom te ver assim. Aproveita esse respiro.",
   },
   {
     id: "cansada",
     label: "Cansada",
     emoji: "😴",
-    icon: "cloud",
-    color: COLORS.feeling.cansada,
-    activeColor: "#D4E9FD",
-    message: "Você está fazendo o seu melhor. Isso já é suficiente. ❤️",
+    message: "Você está fazendo o seu melhor. Isso já é suficiente.",
   },
   {
     id: "indisposta",
     label: "Indisposta",
     emoji: "😔",
-    icon: "rainy",
-    color: COLORS.feeling.indisposta,
-    activeColor: "#EDE9FE",
-    message: "Vamos com calma. Um passo pequeno já conta. 🌿",
+    message: "Vamos com calma. Um passo pequeno já conta.",
   },
   {
     id: "amada",
     label: "Amada",
     emoji: "❤️",
-    icon: "heart",
-    color: COLORS.primary[400],
-    activeColor: COLORS.primary[300],
-    message: "Que lindo. Guarda esse sentimento com você. ✨",
+    message: "Que lindo. Guarda esse sentimento com você.",
   },
 ];
 
-// Componente do botão de mood
+// Componente do botão de mood - com estados visuais fortes
 const MoodButton: React.FC<{
   option: MoodOption;
   isSelected: boolean;
@@ -95,8 +80,32 @@ const MoodButton: React.FC<{
     transform: [{ scale: scale.value }],
   }));
 
-  const backgroundColor = isSelected ? option.activeColor : isDark ? COLORS.neutral[800] : COLORS.neutral[100];
-  const borderColor = isSelected ? option.color : "transparent";
+  // Estados visuais fortes:
+  // Selected: bg primary[100], border primary[400], text primary
+  // Unselected: bg surface.elevated, border subtle, text muted
+  const backgroundColor = isSelected
+    ? isDark
+      ? brand.primary[800]
+      : brand.primary[100]
+    : isDark
+      ? surface.dark.elevated
+      : surface.light.elevated;
+
+  const borderColor = isSelected
+    ? isDark
+      ? brand.primary[400]
+      : brand.primary[400]
+    : isDark
+      ? neutral[700]
+      : neutral[200];
+
+  const textColor = isSelected
+    ? isDark
+      ? brand.primary[200]
+      : brand.primary[700]
+    : isDark
+      ? neutral[400]
+      : neutral[500];
 
   return (
     <Animated.View style={[styles.moodButtonWrapper, animatedStyle]}>
@@ -117,14 +126,7 @@ const MoodButton: React.FC<{
         ]}
       >
         <Text style={styles.moodEmoji}>{option.emoji}</Text>
-        <Text
-          style={[
-            styles.moodLabel,
-            { color: isDark ? COLORS.neutral[100] : COLORS.neutral[900] },
-          ]}
-        >
-          {option.label}
-        </Text>
+        <Text style={[styles.moodLabel, { color: textColor }]}>{option.label}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -168,52 +170,43 @@ export const EmotionalCheckInPrimary: React.FC = () => {
   }, [getTodayCheckIn]);
 
   // Handler de seleção
-  const handleMoodSelect = useCallback(async (mood: MoodType) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const handleMoodSelect = useCallback(
+    async (mood: MoodType) => {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    setSelectedMood(mood);
+      setSelectedMood(mood);
 
-    // Mapear mood para valor numérico
-    const moodValueMap: Record<MoodType, number> = {
-      bem: 5,
-      amada: 4,
-      cansada: 3,
-      indisposta: 2,
-    };
+      // Mapear mood para valor numérico
+      const moodValueMap: Record<MoodType, number> = {
+        bem: 5,
+        amada: 4,
+        cansada: 3,
+        indisposta: 2,
+      };
 
-    setTodayMood(moodValueMap[mood]);
+      setTodayMood(moodValueMap[mood]);
 
-    // Mostrar feedback
-    const option = MOOD_OPTIONS.find((o) => o.id === mood);
-    if (option) {
-      setFeedbackMessage(option.message);
-    }
-  }, [setTodayMood]);
+      // Mostrar feedback
+      const option = MOOD_OPTIONS.find((o) => o.id === mood);
+      if (option) {
+        setFeedbackMessage(option.message);
+      }
+    },
+    [setTodayMood]
+  );
 
   // Cores do tema
-  const cardBg = isDark ? colors.background.secondary : "#FFFFFF";
   const textMain = isDark ? colors.neutral[100] : colors.neutral[900];
   const textMuted = isDark ? colors.neutral[400] : colors.neutral[500];
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: cardBg,
-          borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
-        },
-        SHADOWS.md,
-      ]}
-    >
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: textMain }]}>
-          Como você está agora?
-        </Text>
+        <Text style={[styles.title, { color: textMain }]}>Como você está agora?</Text>
       </View>
 
-      {/* Mood Buttons Grid */}
+      {/* Mood Buttons Grid - Chips grandes >=44pt */}
       <View style={styles.moodGrid}>
         {MOOD_OPTIONS.map((option) => (
           <MoodButton
@@ -233,13 +226,11 @@ export const EmotionalCheckInPrimary: React.FC = () => {
           style={[
             styles.feedbackContainer,
             {
-              backgroundColor: isDark ? colors.neutral[800] : COLORS.primary[50],
+              backgroundColor: isDark ? colors.neutral[800] : brand.primary[50],
             },
           ]}
         >
-          <Text style={[styles.feedbackText, { color: textMuted }]}>
-            {feedbackMessage}
-          </Text>
+          <Text style={[styles.feedbackText, { color: textMuted }]}>{feedbackMessage}</Text>
         </Animated.View>
       )}
     </View>
@@ -248,16 +239,15 @@ export const EmotionalCheckInPrimary: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: RADIUS["2xl"],
-    padding: SPACING.lg,
-    borderWidth: 1,
+    gap: SPACING.md,
   },
   header: {
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.sm,
   },
   title: {
     fontSize: 20,
     fontWeight: "800",
+    fontFamily: "Manrope_800ExtraBold",
     letterSpacing: -0.3,
     textAlign: "center",
   },
@@ -271,20 +261,22 @@ const styles = StyleSheet.create({
   moodButton: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: SPACING.lg,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.sm,
     borderRadius: RADIUS.lg,
-    minHeight: ACCESSIBILITY.minTapTarget + 36, // 80pt visual
+    gap: SPACING.xs,
+    minHeight: ACCESSIBILITY.minTapTarget, // 44pt mínimo
   },
   moodEmoji: {
-    fontSize: 32,
-    marginBottom: SPACING.xs,
+    fontSize: 24,
   },
   moodLabel: {
     fontSize: 13,
     fontWeight: "700",
+    fontFamily: "Manrope_700Bold",
   },
   feedbackContainer: {
-    marginTop: SPACING.lg,
+    marginTop: SPACING.sm,
     paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
     borderRadius: RADIUS.lg,
@@ -292,6 +284,7 @@ const styles = StyleSheet.create({
   feedbackText: {
     fontSize: 14,
     fontWeight: "500",
+    fontFamily: "Manrope_500Medium",
     textAlign: "center",
     lineHeight: 20,
   },

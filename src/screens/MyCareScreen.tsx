@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -9,7 +9,10 @@ import { useAppStore } from "../state/store";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "../hooks/useTheme";
 import { IconName } from "../types/icons";
-import { COLORS as DS_COLORS } from "../theme/design-system";
+import { COLORS as DS_COLORS, SPACING, RADIUS } from "../theme/design-system";
+
+// Foto da Nathalia com o bebê Thales
+const NATHALIA_AVATAR_URL = "https://i.imgur.com/37dbPJE.jpg";
 
 /**
  * Cores semânticas para tela de cuidados
@@ -37,14 +40,18 @@ const getCareColors = (isDark: boolean) => ({
   borderBlue: isDark ? "rgba(125, 185, 213, 0.3)" : "#D6E6F2",
 });
 
+// Afirmações no estilo Nathalia - autênticas, jovens, sem julgamentos
 const DAILY_AFFIRMATIONS = [
-  "Voce esta fazendo o melhor que pode, e isso e suficiente",
-  "Nao existe mae perfeita, existe mae presente",
-  "Cuidar de voce tambem e cuidar do seu bebe",
-  "Seus sentimentos sao validos, todos eles",
-  "Uma mae descansada e uma mae mais presente",
-  "Pedir ajuda e um ato de coragem, nao de fraqueza",
-  "Cada dia e uma nova chance de se conectar",
+  "Você tá fazendo o melhor que pode, e isso já é demais 💕",
+  "Não existe mãe perfeita, existe mãe real e presente",
+  "Cuidar de você também é cuidar do seu bebê, tá?",
+  "Seus sentimentos são válidos, todos eles, sempre",
+  "Descansa, mãe! Você merece esse respiro",
+  "Pedir ajuda é força, não fraqueza. Eu peço toda hora!",
+  "Cada dia é uma chance nova de se conectar com seu filho",
+  "Você não precisa dar conta de tudo. Ninguém precisa.",
+  "Seu corpo fez um milagre. Respeita ele 🙏",
+  "Não deixa ninguém te julgar. Você sabe o que é melhor pra você.",
 ];
 
 type CareColors = ReturnType<typeof getCareColors>;
@@ -88,30 +95,31 @@ const getCareSections = (careColors: CareColors) => [
   },
 ];
 
+// Apoio rápido - Temas que Nathalia aborda (puerpério recente)
 const QUICK_SUPPORT = [
   {
     id: "anxiety",
     emoji: "🫂",
-    title: "Ansiedade",
-    subtitle: "Tecnicas de alivio",
+    title: "Ansiedade materna",
+    subtitle: "Técnicas que me ajudam",
   },
   {
     id: "sleep",
     emoji: "😴",
-    title: "Sono do bebe",
-    subtitle: "Dicas praticas",
+    title: "Sono (ou a falta dele)",
+    subtitle: "Como eu sobrevivo",
   },
   {
     id: "feeding",
     emoji: "🤱",
-    title: "Amamentacao",
-    subtitle: "Apoio e guias",
+    title: "Amamentação",
+    subtitle: "Minha jornada e dicas",
   },
   {
-    id: "self",
-    emoji: "💆‍♀️",
-    title: "Autocuidado",
-    subtitle: "Momentos para si",
+    id: "body",
+    emoji: "🩷",
+    title: "Corpo pós-parto",
+    subtitle: "Respeitar o tempo",
   },
 ];
 
@@ -169,26 +177,27 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
   const handleQuickSupport = async (id: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
+    // Configurações com tom da Nathalia
     const supportConfig: Record<string, { title: string; description: string; emoji: string }> = {
       anxiety: {
-        title: "Ansiedade",
-        description: "Em breve teremos técnicas de alívio e exercícios para ajudar com a ansiedade.",
+        title: "Ansiedade Materna",
+        description: "Ei, eu também sinto isso. Em breve vou compartilhar técnicas que me ajudam a lidar com a ansiedade do puerpério. 💕",
         emoji: "🫂",
       },
       sleep: {
-        title: "Sono do Bebê",
-        description: "Em breve teremos dicas práticas para ajudar seu bebê a dormir melhor.",
+        title: "Sono (ou a falta dele)",
+        description: "Vamos ser realistas: mãe não dorme bem. Mas em breve vou compartilhar como eu sobrevivo e dicas pra aguentar o tranco! 😴",
         emoji: "😴",
       },
       feeding: {
         title: "Amamentação",
-        description: "Em breve teremos guias completos e apoio para amamentação.",
+        description: "Essa jornada tem altos e baixos, né? Em breve vou contar minha experiência e dicas que aprendi. 🤱",
         emoji: "🤱",
       },
-      self: {
-        title: "Autocuidado",
-        description: "Em breve teremos sugestões de momentos de autocuidado para você.",
-        emoji: "💆‍♀️",
+      body: {
+        title: "Corpo Pós-Parto",
+        description: "Nosso corpo fez um milagre! Em breve vou falar sobre aceitar o tempo e cuidar de si sem pressão. 🩷",
+        emoji: "🩷",
       },
     };
 
@@ -209,7 +218,7 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
   };
 
   return (
-    <View className="flex-1" style={{ backgroundColor: colors.background.secondary }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background.secondary }} edges={["top"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -245,16 +254,16 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
           </LinearGradient>
         </View>
 
-        {/* Affirmation Card - Principal */}
+        {/* Affirmation Card - Com foto da Nathalia */}
         <Animated.View
           entering={FadeIn.delay(150).duration(600)}
-          className="px-5 mb-6"
+          style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}
         >
           <View
             style={{
               backgroundColor: colors.background.card,
-              borderRadius: 24,
-              padding: 24,
+              borderRadius: RADIUS.xl,
+              padding: SPACING.xl,
               shadowColor: colors.neutral[900],
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.04,
@@ -262,103 +271,147 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
               elevation: 2,
             }}
           >
-            <View className="flex-row items-start mb-4">
+            <View style={{ flexDirection: "row", alignItems: "flex-start", marginBottom: SPACING.md }}>
+              {/* Avatar da Nathalia com zoom */}
               <View
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: careColors.peachSoft,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 14,
+                  width: 48,
+                  height: 48,
+                  borderRadius: 24,
+                  overflow: "hidden",
+                  marginRight: SPACING.md,
+                  borderWidth: 2,
+                  borderColor: DS_COLORS.primary[200],
                 }}
               >
-                <Text style={{ fontSize: 22 }}>🌸</Text>
+                <Image
+                  source={{ uri: NATHALIA_AVATAR_URL }}
+                  style={{
+                    width: 68,
+                    height: 68,
+                    marginTop: -10,
+                    marginLeft: -10,
+                  }}
+                  resizeMode="cover"
+                />
               </View>
-              <View className="flex-1">
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Text
+                    style={{
+                      color: isDark ? colors.neutral[100] : colors.neutral[800],
+                      fontSize: 15,
+                      fontWeight: "700",
+                      fontFamily: "Manrope_700Bold",
+                    }}
+                  >
+                    Nathalia Valente
+                  </Text>
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={14}
+                    color={DS_COLORS.primary[500]}
+                    style={{ marginLeft: 4 }}
+                  />
+                </View>
                 <Text
                   style={{
                     color: colors.neutral[500],
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: "500",
-                    textTransform: "uppercase",
-                    letterSpacing: 0.5,
+                    marginTop: 2,
                   }}
                 >
-                  Lembrete do dia
+                  Recado do dia pra você 💕
                 </Text>
               </View>
             </View>
 
             <Text
               style={{
-                color: colors.neutral[700],
-                fontSize: 20,
+                color: isDark ? colors.neutral[100] : colors.neutral[700],
+                fontSize: 18,
                 fontWeight: "500",
-                lineHeight: 30,
-                fontStyle: "italic",
+                fontFamily: "Manrope_500Medium",
+                lineHeight: 28,
               }}
             >
-              &ldquo;{todayAffirmation}&rdquo;
+              "{todayAffirmation}"
             </Text>
 
+            {/* Ações */}
             <View
               style={{
-                marginTop: 20,
-                paddingTop: 16,
+                marginTop: SPACING.lg,
+                paddingTop: SPACING.md,
                 borderTopWidth: 1,
-                borderTopColor: colors.neutral[100],
+                borderTopColor: isDark ? colors.neutral[700] : colors.neutral[100],
                 flexDirection: "row",
                 alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <View
+              <Pressable
+                onPress={() => navigation.navigate("Affirmations")}
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: careColors.lilacSoft,
+                  flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: 10,
+                  paddingVertical: SPACING.xs,
                 }}
               >
-                <Text style={{ fontSize: 14 }}>💜</Text>
-              </View>
-              <Text style={{ color: colors.neutral[500], fontSize: 14 }}>
-                Nathalia Valente
-              </Text>
+                <Ionicons name="heart-outline" size={18} color={DS_COLORS.accent[500]} />
+                <Text style={{ color: DS_COLORS.accent[500], fontSize: 13, fontWeight: "600", marginLeft: 6 }}>
+                  Ver mais afirmações
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleTalkPress}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: DS_COLORS.primary[50],
+                  paddingHorizontal: SPACING.md,
+                  paddingVertical: SPACING.sm,
+                  borderRadius: RADIUS.full,
+                }}
+              >
+                <Ionicons name="sparkles" size={14} color={DS_COLORS.primary[500]} />
+                <Text style={{ color: DS_COLORS.primary[600], fontSize: 12, fontWeight: "600", marginLeft: 4 }}>
+                  Falar com NathIA
+                </Text>
+              </Pressable>
             </View>
           </View>
         </Animated.View>
 
-        {/* Belonging Message */}
+        {/* Belonging Message - Tom Nathalia */}
         <Animated.View
           entering={FadeInUp.delay(200).duration(600).springify()}
-          className="px-5 mb-6"
+          style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}
         >
-          <View
+          <Pressable
+            onPress={() => navigation.navigate("MundoDaNath")}
             style={{
-              backgroundColor: careColors.blueSoft,
-              borderRadius: 20,
-              padding: 20,
+              backgroundColor: isDark ? DS_COLORS.primary[900] : DS_COLORS.primary[50],
+              borderRadius: RADIUS.xl,
+              padding: SPACING.lg,
               borderWidth: 1,
-              borderColor: careColors.borderBlue,
+              borderColor: isDark ? DS_COLORS.primary[700] : DS_COLORS.primary[100],
             }}
           >
-            <View className="flex-row items-center">
-              <Text style={{ fontSize: 28, marginRight: 14 }}>🤱</Text>
-              <View className="flex-1">
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={{ fontSize: 28, marginRight: SPACING.md }}>🤱</Text>
+              <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    color: colors.neutral[700],
-                    fontSize: 17,
-                    fontWeight: "600",
+                    color: isDark ? colors.neutral[100] : colors.neutral[700],
+                    fontSize: 16,
+                    fontWeight: "700",
+                    fontFamily: "Manrope_700Bold",
                     marginBottom: 4,
                   }}
                 >
-                  Voce pertence aqui
+                  Ei, você não tá sozinha!
                 </Text>
                 <Text
                   style={{
@@ -367,30 +420,32 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                     lineHeight: 20,
                   }}
                 >
-                  Este e seu espaco seguro. Sem julgamentos, apenas acolhimento.
+                  Eu também passo por isso. Vem pro meu cantinho 💕
                 </Text>
               </View>
+              <Ionicons name="chevron-forward" size={20} color={DS_COLORS.primary[400]} />
             </View>
-          </View>
+          </Pressable>
         </Animated.View>
 
-        {/* Care Sections - 2x2 Grid */}
+        {/* Care Sections - 2x2 Grid - Calm FemTech */}
         <Animated.View
           entering={FadeInUp.delay(250).duration(600).springify()}
-          className="px-5 mb-6"
+          style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}
         >
           <Text
             style={{
-              color: colors.neutral[700],
+              color: isDark ? colors.neutral[100] : colors.neutral[700],
               fontSize: 18,
-              fontWeight: "600",
-              marginBottom: 16,
+              fontWeight: "700",
+              fontFamily: "Manrope_700Bold",
+              marginBottom: SPACING.md,
             }}
           >
-            Cuidados para voce
+            Cuidados pra você
           </Text>
 
-          <View className="flex-row flex-wrap" style={{ marginHorizontal: -6 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", marginHorizontal: -6 }}>
             {careSections.map((section, index) => (
               <Animated.View
                 key={section.id}
@@ -399,39 +454,40 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
               >
                 <Pressable
                   onPress={() => handleCardPress(section.id)}
-                  style={{
-                    backgroundColor: section.bgColor,
-                    borderRadius: 20,
-                    padding: 18,
-                    minHeight: 140,
-                  }}
+                  style={({ pressed }) => ({
+                    backgroundColor: isDark ? colors.neutral[800] : colors.background.card,
+                    borderRadius: RADIUS.xl,
+                    padding: SPACING.lg,
+                    minHeight: 130,
+                    borderWidth: 1,
+                    borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+                    opacity: pressed ? 0.9 : 1,
+                    transform: [{ scale: pressed ? 0.98 : 1 }],
+                  })}
                 >
                   <View
                     style={{
-                      width: 46,
-                      height: 46,
-                      borderRadius: 14,
-                      backgroundColor: colors.background.card,
+                      width: 44,
+                      height: 44,
+                      borderRadius: RADIUS.lg,
+                      backgroundColor: section.bgColor,
                       alignItems: "center",
                       justifyContent: "center",
-                      marginBottom: 14,
-                      shadowColor: colors.neutral[900],
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.04,
-                      shadowRadius: 8,
+                      marginBottom: SPACING.sm,
                     }}
                   >
                     <Ionicons
                       name={section.icon as IconName}
-                      size={24}
+                      size={22}
                       color={section.color}
                     />
                   </View>
                   <Text
                     style={{
-                      color: colors.neutral[700],
-                      fontSize: 16,
+                      color: isDark ? colors.neutral[100] : colors.neutral[700],
+                      fontSize: 15,
                       fontWeight: "600",
+                      fontFamily: "Manrope_600SemiBold",
                       marginBottom: 2,
                     }}
                   >
@@ -440,7 +496,7 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                   <Text
                     style={{
                       color: colors.neutral[500],
-                      fontSize: 13,
+                      fontSize: 12,
                     }}
                   >
                     {section.subtitle}
@@ -451,64 +507,65 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
           </View>
         </Animated.View>
 
-        {/* Quick Support Section */}
+        {/* Quick Support Section - Dicas da Nath */}
         <Animated.View
           entering={FadeInUp.delay(400).duration(600).springify()}
-          className="px-5 mb-6"
+          style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}
         >
           <Text
             style={{
-              color: colors.neutral[700],
+              color: isDark ? colors.neutral[100] : colors.neutral[700],
               fontSize: 18,
-              fontWeight: "600",
-              marginBottom: 16,
+              fontWeight: "700",
+              fontFamily: "Manrope_700Bold",
+              marginBottom: SPACING.md,
             }}
           >
-            Apoio rapido
+            Dicas da Nath 💕
           </Text>
 
           <View
             style={{
-              backgroundColor: colors.background.card,
-              borderRadius: 20,
-              padding: 6,
-              shadowColor: colors.neutral[900],
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.03,
-              shadowRadius: 12,
+              backgroundColor: isDark ? colors.neutral[800] : colors.background.card,
+              borderRadius: RADIUS.xl,
+              borderWidth: 1,
+              borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+              overflow: "hidden",
             }}
           >
             {QUICK_SUPPORT.map((item, index) => (
               <Pressable
                 key={item.id}
                 onPress={() => handleQuickSupport(item.id)}
-                style={{
+                style={({ pressed }) => ({
                   flexDirection: "row",
                   alignItems: "center",
-                  padding: 16,
+                  padding: SPACING.md,
                   borderBottomWidth: index < QUICK_SUPPORT.length - 1 ? 1 : 0,
-                  borderBottomColor: colors.neutral[100],
-                }}
+                  borderBottomColor: isDark ? colors.neutral[700] : colors.neutral[100],
+                  backgroundColor: pressed ? (isDark ? colors.neutral[700] : colors.neutral[50]) : "transparent",
+                })}
               >
                 <View
                   style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 14,
-                    backgroundColor: colors.background.secondary,
+                    width: 44,
+                    height: 44,
+                    borderRadius: RADIUS.lg,
+                    backgroundColor: isDark ? colors.neutral[700] : DS_COLORS.primary[50],
                     alignItems: "center",
                     justifyContent: "center",
-                    marginRight: 14,
+                    marginRight: SPACING.md,
                   }}
                 >
-                  <Text style={{ fontSize: 22 }}>{item.emoji}</Text>
+                  <Text style={{ fontSize: 20 }}>{item.emoji}</Text>
                 </View>
-                <View className="flex-1">
+                <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      color: colors.neutral[700],
-                      fontSize: 16,
-                      fontWeight: "500",
+                      color: isDark ? colors.neutral[100] : colors.neutral[700],
+                      fontSize: 15,
+                      fontWeight: "600",
+                      fontFamily: "Manrope_600SemiBold",
                     }}
                   >
                     {item.title}
@@ -516,163 +573,200 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                   <Text
                     style={{
                       color: colors.neutral[500],
-                      fontSize: 14,
+                      fontSize: 13,
                       marginTop: 2,
                     }}
                   >
                     {item.subtitle}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+                <Ionicons name="chevron-forward" size={18} color={DS_COLORS.primary[400]} />
               </Pressable>
             ))}
           </View>
         </Animated.View>
 
-        {/* Emergency Support - Calmo e discreto */}
+        {/* NathIA CTA - Rosa como accent */}
         <Animated.View
           entering={FadeInUp.delay(500).duration(600).springify()}
-          className="px-5 mb-6"
+          style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}
         >
           <Pressable
             onPress={handleTalkPress}
-            style={{
-              backgroundColor: careColors.roseSoft,
-              borderRadius: 20,
-              padding: 20,
+            style={({ pressed }) => ({
+              backgroundColor: isDark ? DS_COLORS.accent[600] : DS_COLORS.accent[400],
+              borderRadius: RADIUS.xl,
+              padding: SPACING.lg,
               borderWidth: 1,
-              borderColor: careColors.borderRose,
-            }}
+              borderColor: isDark ? DS_COLORS.accent[500] : DS_COLORS.accent[500],
+              opacity: pressed ? 0.9 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
           >
-            <View className="flex-row items-center">
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
               <View
                 style={{
-                  width: 50,
-                  height: 50,
-                  borderRadius: 16,
-                  backgroundColor: colors.background.card,
+                  width: 48,
+                  height: 48,
+                  borderRadius: RADIUS.lg,
+                  backgroundColor: "rgba(255,255,255,0.2)",
                   alignItems: "center",
                   justifyContent: "center",
-                  marginRight: 16,
+                  marginRight: SPACING.md,
                 }}
               >
-                <Ionicons name="chatbubble-ellipses-outline" size={24} color={careColors.rose} />
+                <Ionicons name="sparkles" size={24} color="#FFFFFF" />
               </View>
-              <View className="flex-1">
+              <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    color: colors.neutral[700],
+                    color: colors.neutral[900],
                     fontSize: 16,
-                    fontWeight: "600",
+                    fontWeight: "700",
+                    fontFamily: "Manrope_700Bold",
                   }}
                 >
-                  Precisa conversar?
+                  Quer desabafar?
                 </Text>
                 <Text
                   style={{
-                    color: colors.neutral[500],
+                    color: colors.neutral[800],
                     fontSize: 14,
                     marginTop: 2,
                   }}
                 >
-                  Estamos aqui para ouvir voce
+                  A NathIA tá aqui pra te ouvir 💕
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+              <Ionicons name="chevron-forward" size={20} color={colors.neutral[800]} />
             </View>
           </Pressable>
         </Animated.View>
 
-        {/* Community Banner */}
+        {/* Community Banner - Calm FemTech */}
         <Animated.View
           entering={FadeInUp.delay(550).duration(600).springify()}
-          className="px-5 mb-6"
+          style={{ paddingHorizontal: SPACING.xl, marginBottom: SPACING.lg }}
         >
           <Pressable
             onPress={() => navigation.navigate("Community")}
-            style={{
-              backgroundColor: careColors.lilacSoft,
-              borderRadius: 20,
-              padding: 24,
+            style={({ pressed }) => ({
+              backgroundColor: isDark ? colors.neutral[800] : colors.background.card,
+              borderRadius: RADIUS.xl,
+              padding: SPACING.xl,
               borderWidth: 1,
-              borderColor: careColors.borderLilac,
-            }}
+              borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+              opacity: pressed ? 0.9 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+            })}
           >
-            <View className="flex-row items-center mb-3">
-              <Text style={{ fontSize: 24, marginRight: 10 }}>💜</Text>
-              <Text
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm }}>
+              <View
                 style={{
-                  color: colors.neutral[700],
-                  fontSize: 17,
-                  fontWeight: "600",
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: DS_COLORS.primary[50],
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: SPACING.sm,
                 }}
               >
-                Comunidade Maes Valente
+                <Ionicons name="people" size={20} color={DS_COLORS.primary[500]} />
+              </View>
+              <Text
+                style={{
+                  color: isDark ? colors.neutral[100] : colors.neutral[700],
+                  fontSize: 17,
+                  fontWeight: "700",
+                  fontFamily: "Manrope_700Bold",
+                }}
+              >
+                Comunidade Mães Valente
               </Text>
             </View>
             <Text
               style={{
                 color: colors.neutral[500],
-                fontSize: 15,
+                fontSize: 14,
                 lineHeight: 22,
-                marginBottom: 16,
+                marginBottom: SPACING.md,
               }}
             >
-              Conecte-se com outras maes que entendem sua jornada. Trocar experiencias faz toda diferenca.
+              Mãe que entende mãe. Vem trocar experiência com outras mães que tão passando pelo mesmo que você.
             </Text>
-            <View className="flex-row items-center">
-              <View className="flex-row" style={{ marginRight: 12 }}>
-                {["🧡", "💛", "💚"].map((emoji, i) => (
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {["🩵", "🩷", "💜"].map((emoji, i) => (
                   <View
                     key={i}
                     style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 16,
-                      backgroundColor: colors.background.card,
+                      width: 28,
+                      height: 28,
+                      borderRadius: 14,
+                      backgroundColor: DS_COLORS.primary[50],
                       alignItems: "center",
                       justifyContent: "center",
-                      marginLeft: i > 0 ? -8 : 0,
+                      marginLeft: i > 0 ? -6 : 0,
                       borderWidth: 2,
-                      borderColor: careColors.lilacSoft,
+                      borderColor: isDark ? colors.neutral[800] : colors.background.card,
                     }}
                   >
-                    <Text style={{ fontSize: 14 }}>{emoji}</Text>
+                    <Text style={{ fontSize: 12 }}>{emoji}</Text>
                   </View>
                 ))}
+                <Text style={{ color: colors.neutral[500], fontSize: 12, marginLeft: SPACING.sm }}>
+                  +50 mil mães
+                </Text>
               </View>
-              <Text style={{ color: colors.neutral[500], fontSize: 13 }}>
-                +50 mil maes conectadas
-              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: DS_COLORS.primary[50],
+                  paddingHorizontal: SPACING.md,
+                  paddingVertical: SPACING.xs,
+                  borderRadius: RADIUS.full,
+                }}
+              >
+                <Text style={{ color: DS_COLORS.primary[600], fontSize: 12, fontWeight: "600" }}>
+                  Entrar
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color={DS_COLORS.primary[500]} style={{ marginLeft: 2 }} />
+              </View>
             </View>
           </Pressable>
         </Animated.View>
 
-        {/* Bottom Actions */}
+        {/* Bottom Actions - Calm FemTech */}
         <Animated.View
           entering={FadeInUp.delay(600).duration(600).springify()}
-          className="px-5"
+          style={{ paddingHorizontal: SPACING.xl }}
         >
-          <View className="flex-row" style={{ marginHorizontal: -6 }}>
+          <View style={{ flexDirection: "row", gap: SPACING.sm }}>
             <Pressable
               onPress={() => navigation.navigate("Affirmations")}
-              style={{
+              style={({ pressed }) => ({
                 flex: 1,
-                marginHorizontal: 6,
-                backgroundColor: careColors.peach,
-                borderRadius: 16,
-                padding: 18,
+                backgroundColor: isDark ? colors.neutral[800] : DS_COLORS.primary[50],
+                borderRadius: RADIUS.xl,
+                padding: SPACING.lg,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-              }}
+                borderWidth: 1,
+                borderColor: isDark ? colors.neutral[700] : DS_COLORS.primary[100],
+                opacity: pressed ? 0.9 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
             >
-              <Ionicons name="sparkles-outline" size={20} color={colors.neutral[700]} />
+              <Ionicons name="heart" size={18} color={DS_COLORS.accent[500]} />
               <Text
                 style={{
-                  color: colors.neutral[700],
-                  fontSize: 15,
+                  color: isDark ? colors.neutral[100] : colors.neutral[700],
+                  fontSize: 14,
                   fontWeight: "600",
+                  fontFamily: "Manrope_600SemiBold",
                   marginLeft: 8,
                 }}
               >
@@ -681,52 +775,57 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate("Habits")}
-              style={{
+              style={({ pressed }) => ({
                 flex: 1,
-                marginHorizontal: 6,
-                backgroundColor: careColors.sage,
-                borderRadius: 16,
-                padding: 18,
+                backgroundColor: isDark ? colors.neutral[800] : DS_COLORS.primary[50],
+                borderRadius: RADIUS.xl,
+                padding: SPACING.lg,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-              }}
+                borderWidth: 1,
+                borderColor: isDark ? colors.neutral[700] : DS_COLORS.primary[100],
+                opacity: pressed ? 0.9 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+              })}
             >
-              <Ionicons name="checkbox-outline" size={20} color={colors.neutral[700]} />
+              <Ionicons name="sunny" size={18} color={DS_COLORS.primary[500]} />
               <Text
                 style={{
-                  color: colors.neutral[700],
-                  fontSize: 15,
+                  color: isDark ? colors.neutral[100] : colors.neutral[700],
+                  fontSize: 14,
                   fontWeight: "600",
+                  fontFamily: "Manrope_600SemiBold",
                   marginLeft: 8,
                 }}
               >
-                Meus habitos
+                Meu dia
               </Text>
             </Pressable>
           </View>
         </Animated.View>
 
-        {/* Gentle Footer Message */}
+        {/* Footer Message - Tom Nathalia */}
         <Animated.View
           entering={FadeInUp.delay(650).duration(600).springify()}
-          className="px-5 mt-8"
+          style={{ paddingHorizontal: SPACING.xl, marginTop: SPACING["2xl"] }}
         >
-          <View style={{ alignItems: "center", paddingVertical: 16 }}>
-            <Text style={{ fontSize: 24, marginBottom: 8 }}>🌷</Text>
+          <View style={{ alignItems: "center", paddingVertical: SPACING.lg }}>
+            <Text style={{ fontSize: 24, marginBottom: SPACING.sm }}>💕</Text>
             <Text
               style={{
                 color: colors.neutral[400],
                 fontSize: 14,
                 textAlign: "center",
                 lineHeight: 20,
+                fontFamily: "Manrope_500Medium",
               }}
             >
-              Lembre-se: descansar tambem e cuidar.
+              Lembra: cuidar de você é cuidar do seu filho.{"\n"}Com amor, Nath 🩷
             </Text>
           </View>
         </Animated.View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

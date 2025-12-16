@@ -1,4 +1,6 @@
-# Como Transferir Projeto do Windows para Mac
+# Como Transferir/Sincronizar Projeto do Windows para Mac
+
+> 📁 **Pasta Compartilhada?** Se Windows e Mac estão na mesma pasta (rede compartilhada, Dropbox, etc.), veja `SYNC_PASTA_COMPARTILHADA.md` para guia específico.
 
 ## 🚀 Método 1: Git (Recomendado - Mais Seguro)
 

@@ -1,9 +1,11 @@
 /**
- * NathiaAdviceCard - Card da NathIA personalizado pelo check-in
+ * NathiaAdviceCard - Card da NathIA (Calm FemTech)
  *
  * SECUNDÁRIO na hierarquia da Home
  * - Se não fez check-in: "Como você está hoje? Vamos começar por aí."
  * - Se fez: mensagem baseada no mood + CTA "Conversar com NathIA"
+ *
+ * Usa tokens do preset calmFemtech - azul base, rosa pontual
  */
 
 import React, { useMemo, useCallback } from "react";
@@ -13,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "../../hooks/useTheme";
 import { useCheckInStore } from "../../state/store";
-import { COLORS, SPACING, RADIUS, SHADOWS } from "../../theme/design-system";
+import { SPACING, RADIUS, SHADOWS } from "../../theme/design-system";
 
 interface NathiaAdviceCardProps {
   onPressChat: () => void;
@@ -31,7 +33,7 @@ const MOOD_TIPS: Record<number, string> = {
 export const NathiaAdviceCard: React.FC<NathiaAdviceCardProps> = ({
   onPressChat,
 }) => {
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, brand, text: themeText } = useTheme();
 
   // Store
   const getTodayCheckIn = useCheckInStore((s) => s.getTodayCheckIn);
@@ -52,13 +54,13 @@ export const NathiaAdviceCard: React.FC<NathiaAdviceCardProps> = ({
     onPressChat();
   }, [onPressChat]);
 
-  // Cores do tema - usando cores do app (rosa/primary)
-  const cardBg = isDark ? COLORS.primary[900] + "20" : COLORS.primary[50];
-  const borderColor = isDark ? COLORS.primary[700] + "40" : COLORS.primary[200];
-  const textMain = isDark ? colors.neutral[100] : colors.neutral[900];
-  const textMuted = isDark ? colors.neutral[400] : colors.neutral[600];
-  const iconBg = isDark ? COLORS.primary[800] : COLORS.primary[100];
-  const accentColor = COLORS.primary[500];
+  // Cores do tema - usando tokens calmFemtech (azul base)
+  const cardBg = isDark ? brand.primary[900] : brand.primary[50];
+  const borderColor = isDark ? brand.primary[700] : brand.primary[200];
+  const textMain = themeText?.primary || (isDark ? colors.neutral[100] : colors.neutral[900]);
+  const textMuted = themeText?.secondary || (isDark ? colors.neutral[400] : colors.neutral[600]);
+  const iconBg = isDark ? brand.primary[800] : brand.primary[100];
+  const accentColor = brand.primary[500];
 
   return (
     <Animated.View entering={FadeInUp.delay(100).duration(500)}>
@@ -122,12 +124,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: "800",
+    fontWeight: "700",
+    fontFamily: "Manrope_700Bold",
     marginBottom: 2,
   },
   message: {
     fontSize: 13,
     fontWeight: "500",
+    fontFamily: "Manrope_500Medium",
     lineHeight: 18,
   },
   ctaButton: {

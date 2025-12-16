@@ -1,33 +1,43 @@
 /**
- * HomeScreen - Redesign com UX Emocional + Hierarquia Clara
+ * HomeScreen - Calm FemTech Design
  *
  * Hierarquia:
- * 1. HEADER (reduzido) - Saudação + avatar
- * 2. PRIMÁRIO: Check-in Emocional (1 toque)
- * 3. SECUNDÁRIO: Card NathIA (personalizado)
- * 4. SECUNDÁRIO: Pertencimento (discreto)
- * 5. TERCIÁRIO: Barra de Acesso Rápido
+ * 1. HEADER - Saudação + avatar
+ * 2. HERO - Foto da Nathalia (maternal, acolhedora)
+ * 3. PRIMÁRIO: Check-in Emocional (1 toque)
+ * 4. SECUNDÁRIO: Card NathIA
+ * 5. SECUNDÁRIO: Mundo da Nath (estilo suave)
+ * 6. SECUNDÁRIO: Pertencimento
+ *
+ * Navegação principal via Tab Bar
  */
 
-import React, { useMemo, useCallback } from "react";
-import { View, Text, ScrollView, Pressable, RefreshControl, useWindowDimensions, Platform } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useCallback, useMemo } from "react";
+import {
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme } from "../hooks/useTheme";
 import { useAppStore } from "../state/store";
 import { MainTabScreenProps } from "../types/navigation";
-import { useTheme } from "../hooks/useTheme";
-import { LinearGradient } from "expo-linear-gradient";
 
 // Componentes da Home
-import {
-  EmotionalCheckInPrimary,
-  NathiaAdviceCard,
-  QuickActionsBar,
-  BelongingCard,
-} from "../components/home";
+import { EmotionalCheckInPrimary } from "../components/home";
+import { RowCard } from "../components/ui";
+
+// Foto da Nathalia - balanço com bebê (maternal, calma, luz natural)
+const NATHALIA_HERO_URL = "https://i.imgur.com/7GX41Ft.jpg";
 
 // Responsividade
 const getResponsiveValue = (screenWidth: number, baseValue: number, scale: number = 1): number => {
@@ -37,7 +47,7 @@ const getResponsiveValue = (screenWidth: number, baseValue: number, scale: numbe
 
 export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): React.JSX.Element {
   const insets = useSafeAreaInsets();
-  const { colors, isDark, spacing, shadows, radius, brand } = useTheme();
+  const { colors, isDark, spacing, shadows, brand, radius } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
 
   // Valores responsivos
@@ -100,7 +110,7 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
   // Navigation handlers
   const handleAvatarPress = useCallback(async (): Promise<void> => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    navigation.navigate("Profile");
+    navigation.navigate("EditProfile");
   }, [navigation]);
 
   const handleNathiaChat = useCallback((): void => {
@@ -114,21 +124,6 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
   const handleMundoDaNath = useCallback(async (): Promise<void> => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("MundoDaNath");
-  }, [navigation]);
-
-  const handleQuickNavigation = useCallback((route: string): void => {
-    // Mapear rotas para navegação
-    const routeMap: Record<string, () => void> = {
-      Habits: () => navigation.navigate("Habits"),
-      DailyLog: () => navigation.navigate("DailyLog", {}),
-      Community: () => navigation.navigate("Community"),
-      MyCare: () => navigation.navigate("MyCare"),
-    };
-
-    const navigateAction = routeMap[route];
-    if (navigateAction) {
-      navigateAction();
-    }
   }, [navigation]);
 
   // Cores do tema
@@ -155,9 +150,9 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
             <Text
               style={{
                 color: textMain,
-                fontSize: getResponsiveValue(screenWidth, 24, 1),
-                fontWeight: "800",
-                letterSpacing: -0.3,
+                fontSize: 20,
+                fontWeight: "700",
+                fontFamily: "Manrope_700Bold",
               }}
             >
               {greeting}, {userName || "Mamãe"}
@@ -213,10 +208,10 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
                     justifyContent: "center",
                   }}
                 >
-                  <Ionicons 
-                    name="person" 
-                    size={22} 
-                    color={colors.text.inverse || colors.neutral[0]} 
+                  <Ionicons
+                    name="person"
+                    size={22}
+                    color={colors.text.inverse || colors.neutral[0]}
                   />
                 </View>
               )}
@@ -228,7 +223,10 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
         <ScrollView
           contentContainerStyle={{
             paddingHorizontal: horizontalPadding,
-            paddingBottom: getResponsiveValue(screenWidth, 24) + getResponsiveValue(screenWidth, 100) + insets.bottom,
+            paddingBottom:
+              getResponsiveValue(screenWidth, 24) +
+              getResponsiveValue(screenWidth, 100) +
+              insets.bottom,
             gap: gap,
           }}
           showsVerticalScrollIndicator={false}
@@ -242,103 +240,166 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
           }
           accessibilityLabel="Conteúdo principal da tela inicial"
         >
-          {/* 1. PRIMÁRIO: Check-in Emocional (1 toque) */}
-          <Animated.View entering={FadeInUp.delay(50).duration(500).springify()}>
-            <EmotionalCheckInPrimary />
-          </Animated.View>
-
-          {/* 2. SECUNDÁRIO: Card NathIA */}
-          <NathiaAdviceCard onPressChat={handleNathiaChat} />
-
-          {/* 2.5. Mundo da Nath - Conteúdo Exclusivo (Rosa Accent - Momento de Alegria) */}
-          <Animated.View entering={FadeInUp.delay(150).duration(500).springify()}>
+          {/* HERO - Foto da Nathalia (maternal, acolhedora) */}
+          <Animated.View entering={FadeInUp.delay(50).duration(600).springify()}>
             <Pressable
               onPress={handleMundoDaNath}
-              style={{
+              accessibilityLabel="Ver conteúdos da Nathalia"
+              style={({ pressed }) => ({
                 borderRadius: radius.xl,
                 overflow: "hidden",
-                shadowColor: brand.accent[500],
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 12,
-                elevation: 6,
-              }}
+                opacity: pressed ? 0.95 : 1,
+                transform: [{ scale: pressed ? 0.99 : 1 }],
+              })}
             >
-              <LinearGradient
-                colors={[brand.accent[400], brand.accent[500]] as const}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={{
-                  padding: spacing.md,
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                {/* Avatar Nath */}
+              <View style={{ position: "relative" }}>
+                {/* Container com overflow hidden para zoom */}
                 <View
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: "rgba(255,255,255,0.95)",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    marginRight: spacing.md,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 4,
+                    width: "100%",
+                    height: getResponsiveValue(screenWidth, 180, 1),
+                    borderRadius: radius.xl,
+                    overflow: "hidden",
                   }}
                 >
-                  <Text style={{ fontSize: 22, fontWeight: "700", color: brand.accent[500] }}>N</Text>
+                  {/* Imagem com zoom para mostrar ela e o bebê */}
+                  <Image
+                    source={{ uri: NATHALIA_HERO_URL }}
+                    style={{
+                      width: "120%",
+                      height: "120%",
+                      alignSelf: "center",
+                    }}
+                    contentFit="cover"
+                    contentPosition={{ top: 0.3 }}
+                    transition={300}
+                    placeholder={{ blurhash: "LKO2?U%2Tw=w]~RBVZRi};RPxuwH" }}
+                  />
                 </View>
 
-                {/* Content */}
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "700",
-                        color: "#FFFFFF",
-                        marginRight: spacing.xs,
-                      }}
-                    >
-                      Mundo da Nath
-                    </Text>
-                    <View
-                      style={{
-                        backgroundColor: "rgba(255,255,255,0.25)",
-                        paddingHorizontal: spacing.xs,
-                        paddingVertical: 1,
-                        borderRadius: radius.full,
-                      }}
-                    >
-                      <Text style={{ fontSize: 8, fontWeight: "600", color: "#FFFFFF" }}>NOVO</Text>
-                    </View>
-                  </View>
+                {/* Gradiente overlay */}
+                <LinearGradient
+                  colors={["transparent", "rgba(0,0,0,0.6)"]}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 80,
+                    borderBottomLeftRadius: radius.xl,
+                    borderBottomRightRadius: radius.xl,
+                  }}
+                />
+
+                {/* Texto sobre a imagem */}
+                <View
+                  style={{
+                    position: "absolute",
+                    bottom: spacing.md,
+                    left: spacing.lg,
+                    right: spacing.lg,
+                  }}
+                >
                   <Text
                     style={{
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.9)",
-                      lineHeight: 16,
+                      color: "#FFFFFF",
+                      fontSize: 15,
+                      fontWeight: "700",
+                      fontFamily: "Manrope_700Bold",
+                      marginBottom: 2,
                     }}
                   >
-                    Conteúdos exclusivos da Nath para você 💕
+                    Olá, mamãe 💕
+                  </Text>
+                  <Text
+                    style={{
+                      color: "rgba(255,255,255,0.9)",
+                      fontSize: 13,
+                      fontWeight: "500",
+                      fontFamily: "Manrope_500Medium",
+                    }}
+                  >
+                    Você está fazendo um trabalho incrível
                   </Text>
                 </View>
-
-                {/* Arrow */}
-                <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.8)" />
-              </LinearGradient>
+              </View>
             </Pressable>
           </Animated.View>
 
-          {/* 3. SECUNDÁRIO: Pertencimento (discreto) */}
-          <BelongingCard onPress={handleCommunity} />
+          {/* 1. PRIMÁRIO: Check-in Emocional (1 toque) */}
+          <Animated.View entering={FadeInUp.delay(100).duration(500).springify()}>
+            <EmotionalCheckInPrimary />
+          </Animated.View>
 
-          {/* 4. TERCIÁRIO: Barra de Acesso Rápido */}
-          <QuickActionsBar onNavigate={handleQuickNavigation} />
+          {/* CTA Rosa - Premium (accent[400], texto navy, sombra mínima) */}
+          <Animated.View entering={FadeInUp.delay(150).duration(500).springify()}>
+            <Pressable
+              onPress={handleNathiaChat}
+              accessibilityRole="button"
+              accessibilityLabel="Conversar com a NathIA"
+              style={({ pressed }) => ({
+                borderRadius: radius.xl,
+                backgroundColor: isDark ? brand.accent[500] : brand.accent[400],
+                paddingVertical: spacing.md,
+                paddingHorizontal: spacing.lg,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: spacing.sm,
+                opacity: pressed ? 0.88 : 1,
+                transform: [{ scale: pressed ? 0.98 : 1 }],
+                borderWidth: 1,
+                borderColor: isDark ? brand.accent[600] : brand.accent[500],
+              })}
+            >
+              <Ionicons name="sparkles" size={18} color={colors.neutral[900]} />
+              <Text
+                style={{
+                  fontFamily: "Manrope_700Bold",
+                  fontSize: 14,
+                  color: colors.neutral[900],
+                }}
+              >
+                Conversar com a NathIA
+              </Text>
+            </Pressable>
+          </Animated.View>
+
+          {/* 2. SECUNDÁRIO: Card NathIA */}
+          <RowCard
+            icon="sparkles"
+            title="NathIA"
+            subtitle="Como você está hoje? Vamos começar por aí."
+            onPress={handleNathiaChat}
+            animationDelay={200}
+            accessibilityLabel="Conversar com NathIA"
+            accessibilityHint="Abre o chat com a assistente virtual NathIA"
+          />
+
+          {/* 3. SECUNDÁRIO: Mundo da Nath - Rosa como accent (badge + ícone) */}
+          <RowCard
+            icon="heart"
+            iconColor={isDark ? brand.accent[300] : brand.accent[500]}
+            title="Mundo da Nath"
+            subtitle="Conteúdos exclusivos da Nath para você"
+            badge="NOVO"
+            badgeColor={isDark ? brand.accent[500] : brand.accent[200]}
+            onPress={handleMundoDaNath}
+            animationDelay={150}
+            accessibilityLabel="Mundo da Nath"
+            accessibilityHint="Abre conteúdos exclusivos da Nathalia"
+          />
+
+          {/* 4. SECUNDÁRIO: Pertencimento */}
+          <RowCard
+            icon="people"
+            title="Você não está sozinha"
+            subtitle="Conecte-se com outras mães"
+            onPress={handleCommunity}
+            animationDelay={200}
+            accessibilityLabel="Ver comunidade"
+            accessibilityHint="Abre a comunidade de mães"
+          />
         </ScrollView>
       </View>
     </SafeAreaView>

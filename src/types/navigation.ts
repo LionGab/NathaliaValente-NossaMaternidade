@@ -1,6 +1,6 @@
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { CompositeScreenProps, NavigatorScreenParams } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 // Root Stack Navigator
 export type RootStackParamList = {
@@ -60,7 +60,7 @@ export type MainTabParamList = {
   Home: undefined;
   Community: undefined;
   Assistant: undefined;
-  Profile: undefined;
+  MundoNath: undefined;
   MyCare: undefined;
 };
 
@@ -121,10 +121,7 @@ export type OnboardingStep =
   | "interests"
   | "complete";
 
-export type PregnancyStage =
-  | "trying"
-  | "pregnant"
-  | "postpartum";
+export type PregnancyStage = "trying" | "pregnant" | "postpartum";
 
 export type Interest =
   | "nutrition"
@@ -158,12 +155,15 @@ export interface Post {
   authorAvatar?: string;
   content: string;
   imageUrl?: string;
+  videoUrl?: string;
   likesCount: number;
   commentsCount: number;
   createdAt: string;
   groupId?: string;
   isLiked: boolean;
   type?: string;
+  /** Status de revisão: pending | approved | rejected */
+  status?: "pending" | "approved" | "rejected";
 }
 
 export interface Comment {

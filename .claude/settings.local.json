@@ -48,7 +48,8 @@
       "Bash(gem install:*)",
       "Bash(bun start:*)",
       "Bash(ruby --version:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(sort:*)"
     ]
   }
 }

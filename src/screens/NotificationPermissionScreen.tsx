@@ -2,10 +2,21 @@
  * Nossa Maternidade - NotificationPermissionScreen
  * Premium UX inspired by Headspace, Calm, and Flo
  * Pre-permission priming pattern with notification preview
+ *
+ * Refatorado: Mobile-first com componentes extraídos
+ * Responsivo: Adapta para todos os dispositivos
+ *   - iOS: iPhone SE, mini, 14, 15, Pro Max
+ *   - Android: Galaxy A series, Pixel, tablets
  */
 
-import React, { useState } from "react";
-import { View, Text, Pressable } from "react-native";
+import React, { memo, useCallback, useMemo } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   FadeInDown,
@@ -16,7 +27,6 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { IconName } from "../types/icons";
 import {
   registerForPushNotifications,
   initializeNotifications,
@@ -31,122 +41,323 @@ import {
   TYPOGRAPHY,
 } from "../theme/design-system";
 import { RootStackScreenProps } from "../types/navigation";
+import { Button } from "../components/ui/Button";
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 type Props = RootStackScreenProps<"NotificationPermission">;
 
-// Notification preview component - shows how notifications will look
-const NotificationPreview = ({ delay }: { delay: number }) => (
-  <Animated.View
-    entering={SlideInRight.duration(600).delay(delay).springify()}
-    style={{
-      backgroundColor: "rgba(255, 255, 255, 0.95)",
-      borderRadius: RADIUS.xl,
-      padding: SPACING.md,
-      marginBottom: SPACING.sm,
-      flexDirection: "row",
-      alignItems: "center",
-      ...SHADOWS.md,
-      borderWidth: 1,
-      borderColor: "rgba(244, 63, 94, 0.1)",
-    }}
-  >
-    <LinearGradient
-      colors={[COLORS.primary[400], COLORS.primary[500]]}
-      style={{
-        width: 40,
-        height: 40,
-        borderRadius: RADIUS.lg,
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: SPACING.md,
-      }}
-    >
-      <Ionicons name="heart" size={20} color="#FFFFFF" />
-    </LinearGradient>
-    <View style={{ flex: 1 }}>
-      <Text
-        style={{
-          fontSize: 13,
-          fontWeight: "600",
-          color: COLORS.neutral[800],
-          marginBottom: 2,
-        }}
-      >
-        Nossa Maternidade
-      </Text>
-      <Text
-        style={{
-          fontSize: 12,
-          color: COLORS.neutral[600],
-        }}
-        numberOfLines={1}
-      >
-        Bom dia! Como você está se sentindo hoje? 💕
-      </Text>
-    </View>
-    <Text style={{ fontSize: 11, color: COLORS.neutral[400] }}>agora</Text>
-  </Animated.View>
-);
+interface NotificationPreviewProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  message: string;
+  time: string;
+  colors: readonly [string, string];
+  delay: number;
+  isCompact: boolean;
+}
 
-const NotificationPreview2 = ({ delay }: { delay: number }) => (
-  <Animated.View
-    entering={SlideInRight.duration(600).delay(delay).springify()}
-    style={{
-      backgroundColor: "rgba(255, 255, 255, 0.9)",
-      borderRadius: RADIUS.xl,
-      padding: SPACING.md,
-      marginBottom: SPACING.sm,
-      flexDirection: "row",
-      alignItems: "center",
-      ...SHADOWS.sm,
-      borderWidth: 1,
-      borderColor: "rgba(167, 139, 250, 0.1)",
-    }}
-  >
-    <LinearGradient
-      colors={[COLORS.secondary[400], COLORS.secondary[500]]}
+interface BenefitItemProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  text: string;
+  color: string;
+  isCompact: boolean;
+}
+
+
+interface ResponsiveSizes {
+  isCompact: boolean;
+  headerIcon: number;
+  headerPadding: number;
+  bellIconSize: number;
+  titleSize: number;
+  titleLineHeight: number;
+  sectionMargin: number;
+  contentPadding: number;
+}
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+// Breakpoints para responsividade cross-platform
+const BREAKPOINTS = {
+  // Altura (iPhone SE, mini, Android compactos)
+  heightCompact: 700,
+  // Largura (Android narrow como Galaxy A series)
+  widthNarrow: 360,
+} as const;
+
+const NOTIFICATION_PREVIEWS = [
+  {
+    icon: "heart" as const,
+    title: "Nossa Maternidade",
+    message: "Bom dia! Como você está se sentindo hoje? 💕",
+    time: "agora",
+    colors: [COLORS.primary[400], COLORS.primary[500]] as const,
+  },
+  {
+    icon: "sparkles" as const,
+    title: "Sua afirmação do dia",
+    message: "Você é forte e capaz. Confie no processo ✨",
+    time: "8:00",
+    colors: [COLORS.secondary[400], COLORS.secondary[500]] as const,
+  },
+];
+
+const BENEFITS = [
+  { icon: "sunny" as const, text: "Check-in diário às 9h", color: "#F59E0B" },
+  {
+    icon: "sparkles" as const,
+    text: "Afirmações positivas às 8h",
+    color: COLORS.secondary[500],
+  },
+  {
+    icon: "leaf" as const,
+    text: "Lembretes de hábitos às 20h",
+    color: "#10B981",
+  },
+  {
+    icon: "moon" as const,
+    text: "Momento de relaxar às 14:30",
+    color: "#6366F1",
+  },
+];
+
+const ANIMATION_DELAYS = {
+  header: 0,
+  title: 200,
+  subtitle: 300,
+  previews: 500,
+  previewItem1: 600,
+  previewItem2: 750,
+  benefits: 900,
+  buttons: 1100,
+  footer: 1300,
+} as const;
+
+// ============================================================================
+// HOOKS
+// ============================================================================
+
+function useResponsiveSizes(): ResponsiveSizes {
+  const { height, width } = useWindowDimensions();
+
+  return useMemo(() => {
+    // Compact se altura pequena OU largura estreita (Android narrow)
+    const isCompact =
+      height < BREAKPOINTS.heightCompact || width < BREAKPOINTS.widthNarrow;
+
+    return {
+      isCompact,
+      headerIcon: isCompact ? 56 : 80,
+      headerPadding: isCompact ? SPACING.md : SPACING.xl,
+      bellIconSize: isCompact ? 28 : 40,
+      titleSize: isCompact ? 26 : 32,
+      titleLineHeight: isCompact ? 32 : 38,
+      sectionMargin: isCompact ? SPACING.md : SPACING["2xl"],
+      contentPadding: isCompact ? SPACING.md : SPACING.xl,
+    };
+  }, [height, width]);
+}
+
+// ============================================================================
+// SUBCOMPONENTS
+// ============================================================================
+
+/**
+ * Notification preview card - simulates real iOS notification
+ */
+const NotificationPreview = memo(function NotificationPreview({
+  icon,
+  title,
+  message,
+  time,
+  colors,
+  delay,
+  isCompact,
+}: NotificationPreviewProps) {
+  const iconSize = isCompact ? 32 : 40;
+  const iconInnerSize = isCompact ? 16 : 20;
+
+  return (
+    <Animated.View
+      entering={SlideInRight.duration(600).delay(delay).springify()}
+      accessibilityRole="text"
+      accessibilityLabel={`${title}: ${message}`}
       style={{
-        width: 40,
-        height: 40,
-        borderRadius: RADIUS.lg,
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        borderRadius: RADIUS.xl,
+        padding: isCompact ? SPACING.sm : SPACING.md,
+        marginBottom: isCompact ? SPACING.xs : SPACING.sm,
+        flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
-        marginRight: SPACING.md,
+        ...SHADOWS.md,
+        borderWidth: 1,
+        borderColor: `${colors[0]}15`,
       }}
     >
-      <Ionicons name="sparkles" size={20} color="#FFFFFF" />
-    </LinearGradient>
-    <View style={{ flex: 1 }}>
-      <Text
+      <LinearGradient
+        colors={colors}
         style={{
-          fontSize: 13,
-          fontWeight: "600",
-          color: COLORS.neutral[800],
-          marginBottom: 2,
+          width: iconSize,
+          height: iconSize,
+          borderRadius: RADIUS.lg,
+          alignItems: "center",
+          justifyContent: "center",
+          marginRight: isCompact ? SPACING.sm : SPACING.md,
         }}
       >
-        Sua afirmação do dia
-      </Text>
+        <Ionicons name={icon} size={iconInnerSize} color="#FFFFFF" />
+      </LinearGradient>
+
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontSize: isCompact ? 12 : 13,
+            fontWeight: "600",
+            color: COLORS.neutral[800],
+            marginBottom: 1,
+          }}
+        >
+          {title}
+        </Text>
+        <Text
+          style={{
+            fontSize: isCompact ? 11 : 12,
+            color: COLORS.neutral[600],
+          }}
+          numberOfLines={1}
+        >
+          {message}
+        </Text>
+      </View>
+
       <Text
         style={{
-          fontSize: 12,
-          color: COLORS.neutral[600],
+          fontSize: isCompact ? 10 : 11,
+          color: COLORS.neutral[400],
         }}
-        numberOfLines={1}
       >
-        Você é forte e capaz. Confie no processo ✨
+        {time}
       </Text>
+    </Animated.View>
+  );
+});
+
+/**
+ * Benefit item with icon and checkmark
+ */
+const BenefitItem = memo(function BenefitItem({
+  icon,
+  text,
+  color,
+  isCompact,
+}: BenefitItemProps) {
+  const iconContainerSize = isCompact ? 28 : 32;
+  const iconSize = isCompact ? 14 : 16;
+
+  return (
+    <View
+      accessibilityRole="text"
+      accessibilityLabel={text}
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: isCompact ? SPACING.xs : SPACING.sm,
+      }}
+    >
+      <View
+        style={{
+          width: iconContainerSize,
+          height: iconContainerSize,
+          borderRadius: iconContainerSize / 2,
+          backgroundColor: `${color}15`,
+          alignItems: "center",
+          justifyContent: "center",
+          marginRight: isCompact ? SPACING.sm : SPACING.md,
+        }}
+      >
+        <Ionicons name={icon} size={iconSize} color={color} />
+      </View>
+
+      <Text
+        style={{
+          fontSize: isCompact ? 13 : TYPOGRAPHY.bodyMedium.fontSize,
+          color: COLORS.neutral[700],
+          flex: 1,
+        }}
+      >
+        {text}
+      </Text>
+
+      <Ionicons
+        name="checkmark-circle"
+        size={isCompact ? 18 : 20}
+        color={COLORS.semantic.success}
+      />
     </View>
-    <Text style={{ fontSize: 11, color: COLORS.neutral[400] }}>8:00</Text>
-  </Animated.View>
-);
+  );
+});
+
+/**
+ * Header com ícone de sino animado - responsivo
+ */
+const Header = memo(function Header() {
+  const sizes = useResponsiveSizes();
+
+  return (
+    <Animated.View
+      entering={FadeInUp.duration(800).springify()}
+      style={{
+        alignItems: "center",
+        marginBottom: sizes.sectionMargin,
+      }}
+    >
+      <View
+        style={{
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          borderRadius: RADIUS.full,
+          padding: sizes.headerPadding,
+          ...SHADOWS.lg,
+        }}
+      >
+        <LinearGradient
+          colors={[COLORS.primary[400], COLORS.secondary[400]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: sizes.headerIcon,
+            height: sizes.headerIcon,
+            borderRadius: sizes.headerIcon / 2,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons
+            name="notifications"
+            size={sizes.bellIconSize}
+            color="#FFFFFF"
+          />
+        </LinearGradient>
+      </View>
+    </Animated.View>
+  );
+});
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 export default function NotificationPermissionScreen({ navigation }: Props) {
   void navigation;
   const insets = useSafeAreaInsets();
-  const [isLoading, setIsLoading] = useState(false);
+  const sizes = useResponsiveSizes();
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleEnableNotifications = async () => {
+  const handleEnableNotifications = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsLoading(true);
 
@@ -166,15 +377,13 @@ export default function NotificationPermissionScreen({ navigation }: Props) {
       await skipNotificationSetup();
     } finally {
       setIsLoading(false);
-      // Navigation handled by RootNavigator
     }
-  };
+  }, []);
 
-  const handleSkip = async () => {
+  const handleSkip = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await skipNotificationSetup();
-    // Navigation handled by RootNavigator
-  };
+  }, []);
 
   return (
     <LinearGradient
@@ -182,199 +391,136 @@ export default function NotificationPermissionScreen({ navigation }: Props) {
       locations={[0, 0.5, 1]}
       style={{ flex: 1 }}
     >
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: SPACING.xl,
-          paddingTop: insets.top + SPACING["2xl"],
-          paddingBottom: insets.bottom + SPACING.xl,
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: sizes.contentPadding,
+          paddingTop: insets.top + (sizes.isCompact ? SPACING.lg : SPACING["2xl"]),
+          paddingBottom: insets.bottom + SPACING.md,
         }}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
-        {/* Header with bell animation */}
-        <Animated.View
-          entering={FadeInUp.duration(800).springify()}
-          style={{
-            alignItems: "center",
-            marginBottom: SPACING["2xl"],
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              borderRadius: RADIUS.full,
-              padding: SPACING.xl,
-              ...SHADOWS.lg,
-            }}
-          >
-            <LinearGradient
-              colors={[COLORS.primary[400], COLORS.secondary[400]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="notifications" size={40} color="#FFFFFF" />
-            </LinearGradient>
-          </View>
-        </Animated.View>
+        {/* Header com ícone de sino */}
+        <Header />
 
-        {/* Title - REFINADO */}
+        {/* Título */}
         <Animated.View
-          entering={FadeInDown.duration(600).delay(200).springify()}
-          style={{ marginBottom: SPACING.xl }}
+          entering={FadeInDown.duration(600)
+            .delay(ANIMATION_DELAYS.title)
+            .springify()}
+          style={{ marginBottom: sizes.isCompact ? SPACING.md : SPACING.xl }}
         >
           <Text
+            accessibilityRole="header"
             style={{
-              fontSize: 32,
+              fontSize: sizes.titleSize,
               fontWeight: "700",
               color: COLORS.neutral[900],
               textAlign: "center",
               letterSpacing: -0.8,
-              lineHeight: 38,
+              lineHeight: sizes.titleLineHeight,
             }}
           >
             Nunca perca um{"\n"}momento importante 💜
           </Text>
         </Animated.View>
 
-        {/* Subtitle */}
+        {/* Subtítulo */}
         <Animated.View
-          entering={FadeInDown.duration(600).delay(300).springify()}
-          style={{ marginBottom: SPACING["2xl"] }}
+          entering={FadeInDown.duration(600)
+            .delay(ANIMATION_DELAYS.subtitle)
+            .springify()}
+          style={{ marginBottom: sizes.sectionMargin }}
         >
           <Text
             style={{
-              fontSize: TYPOGRAPHY.bodyLarge.fontSize,
+              fontSize: sizes.isCompact ? 14 : TYPOGRAPHY.bodyLarge.fontSize,
               color: COLORS.neutral[600],
               textAlign: "center",
-              lineHeight: 24,
-              paddingHorizontal: SPACING.md,
+              lineHeight: sizes.isCompact ? 20 : 24,
+              paddingHorizontal: sizes.isCompact ? 0 : SPACING.md,
             }}
           >
-            Lembretes carinhosos para cuidar de você durante essa jornada especial
+            Lembretes carinhosos para cuidar de você durante essa jornada
+            especial
           </Text>
         </Animated.View>
 
-        {/* Notification Previews - Like real notifications */}
+        {/* Preview das notificações */}
         <Animated.View
-          entering={FadeIn.duration(400).delay(500)}
+          entering={FadeIn.duration(400).delay(ANIMATION_DELAYS.previews)}
           style={{
-            marginBottom: SPACING["2xl"],
-            paddingHorizontal: SPACING.xs,
+            marginBottom: sizes.sectionMargin,
           }}
         >
-          <NotificationPreview delay={600} />
-          <NotificationPreview2 delay={750} />
-        </Animated.View>
-
-        {/* Benefits List */}
-        <Animated.View
-          entering={FadeInDown.duration(600).delay(900).springify()}
-          style={{
-            backgroundColor: "rgba(255, 255, 255, 0.6)",
-            borderRadius: RADIUS["2xl"],
-            padding: SPACING.lg,
-            marginBottom: SPACING["2xl"],
-          }}
-        >
-          {[
-            { icon: "sunny", text: "Check-in diário às 9h", color: "#F59E0B" },
-            { icon: "sparkles", text: "Afirmações positivas às 8h", color: COLORS.secondary[500] },
-            { icon: "leaf", text: "Lembretes de hábitos às 20h", color: "#10B981" },
-            { icon: "moon", text: "Momento de relaxar às 14:30", color: "#6366F1" },
-          ].map((item, index) => (
-            <View
-              key={index}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingVertical: SPACING.sm,
-              }}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: `${item.color}15`,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: SPACING.md,
-                }}
-              >
-                <Ionicons name={item.icon as IconName} size={16} color={item.color} />
-              </View>
-              <Text
-                style={{
-                  fontSize: TYPOGRAPHY.bodyMedium.fontSize,
-                  color: COLORS.neutral[700],
-                  flex: 1,
-                }}
-              >
-                {item.text}
-              </Text>
-              <Ionicons name="checkmark-circle" size={20} color={COLORS.semantic.success} />
-            </View>
+          {NOTIFICATION_PREVIEWS.map((preview, index) => (
+            <NotificationPreview
+              key={preview.title}
+              {...preview}
+              isCompact={sizes.isCompact}
+              delay={
+                index === 0
+                  ? ANIMATION_DELAYS.previewItem1
+                  : ANIMATION_DELAYS.previewItem2
+              }
+            />
           ))}
         </Animated.View>
 
-        {/* Spacer */}
-        <View style={{ flex: 1 }} />
+        {/* Lista de benefícios */}
+        <Animated.View
+          entering={FadeInDown.duration(600)
+            .delay(ANIMATION_DELAYS.benefits)
+            .springify()}
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.6)",
+            borderRadius: RADIUS["2xl"],
+            padding: sizes.isCompact ? SPACING.md : SPACING.lg,
+            marginBottom: sizes.sectionMargin,
+          }}
+        >
+          {BENEFITS.map((benefit) => (
+            <BenefitItem
+              key={benefit.text}
+              {...benefit}
+              isCompact={sizes.isCompact}
+            />
+          ))}
+        </Animated.View>
 
-        {/* Buttons */}
-        <Animated.View entering={FadeInDown.duration(600).delay(1100).springify()}>
-          {/* Primary Button */}
-          <Pressable
-            onPress={handleEnableNotifications}
+        {/* Spacer flexível - menor em telas pequenas */}
+        <View style={{ flex: 1, minHeight: sizes.isCompact ? 8 : 16 }} />
+
+        {/* Botões de ação */}
+        <Animated.View
+          entering={FadeInDown.duration(600)
+            .delay(ANIMATION_DELAYS.buttons)
+            .springify()}
+        >
+          {/* Botão principal */}
+          <Button
+            variant="accent"
+            size={sizes.isCompact ? "md" : "lg"}
+            icon="notifications"
+            loading={isLoading}
             disabled={isLoading}
-            style={({ pressed }) => ({
-              marginBottom: SPACING.md,
-              opacity: isLoading ? 0.8 : pressed ? 0.9 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
+            fullWidth
+            onPress={handleEnableNotifications}
+            accessibilityLabel="Ativar lembretes de notificação"
           >
-            <LinearGradient
-              colors={[COLORS.primary[500], COLORS.primary[600]]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                borderRadius: RADIUS.xl,
-                paddingVertical: SPACING.lg + 2,
-                alignItems: "center",
-                ...SHADOWS.md,
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name={isLoading ? "hourglass-outline" : "notifications"}
-                  size={20}
-                  color="#FFFFFF"
-                  style={{ marginRight: SPACING.sm }}
-                />
-                <Text
-                  style={{
-                    color: "#FFFFFF",
-                    fontSize: TYPOGRAPHY.labelLarge.fontSize,
-                    fontWeight: "700",
-                  }}
-                >
-                  {isLoading ? "Configurando..." : "Ativar lembretes"}
-                </Text>
-              </View>
-            </LinearGradient>
-          </Pressable>
+            {isLoading ? "Configurando..." : "Ativar lembretes"}
+          </Button>
 
-          {/* Secondary Button */}
+          {/* Botão secundário */}
           <Pressable
             onPress={handleSkip}
             disabled={isLoading}
+            accessibilityRole="button"
+            accessibilityLabel="Configurar lembretes depois"
             style={({ pressed }) => ({
-              paddingVertical: SPACING.md,
+              paddingVertical: sizes.isCompact ? SPACING.sm : SPACING.md,
+              marginTop: sizes.isCompact ? SPACING.xs : SPACING.sm,
               alignItems: "center",
               opacity: pressed ? 0.7 : 1,
             })}
@@ -382,7 +528,7 @@ export default function NotificationPermissionScreen({ navigation }: Props) {
             <Text
               style={{
                 color: COLORS.neutral[500],
-                fontSize: TYPOGRAPHY.bodyMedium.fontSize,
+                fontSize: sizes.isCompact ? 13 : TYPOGRAPHY.bodyMedium.fontSize,
                 fontWeight: "500",
               }}
             >
@@ -390,15 +536,18 @@ export default function NotificationPermissionScreen({ navigation }: Props) {
             </Text>
           </Pressable>
 
-          {/* Privacy note */}
+          {/* Nota de privacidade */}
           <Animated.View
-            entering={FadeIn.duration(400).delay(1300)}
-            style={{ alignItems: "center", marginTop: SPACING.sm }}
+            entering={FadeIn.duration(400).delay(ANIMATION_DELAYS.footer)}
+            style={{
+              alignItems: "center",
+              marginTop: sizes.isCompact ? SPACING.xs : SPACING.sm,
+            }}
           >
             <Text
               style={{
                 color: COLORS.neutral[400],
-                fontSize: 11,
+                fontSize: sizes.isCompact ? 10 : 11,
                 textAlign: "center",
               }}
             >
@@ -406,7 +555,7 @@ export default function NotificationPermissionScreen({ navigation }: Props) {
             </Text>
           </Animated.View>
         </Animated.View>
-      </View>
+      </ScrollView>
     </LinearGradient>
   );
 }

@@ -1,34 +1,46 @@
 /**
- * Nossa Maternidade - Main Tab Navigator
- * Premium glassmorphism design with animated icons
+ * Nossa Maternidade - Main Tab Navigator (Calm FemTech)
+ *
+ * Tabs: Home | Mães | NathIA (centro) | MundoNath | Hábitos
+ * Design com glassmorphism + Manrope font
+ * iOS/Android compatible
  */
 
-import React from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { MainTabParamList } from "../types/navigation";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Platform, Pressable } from "react-native";
+import { BottomTabBarButtonProps, createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import React from "react";
+import { Platform, Pressable, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  COLORS,
-  SPACING,
-  SHADOWS,
-} from "../theme/design-system";
+import { COLORS, SHADOWS, SPACING } from "../theme/design-system";
+import { brand } from "../theme/presets/calmFemtech";
+import { MainTabParamList, MainTabScreenProps } from "../types/navigation";
 
 // Screens
-import HomeScreen from "../screens/HomeScreen";
-import CommunityScreen from "../screens/CommunityScreen";
 import AssistantScreen from "../screens/AssistantScreen";
-import ProfileScreen from "../screens/ProfileScreen";
-import MyCareScreen from "../screens/MyCareScreen";
+import CommunityScreen from "../screens/CommunityScreen";
+import HabitsScreen from "../screens/HabitsScreen";
+import HomeScreen from "../screens/HomeScreen";
+import MundoDaNathScreenOriginal from "../screens/MundoDaNathScreen";
+
+// Wrapper para MundoDaNathScreen (compatibiliza props de Tab com Stack)
+const MundoDaNathScreen = ({ navigation }: MainTabScreenProps<"MundoNath">) => {
+  // Adapta a navegação para o formato esperado pelo MundoDaNathScreen
+  const adaptedNavigation = {
+    ...navigation,
+    goBack: () => navigation.goBack(),
+    navigate: navigation.navigate as never,
+  };
+  return (
+    <MundoDaNathScreenOriginal
+      navigation={adaptedNavigation as never}
+      route={{ key: "MundoDaNath", name: "MundoDaNath" } as never}
+    />
+  );
+};
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -71,14 +83,8 @@ const AnimatedTabIcon = ({
   );
 };
 
-// NathIA Center Button Component
-const NathIACenterButton = ({
-  onPress,
-  focused,
-}: {
-  onPress: () => void;
-  focused: boolean;
-}) => {
+// NathIA Center Button Component (Calm FemTech - azul dominante + label)
+const NathIACenterButton = ({ onPress, focused }: { onPress: () => void; focused: boolean }) => {
   const scale = useSharedValue(1);
 
   const handlePress = async () => {
@@ -95,18 +101,19 @@ const NathIACenterButton = ({
   }));
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable onPress={handlePress} style={{ alignItems: "center" }}>
       <Animated.View
         style={[
           {
             marginTop: -20,
+            alignItems: "center",
             ...SHADOWS.lg,
           },
           animatedStyle,
         ]}
       >
         <LinearGradient
-          colors={[COLORS.primary[500], "#EC4899", COLORS.secondary[500]]}
+          colors={[brand.primary[400], brand.primary[600], brand.accent[400]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{
@@ -122,9 +129,21 @@ const NathIACenterButton = ({
           <Ionicons
             name={focused ? "sparkles" : "sparkles-outline"}
             size={26}
-            color="#FFFFFF"
+            color={COLORS.text.inverse}
           />
         </LinearGradient>
+        {/* Label NathIA sempre visível */}
+        <Text
+          style={{
+            fontSize: 11,
+            fontWeight: "600",
+            fontFamily: "Manrope_600SemiBold",
+            color: focused ? COLORS.primary[500] : COLORS.neutral[400],
+            marginTop: 4,
+          }}
+        >
+          NathIA
+        </Text>
       </Animated.View>
     </Pressable>
   );
@@ -153,10 +172,17 @@ export default function MainTabNavigator() {
         tabBarActiveTintColor: COLORS.primary[500],
         tabBarInactiveTintColor: COLORS.neutral[400],
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: "600",
-          marginTop: 2,
+          fontFamily: "Manrope_600SemiBold",
+          lineHeight: 12,
+          marginTop: 0,
+          marginBottom: Platform.OS === "ios" ? 0 : 4,
         },
+        tabBarItemStyle: {
+          paddingVertical: Platform.OS === "ios" ? 4 : 6,
+        },
+        tabBarShowLabel: true,
         tabBarBackground: () =>
           Platform.OS === "ios" ? (
             <BlurView
@@ -169,7 +195,7 @@ export default function MainTabNavigator() {
                 right: 0,
                 bottom: 0,
                 borderTopWidth: 1,
-                borderTopColor: "rgba(0, 0, 0, 0.05)",
+                borderTopColor: `${COLORS.neutral[900]}0D`, // ~5% opacity
               }}
             />
           ) : (
@@ -194,7 +220,7 @@ export default function MainTabNavigator() {
         options={{
           tabBarLabel: "Home",
           tabBarAccessibilityLabel: "Início - Tela principal do app",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <AnimatedTabIcon
               name={focused ? "home" : "home-outline"}
               focused={focused}
@@ -207,9 +233,9 @@ export default function MainTabNavigator() {
         name="Community"
         component={CommunityScreen}
         options={{
-          tabBarLabel: "MãesValente",
-          tabBarAccessibilityLabel: "MãesValente - Conecte-se com outras mães",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarLabel: "Mães",
+          tabBarAccessibilityLabel: "Mães - Conecte-se com outras mães",
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <AnimatedTabIcon
               name={focused ? "people" : "people-outline"}
               focused={focused}
@@ -222,34 +248,37 @@ export default function MainTabNavigator() {
         name="Assistant"
         component={AssistantScreen}
         options={{
-          tabBarLabel: "",
+          tabBarLabel: "NathIA",
           tabBarAccessibilityLabel: "NathIA - Assistente de inteligência artificial",
-          tabBarIcon: ({ focused }) => (
-            <NathIACenterButton
-              onPress={() => {}}
-              focused={focused}
-            />
-          ),
-          tabBarButton: (props) => (
-            <Pressable
-              {...props}
-              onPress={async (e) => {
-                await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                props.onPress?.(e);
+          tabBarButton: (props: BottomTabBarButtonProps) => (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                paddingTop: Platform.OS === "ios" ? SPACING.sm : 0,
               }}
-            />
+            >
+              <NathIACenterButton
+                onPress={() => {
+                  // Cast para evitar erro de tipagem do GestureResponderEvent
+                  (props.onPress as (() => void) | undefined)?.();
+                }}
+                focused={props.accessibilityState?.selected ?? false}
+              />
+            </View>
           ),
         }}
       />
       <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="MundoNath"
+        component={MundoDaNathScreen}
         options={{
           tabBarLabel: "MundoNath",
-          tabBarAccessibilityLabel: "Mundo da Nath - Conteúdo exclusivo da Nathalia",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarAccessibilityLabel: "Mundo da Nath - Conteúdo exclusivo",
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <AnimatedTabIcon
-              name={focused ? "person" : "person-outline"}
+              name={focused ? "heart" : "heart-outline"}
               focused={focused}
               color={color}
             />
@@ -258,13 +287,13 @@ export default function MainTabNavigator() {
       />
       <Tab.Screen
         name="MyCare"
-        component={MyCareScreen}
+        component={HabitsScreen}
         options={{
-          tabBarLabel: "Meus Cuidados",
-          tabBarAccessibilityLabel: "Meus Cuidados - Bem-estar e autocuidado",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarLabel: "Hábitos",
+          tabBarAccessibilityLabel: "Hábitos - Rotinas de bem-estar",
+          tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <AnimatedTabIcon
-              name={focused ? "heart" : "heart-outline"}
+              name={focused ? "checkbox" : "checkbox-outline"}
               focused={focused}
               color={color}
             />

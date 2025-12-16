@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 const plugin = require("tailwindcss/plugin");
+const themeColors = require("./src/theme/tailwind-bridge.cjs");
 
 module.exports = {
   // NOTE: Update this to include the paths to all of your component files.
@@ -188,12 +189,11 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["DMSans_400Regular"],
-        medium: ["DMSans_500Medium"],
-        semibold: ["DMSans_600SemiBold"],
-        bold: ["DMSans_700Bold"],
-        serif: ["DMSerifDisplay_400Regular"],
-        serifItalic: ["DMSerifDisplay_400Regular_Italic"],
+        sans: ["Manrope_400Regular"],
+        medium: ["Manrope_500Medium"],
+        semibold: ["Manrope_600SemiBold"],
+        bold: ["Manrope_700Bold"],
+        extrabold: ["Manrope_800ExtraBold"],
       },
       fontSize: {
         xs: ["11px", { lineHeight: "16px", letterSpacing: "0.01em" }],

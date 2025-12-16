@@ -7,38 +7,39 @@
  * 4. Authenticated → MainTabs + Modal Screens
  */
 
-import React, { useEffect, useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../types/navigation";
-import { useAppStore } from "../state/store";
-import { useNathIAOnboardingStore } from "../state/nathia-onboarding-store";
+import React, { useEffect, useState } from "react";
 import { hasAskedNotificationPermission } from "../services/notifications";
+import { useNathIAOnboardingStore } from "../state/nathia-onboarding-store";
+import { useAppStore } from "../state/store";
 import { COLORS } from "../theme/design-system";
+import { RootStackParamList } from "../types/navigation";
 
 // Auth & Onboarding Screens
 import LoginScreen from "../screens/LoginScreen";
-import NotificationPermissionScreen from "../screens/NotificationPermissionScreen";
 import NathIAOnboardingScreen from "../screens/NathIAOnboardingScreen";
+import NotificationPermissionScreen from "../screens/NotificationPermissionScreen";
 
 // Main Navigator
 import MainTabNavigator from "./MainTabNavigator";
 
 // Feature Screens
-import PostDetailScreen from "../screens/PostDetailScreen";
-import NewPostScreen from "../screens/NewPostScreen";
-import DailyLogScreen from "../screens/DailyLogScreen";
 import AffirmationsScreen from "../screens/AffirmationsScreen";
+import ComingSoonScreen from "../screens/ComingSoonScreen";
+import DailyLogScreen from "../screens/DailyLogScreen";
 import HabitsScreen from "../screens/HabitsScreen";
 import LegalScreen from "../screens/LegalScreen";
-import ComingSoonScreen from "../screens/ComingSoonScreen";
+import NewPostScreen from "../screens/NewPostScreen";
+import PostDetailScreen from "../screens/PostDetailScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 
 // New Premium Screens
 import BreathingExerciseScreen from "../screens/BreathingExerciseScreen";
-import RestSoundsScreen from "../screens/RestSoundsScreen";
 import HabitsEnhancedScreen from "../screens/HabitsEnhancedScreen";
 import MaeValenteProgressScreen from "../screens/MaeValenteProgressScreen";
-import Paywall from "../screens/PaywallScreen";
 import MundoDaNathScreen from "../screens/MundoDaNathScreen";
+import Paywall from "../screens/PaywallScreen";
+import RestSoundsScreen from "../screens/RestSoundsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -72,7 +73,8 @@ export default function RootNavigator() {
   // Flow: Login → NotificationPermission → NathIAOnboarding → MainApp
   const shouldShowLogin = !isAuthenticated;
   const shouldShowNotificationPermission = isAuthenticated && !notificationSetupDone;
-  const shouldShowNathIAOnboarding = isAuthenticated && notificationSetupDone && !isNathIAOnboardingComplete;
+  const shouldShowNathIAOnboarding =
+    isAuthenticated && notificationSetupDone && !isNathIAOnboardingComplete;
   const shouldShowMainApp = isAuthenticated && notificationSetupDone && isNathIAOnboardingComplete;
 
   return (
@@ -85,11 +87,7 @@ export default function RootNavigator() {
     >
       {/* Stage 1: Login */}
       {shouldShowLogin && (
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ animation: "fade" }}
-        />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ animation: "fade" }} />
       )}
 
       {/* Stage 2: Notification Permission */}
@@ -171,6 +169,17 @@ export default function RootNavigator() {
             options={{
               headerShown: false,
               animation: "slide_from_right",
+            }}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={ProfileScreen}
+            options={{
+              headerShown: true,
+              headerTitle: "Perfil",
+              headerBackTitle: "Voltar",
+              headerTintColor: COLORS.primary[600],
+              headerStyle: { backgroundColor: COLORS.background.primary },
             }}
           />
           <Stack.Screen

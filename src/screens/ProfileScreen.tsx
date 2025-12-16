@@ -1,13 +1,13 @@
-import React from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { MainTabScreenProps } from "../types/navigation";
-import { useAppStore } from "../state/store";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import React from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
+import { useAppStore } from "../state/store";
+import { RootStackScreenProps } from "../types/navigation";
 
 interface MenuItem {
   id: string;
@@ -26,7 +26,7 @@ interface MenuItem {
  *
  * @see docs/8PT_GRID_SYSTEM.md
  */
-export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profile">) {
+export default function ProfileScreen({ navigation }: RootStackScreenProps<"EditProfile">) {
   const insets = useSafeAreaInsets();
   const { colors, theme, setTheme } = useTheme();
   const user = useAppStore((s) => s.user);
@@ -34,10 +34,25 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
 
   const MENU_ITEMS: MenuItem[] = [
     { id: "edit", label: "Editar perfil", icon: "person-outline", color: colors.neutral[500] },
-    { id: "notifications", label: "Notificações", icon: "notifications-outline", color: colors.neutral[500] },
+    {
+      id: "notifications",
+      label: "Notificações",
+      icon: "notifications-outline",
+      color: colors.neutral[500],
+    },
     { id: "privacy", label: "Privacidade", icon: "shield-outline", color: colors.neutral[500] },
-    { id: "help", label: "Ajuda e suporte", icon: "help-circle-outline", color: colors.neutral[500] },
-    { id: "about", label: "Sobre o app", icon: "information-circle-outline", color: colors.neutral[500] },
+    {
+      id: "help",
+      label: "Ajuda e suporte",
+      icon: "help-circle-outline",
+      color: colors.neutral[500],
+    },
+    {
+      id: "about",
+      label: "Sobre o app",
+      icon: "information-circle-outline",
+      color: colors.neutral[500],
+    },
   ];
 
   const getStageLabel = () => {
@@ -45,9 +60,9 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
       case "trying":
         return "Tentando engravidar";
       case "pregnant":
-        return "Gravida";
+        return "Grávida";
       case "postpartum":
-        return "Pos-parto";
+        return "Pós-parto";
       default:
         return "";
     }
@@ -93,7 +108,8 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
       },
       about: {
         title: "Sobre o App",
-        description: "Nossa Maternidade é um app criado com carinho por Nathália Valente para acompanhar você em toda a jornada da maternidade.",
+        description:
+          "Nossa Maternidade é um app criado com carinho por Nathália Valente para acompanhar você em toda a jornada da maternidade.",
         emoji: "💜",
       },
     };
@@ -138,7 +154,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
                 shadowColor: colors.neutral[900],
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.04,
-                shadowRadius: 8
+                shadowRadius: 8,
               }}
             >
               <Ionicons name="settings-outline" size={24} color={colors.neutral[500]} />
@@ -154,7 +170,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
               shadowColor: colors.neutral[900],
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.06,
-              shadowRadius: 24
+              shadowRadius: 24,
             }}
           >
             <View className="items-center">
@@ -164,7 +180,9 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
               >
                 <Ionicons name="person" size={52} color={colors.neutral[400]} />
               </View>
-              <Text className="text-warmGray-800 text-2xl font-serif mb-3">{user?.name || "Usuaria"}</Text>
+              <Text className="text-warmGray-800 text-2xl font-serif mb-3">
+                {user?.name || "Usuaria"}
+              </Text>
               <View className="flex-row items-center">
                 <View
                   className="px-4 py-2 rounded-full"
@@ -208,7 +226,9 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
               {user.interests.map((interest, index) => (
                 <Animated.View
                   key={interest}
-                  entering={FadeInUp.delay(300 + index * 50).duration(600).springify()}
+                  entering={FadeInUp.delay(300 + index * 50)
+                    .duration(600)
+                    .springify()}
                 >
                   <View
                     className="px-5 py-2.5 mr-2 mb-2"
@@ -218,7 +238,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
                       shadowColor: colors.neutral[900],
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.04,
-                      shadowRadius: 8
+                      shadowRadius: 8,
                     }}
                   >
                     <Text className="text-warmGray-700 text-base capitalize">
@@ -245,7 +265,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
               shadowColor: colors.neutral[900],
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.04,
-              shadowRadius: 12
+              shadowRadius: 12,
             }}
           >
             <View className="flex-row justify-between">
@@ -262,7 +282,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
                   paddingVertical: 16,
                   marginRight: 8,
                   borderWidth: 2,
-                  borderColor: theme === "light" ? colors.primary[500] : "transparent"
+                  borderColor: theme === "light" ? colors.primary[500] : "transparent",
                 }}
               >
                 <Ionicons
@@ -291,7 +311,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
                   paddingVertical: 16,
                   marginHorizontal: 8,
                   borderWidth: 2,
-                  borderColor: theme === "dark" ? colors.primary[500] : "transparent"
+                  borderColor: theme === "dark" ? colors.primary[500] : "transparent",
                 }}
               >
                 <Ionicons
@@ -320,7 +340,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
                   paddingVertical: 16,
                   marginLeft: 8,
                   borderWidth: 2,
-                  borderColor: theme === "system" ? colors.primary[500] : "transparent"
+                  borderColor: theme === "system" ? colors.primary[500] : "transparent",
                 }}
               >
                 <Ionicons
@@ -340,11 +360,8 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
         </Animated.View>
 
         {/* Menu Items */}
-        <Animated.View
-          entering={FadeInUp.delay(400).duration(600).springify()}
-          className="px-6"
-        >
-          <Text className="text-warmGray-800 text-xl font-semibold mb-4">Configuracoes</Text>
+        <Animated.View entering={FadeInUp.delay(400).duration(600).springify()} className="px-6">
+          <Text className="text-warmGray-800 text-xl font-semibold mb-4">Configurações</Text>
           <View
             style={{
               backgroundColor: colors.background.card,
@@ -353,7 +370,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
               shadowColor: colors.neutral[900],
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.04,
-              shadowRadius: 12
+              shadowRadius: 12,
             }}
           >
             {MENU_ITEMS.map((item, index) => (
@@ -391,7 +408,7 @@ export default function ProfileScreen({ navigation }: MainTabScreenProps<"Profil
               paddingVertical: 18,
               paddingHorizontal: 20,
               borderWidth: 1.5,
-              borderColor: colors.primary[200]
+              borderColor: colors.primary[200],
             }}
           >
             <Ionicons name="log-out-outline" size={22} color={colors.primary[500]} />

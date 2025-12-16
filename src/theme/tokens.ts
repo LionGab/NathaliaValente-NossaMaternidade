@@ -30,16 +30,16 @@ export const brand = {
    * - Uso: superfícies, navegação, estrutura, elementos principais
    */
   primary: {
-    50: "#F7FBFD",   // Background principal
-    100: "#E8F3F9",  // Highlights, cards
-    200: "#DCE9F1",  // Border subtle
-    300: "#B4D7E8",  // Hover states
-    400: "#96C7DE",  // Active elements
-    500: "#7DB9D5",  // Principal - elementos destacados
-    600: "#5BA3C7",  // CTA secundário
-    700: "#4488AB",  // Links, ícones
-    800: "#376E8C",  // Textos sobre claro
-    900: "#2B576D",  // Headings
+    50: "#F7FBFD", // Background principal
+    100: "#E8F3F9", // Highlights, cards
+    200: "#DCE9F1", // Border subtle
+    300: "#B4D7E8", // Hover states
+    400: "#96C7DE", // Active elements
+    500: "#7DB9D5", // Principal - elementos destacados
+    600: "#5BA3C7", // CTA secundário
+    700: "#4488AB", // Links, ícones
+    800: "#376E8C", // Textos sobre claro
+    900: "#2B576D", // Headings
   },
 
   /**
@@ -49,16 +49,16 @@ export const brand = {
    * - REGRA: usar pontualmente (máx 10-15% da tela)
    */
   accent: {
-    50: "#FFF1F5",   // Background accent suave
-    100: "#FFE4EC",  // Highlight rosa
-    200: "#FECDD6",  // Border rosa
-    300: "#FDA4B8",  // Hover
-    400: "#FB7190",  // Active
-    500: "#F4258C",  // CTA PRINCIPAL - destaque máximo
-    600: "#DB1F7D",  // CTA pressed
-    700: "#B8196A",  // Links rosa
-    800: "#961456",  // Text accent
-    900: "#7A1047",  // Heading accent (raro)
+    50: "#FFF1F5", // Background accent suave
+    100: "#FFE4EC", // Highlight rosa
+    200: "#FECDD6", // Border rosa
+    300: "#FDA4B8", // Hover
+    400: "#FB7190", // Active
+    500: "#F4258C", // CTA PRINCIPAL - destaque máximo
+    600: "#DB1F7D", // CTA pressed
+    700: "#B8196A", // Links rosa
+    800: "#961456", // Text accent
+    900: "#7A1047", // Heading accent (raro)
   },
 
   /**
@@ -72,7 +72,7 @@ export const brand = {
     200: "#E9D5FF",
     300: "#D8B4FE",
     400: "#C084FC",
-    500: "#A855F7",  // Principal
+    500: "#A855F7", // Principal
     600: "#9333EA",
     700: "#7C3AED",
     800: "#6B21A8",
@@ -264,38 +264,53 @@ export const feeling = {
 // ===========================================
 
 export const typography = {
+  /**
+   * Manrope - Fonte única do app
+   * Geometric sans-serif com personalidade amigável
+   * Excelente legibilidade em mobile
+   */
   fontFamily: {
-    sans: "DMSans_400Regular",
-    sansMedium: "DMSans_500Medium",
-    sansSemibold: "DMSans_600SemiBold",
-    sansBold: "DMSans_700Bold",
-    serif: "DMSerifDisplay_400Regular",
+    base: "Manrope_400Regular",
+    medium: "Manrope_500Medium",
+    semibold: "Manrope_600SemiBold",
+    bold: "Manrope_700Bold",
+    extrabold: "Manrope_800ExtraBold",
+    // Aliases para compatibilidade
+    sans: "Manrope_400Regular",
+    sansMedium: "Manrope_500Medium",
+    sansSemibold: "Manrope_600SemiBold",
+    sansBold: "Manrope_700Bold",
+    // Serif não existe mais - usar bold para destaque
+    serif: "Manrope_700Bold",
   },
 
-  // Display (títulos hero)
-  displayLarge: { fontSize: 57, lineHeight: 64, fontWeight: "400" as const },
-  displayMedium: { fontSize: 45, lineHeight: 52, fontWeight: "400" as const },
-  displaySmall: { fontSize: 36, lineHeight: 44, fontWeight: "400" as const },
+  // Display (títulos hero) - Escala Calm FemTech
+  displayLarge: { fontSize: 28, lineHeight: 34, fontWeight: "400" as const },
+  displayMedium: { fontSize: 24, lineHeight: 30, fontWeight: "400" as const },
+  displaySmall: { fontSize: 22, lineHeight: 28, fontWeight: "400" as const },
 
-  // Headline (seções)
-  headlineLarge: { fontSize: 32, lineHeight: 40, fontWeight: "600" as const },
-  headlineMedium: { fontSize: 28, lineHeight: 36, fontWeight: "600" as const },
-  headlineSmall: { fontSize: 24, lineHeight: 32, fontWeight: "600" as const },
+  // Headline (seções) - h1, h2, h3
+  headlineLarge: { fontSize: 22, lineHeight: 28, fontWeight: "600" as const }, // h1
+  headlineMedium: { fontSize: 18, lineHeight: 24, fontWeight: "600" as const }, // h2
+  headlineSmall: { fontSize: 16, lineHeight: 22, fontWeight: "600" as const }, // h3
 
-  // Title (cards)
-  titleLarge: { fontSize: 22, lineHeight: 28, fontWeight: "600" as const },
-  titleMedium: { fontSize: 18, lineHeight: 24, fontWeight: "600" as const },
+  // Title (cards, subtítulos)
+  titleLarge: { fontSize: 18, lineHeight: 24, fontWeight: "600" as const },
+  titleMedium: { fontSize: 16, lineHeight: 22, fontWeight: "600" as const },
   titleSmall: { fontSize: 14, lineHeight: 20, fontWeight: "600" as const },
 
-  // Body (texto corrido)
-  bodyLarge: { fontSize: 17, lineHeight: 26, fontWeight: "400" as const },
-  bodyMedium: { fontSize: 15, lineHeight: 22, fontWeight: "400" as const },
-  bodySmall: { fontSize: 13, lineHeight: 18, fontWeight: "400" as const },
+  // Body (texto corrido) - Escala principal
+  bodyLarge: { fontSize: 16, lineHeight: 24, fontWeight: "400" as const }, // body
+  bodyMedium: { fontSize: 15, lineHeight: 22, fontWeight: "400" as const }, // body (padrão)
+  bodySmall: { fontSize: 14, lineHeight: 20, fontWeight: "400" as const }, // bodySm
 
-  // Label (botões, tags)
-  labelLarge: { fontSize: 15, lineHeight: 20, fontWeight: "600" as const },
+  // Label (botões, tags, inputs)
+  labelLarge: { fontSize: 14, lineHeight: 20, fontWeight: "600" as const }, // label
   labelMedium: { fontSize: 13, lineHeight: 18, fontWeight: "600" as const },
-  labelSmall: { fontSize: 11, lineHeight: 16, fontWeight: "600" as const },
+  labelSmall: { fontSize: 12, lineHeight: 16, fontWeight: "600" as const }, // caption
+
+  // Caption (legendas, hints) - alias para labelSmall
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: "400" as const },
 } as const;
 
 // ===========================================

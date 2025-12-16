@@ -2,7 +2,7 @@
  * Hook para gerenciar tema (light/dark)
  * Integra com useAppStore para persistência
  *
- * Usa tokens.ts como fonte única de verdade (azul + rosa híbrido)
+ * Usa calmFemtech preset como fonte única de verdade
  */
 
 import React, { useMemo } from "react";
@@ -10,18 +10,21 @@ import { useColorScheme } from "react-native";
 import { useAppStore } from "../state/store";
 import { COLORS, COLORS_DARK } from "../theme/design-system";
 import {
-  brand,
   neutral,
   feeling,
   typography,
   spacing,
   radius,
   shadows,
-  gradients,
   components,
   layout,
   getThemeTokens,
 } from "../theme/tokens";
+import {
+  brand,
+  gradients,
+  getPresetTokens,
+} from "../theme/presets/calmFemtech";
 
 export type ThemeMode = "light" | "dark" | "system";
 
@@ -46,8 +49,11 @@ export function useTheme() {
   // Retorna as cores baseadas no tema (usando design-system.ts para compat)
   const colors = shouldUseDark ? COLORS_DARK : COLORS;
 
-  // Novos tokens semânticos (azul + rosa híbrido)
-  const tokens = useMemo(() => getThemeTokens(shouldUseDark ? "dark" : "light"), [shouldUseDark]);
+  // Tokens legados (compatibilidade)
+  const legacyTokens = useMemo(() => getThemeTokens(shouldUseDark ? "dark" : "light"), [shouldUseDark]);
+
+  // Novos tokens calmFemtech (fonte de verdade)
+  const presetTokens = useMemo(() => getPresetTokens(shouldUseDark ? "dark" : "light"), [shouldUseDark]);
 
   return {
     // Compat com código existente
@@ -60,19 +66,29 @@ export function useTheme() {
       setTheme(newTheme);
     },
 
-    // Novos tokens semânticos (Fase 2+)
-    tokens,
+    // =========================================
+    // Calm FemTech Preset (NOVA API - usar esta)
+    // =========================================
+    preset: presetTokens,
     brand,
-    surface: tokens.surface,
-    text: tokens.text,
-    semantic: tokens.semantic,
+    surface: presetTokens.surface,
+    text: presetTokens.text,
+    semantic: presetTokens.semantic,
+    border: presetTokens.border,
+    button: presetTokens.button,
+    card: presetTokens.card,
+    gradients,
+
+    // =========================================
+    // Tokens legados (compatibilidade)
+    // =========================================
+    tokens: legacyTokens,
     neutral,
     feeling,
     typography,
     spacing,
     radius,
     shadows,
-    gradients,
     components,
     layout,
   };
