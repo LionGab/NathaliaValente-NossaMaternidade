@@ -25,6 +25,7 @@
     "clean": "node scripts/clean-cache.js",
     "clean:all": "bun run clean && rm -rf node_modules bun.lock && bun install",
     "setup-dev": "bash scripts/setup-dev.sh",
+    "setup-mac": "bash scripts/setup-mac.sh",
     "fix:ios": "bash scripts/fix-ios-pods.sh",
     "eas": "npx eas-cli",
     "eas:build": "npx eas-cli build",
