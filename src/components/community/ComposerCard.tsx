@@ -1,10 +1,5 @@
 /**
- * ComposerCard - Card unificado para criar novo post
- *
- * Design: Facebook/Instagram style
- * - Card único com todas as seções
- * - Avatar + prompt + ações + tópicos integrados
- * - Visual limpo e profissional
+ * ComposerCard - Card para criar novo post + tópicos
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -22,124 +17,103 @@ interface ComposerCardProps {
 export const ComposerCard: React.FC<ComposerCardProps> = React.memo(({ onPress }) => {
   const { colors, isDark, brand } = useTheme();
 
-  // Theme colors
-  const cardBg = isDark ? colors.neutral[800] : COLORS.neutral[0];
-  const borderColor = isDark ? colors.neutral[700] : COLORS.neutral[200];
-  const textPrimary = isDark ? colors.neutral[100] : colors.neutral[900];
   const textSecondary = isDark ? colors.neutral[400] : COLORS.text.secondary;
-  const avatarBg = isDark ? colors.primary[900] : COLORS.primary[100];
+  const textMain = isDark ? colors.neutral[100] : colors.neutral[900];
 
-  const handlePress = async () => {
+  const handleTopicPress = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onPress();
   };
 
-  const getTopicStyle = (isAccent: boolean) => {
+  const getTopicColors = (isAccent: boolean) => {
     const color = isAccent
-      ? isDark ? brand.accent[400] : brand.accent[600]
-      : isDark ? colors.primary[400] : colors.primary[600];
+      ? isDark ? brand.accent[300] : brand.accent[500]
+      : isDark ? colors.primary[300] : colors.primary[500];
 
     const bg = isAccent
-      ? isDark ? `${brand.accent[500]}15` : `${brand.accent[500]}08`
-      : isDark ? `${colors.primary[500]}15` : `${colors.primary[500]}08`;
+      ? isDark ? `${brand.accent[500]}15` : brand.accent[50]
+      : isDark ? `${colors.primary[500]}15` : colors.primary[50];
 
-    const borderClr = isAccent
+    const border = isAccent
       ? isDark ? brand.accent[700] : brand.accent[200]
       : isDark ? colors.primary[700] : colors.primary[200];
 
-    return { color, bg, borderClr };
+    return { color, bg, border };
   };
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.container}>
+      {/* Card principal */}
       <Pressable
-        onPress={handlePress}
+        onPress={onPress}
         style={({ pressed }) => [
           styles.card,
           {
-            backgroundColor: cardBg,
-            borderColor,
-            opacity: pressed ? 0.97 : 1,
+            backgroundColor: isDark ? COLORS.neutral[800] : COLORS.neutral[0],
+            borderColor: isDark ? COLORS.neutral[700] : COLORS.neutral[100],
+            opacity: pressed ? 0.95 : 1,
             transform: [{ scale: pressed ? 0.995 : 1 }],
           },
         ]}
       >
-        {/* === SEÇÃO 1: Input Row === */}
-        <View style={styles.inputSection}>
-          <View style={[styles.avatar, { backgroundColor: avatarBg }]}>
-            <Ionicons name="person" size={20} color={colors.primary[500]} />
+        <View style={styles.inputRow}>
+          <View style={styles.avatar}>
+            <Ionicons name="person" size={20} color={COLORS.primary[500]} />
           </View>
-          <Text style={[styles.inputText, { color: textSecondary }]}>
+          <Text style={[styles.placeholder, { color: textSecondary }]}>
             No que você está pensando?
           </Text>
         </View>
 
-        {/* === SEÇÃO 2: Ações (Foto/Vídeo) === */}
-        <View style={[styles.actionsSection, { borderTopColor: borderColor }]}>
-          <Pressable
-            onPress={handlePress}
-            style={({ pressed }) => [
-              styles.actionBtn,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Ionicons name="image-outline" size={22} color={colors.primary[500]} />
-            <Text style={[styles.actionLabel, { color: colors.primary[600] }]}>Foto</Text>
-          </Pressable>
+        <View
+          style={[
+            styles.separator,
+            { backgroundColor: isDark ? COLORS.neutral[700] : COLORS.neutral[100] },
+          ]}
+        />
 
-          <View style={[styles.actionDivider, { backgroundColor: borderColor }]} />
-
-          <Pressable
-            onPress={handlePress}
-            style={({ pressed }) => [
-              styles.actionBtn,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Ionicons name="videocam-outline" size={22} color={brand.accent[500]} />
-            <Text style={[styles.actionLabel, { color: brand.accent[600] }]}>Vídeo</Text>
-          </Pressable>
-        </View>
-
-        {/* === SEÇÃO 3: Tópicos === */}
-        <View style={[styles.topicsSection, { borderTopColor: borderColor }]}>
-          <View style={styles.topicsHeader}>
-            <Ionicons
-              name="chatbubbles-outline"
-              size={16}
-              color={textSecondary}
-            />
-            <Text style={[styles.topicsLabel, { color: textPrimary }]}>
-              Sobre o que você quer falar?
-            </Text>
+        <View style={styles.actionsRow}>
+          <View style={styles.action}>
+            <Ionicons name="image" size={20} color={colors.primary[500]} />
+            <Text style={[styles.actionText, { color: colors.primary[500] }]}>Foto</Text>
           </View>
-
-          <View style={styles.topicsGrid}>
-            {COMMUNITY_TOPICS.map((topic) => {
-              const { color, bg, borderClr } = getTopicStyle(topic.accent);
-
-              return (
-                <Pressable
-                  key={topic.label}
-                  onPress={handlePress}
-                  style={({ pressed }) => [
-                    styles.topicChip,
-                    {
-                      backgroundColor: bg,
-                      borderColor: borderClr,
-                      opacity: pressed ? 0.7 : 1,
-                      transform: [{ scale: pressed ? 0.95 : 1 }],
-                    },
-                  ]}
-                >
-                  <Ionicons name={topic.icon} size={14} color={color} />
-                  <Text style={[styles.topicText, { color }]}>{topic.label}</Text>
-                </Pressable>
-              );
-            })}
+          <View style={styles.action}>
+            <Ionicons name="videocam" size={20} color={brand.accent[500]} />
+            <Text style={[styles.actionText, { color: brand.accent[500] }]}>Vídeo</Text>
           </View>
         </View>
       </Pressable>
+
+      {/* Tópicos */}
+      <View style={styles.topicsSection}>
+        <Text style={[styles.topicsTitle, { color: textMain }]}>
+          Sobre o que você quer falar?
+        </Text>
+        <View style={styles.topicsGrid}>
+          {COMMUNITY_TOPICS.map((topic) => {
+            const { color, bg, border } = getTopicColors(topic.accent);
+
+            return (
+              <Pressable
+                key={topic.label}
+                onPress={handleTopicPress}
+                style={({ pressed }) => [
+                  styles.topicChip,
+                  {
+                    backgroundColor: bg,
+                    borderColor: border,
+                    opacity: pressed ? 0.85 : 1,
+                    transform: [{ scale: pressed ? 0.97 : 1 }],
+                  },
+                ]}
+              >
+                <Ionicons name={topic.icon} size={16} color={color} style={styles.topicIcon} />
+                <Text style={[styles.topicText, { color }]}>{topic.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
 });
@@ -147,94 +121,75 @@ export const ComposerCard: React.FC<ComposerCardProps> = React.memo(({ onPress }
 ComposerCard.displayName = "ComposerCard";
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginBottom: SPACING["2xl"], // 24pt antes da seção de posts
+  container: {
+    marginBottom: SPACING.xl,
   },
-
   card: {
-    borderRadius: RADIUS.xl, // 16pt
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
     borderWidth: 1,
     ...SHADOWS.sm,
-    overflow: "hidden",
   },
-
-  // === INPUT SECTION ===
-  inputSection: {
+  inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.lg,
-    gap: SPACING.md,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary[100],
     alignItems: "center",
     justifyContent: "center",
+    marginRight: SPACING.md,
   },
-  inputText: {
+  placeholder: {
     flex: 1,
     fontSize: 15,
     fontFamily: "Manrope_500Medium",
   },
-
-  // === ACTIONS SECTION ===
-  actionsSection: {
+  separator: {
+    height: 1,
+    marginVertical: SPACING.md,
+  },
+  actionsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-evenly",
-    borderTopWidth: 1,
-    paddingVertical: SPACING.md,
+    justifyContent: "space-around",
   },
-  actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.xl,
-    gap: SPACING.sm,
-  },
-  actionLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    fontFamily: "Manrope_600SemiBold",
-  },
-  actionDivider: {
-    width: 1,
-    height: 24,
-  },
-
-  // === TOPICS SECTION ===
-  topicsSection: {
-    borderTopWidth: 1,
-    padding: SPACING.lg,
-  },
-  topicsHeader: {
+  action: {
     flexDirection: "row",
     alignItems: "center",
     gap: SPACING.xs,
-    marginBottom: SPACING.md,
   },
-  topicsLabel: {
+  actionText: {
     fontSize: 13,
     fontWeight: "600",
     fontFamily: "Manrope_600SemiBold",
   },
+  topicsSection: {
+    marginTop: SPACING.xl,
+  },
+  topicsTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    fontFamily: "Manrope_600SemiBold",
+    marginBottom: SPACING.md,
+  },
   topicsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: SPACING.md,
-    rowGap: SPACING.sm,
+    gap: SPACING.sm,
   },
   topicChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: SPACING.md + 2,
+    paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    gap: SPACING.xs + 2,
+  },
+  topicIcon: {
+    marginRight: 6,
   },
   topicText: {
     fontSize: 13,
