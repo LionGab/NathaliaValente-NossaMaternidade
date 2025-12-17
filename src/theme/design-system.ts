@@ -132,6 +132,21 @@ export const COLORS = {
   },
 
   // =========================================
+  // SURFACE COLORS (Soft backgrounds for cards)
+  // =========================================
+  /**
+   * Superfícies suaves para cards temáticos
+   * - Tons pastéis muito claros
+   */
+  surface: {
+    roseSoft: "#FDF0F0",    // Rosa muito suave
+    peachSoft: "#FDF6F2",   // Pêssego muito suave
+    lilacBorder: "#E0D4F0", // Borda lilás
+    roseBorder: "#F5E0E0",  // Borda rosa
+    blueBorder: "#D6E6F2",  // Borda azul
+  },
+
+  // =========================================
   // TEXT COLORS
   // =========================================
 
@@ -180,6 +195,24 @@ export const COLORS = {
     cansada: "#BAE6FD", // Azul pastel (nuvem)
     indisposta: "#DDD6FE", // Lavanda (chuva)
     amada: "#FECDD3", // Rosa pastel (coração)
+  },
+
+  // =========================================
+  // MOOD COLORS (Daily Log - Humores)
+  // =========================================
+  /**
+   * Cores para seleção de humor no registro diário
+   * - Cores vibrantes para identificação rápida
+   */
+  mood: {
+    happy: "#10B981",     // Verde esmeralda (feliz)
+    calm: "#6366F1",      // Índigo (calma)
+    energetic: "#F59E0B", // Âmbar (energética)
+    anxious: "#EF4444",   // Vermelho (ansiosa)
+    sad: "#3B82F6",       // Azul (triste)
+    irritated: "#F97316", // Laranja (irritada)
+    sensitive: "#EC4899", // Rosa (sensível)
+    tired: "#8B5CF6",     // Violeta (cansada)
   },
 
   // =========================================
@@ -782,6 +815,64 @@ export const GRADIENTS = {
 
   glass: ["rgba(255,255,255,0.8)", "rgba(247,251,253,0.4)"],
   shimmer: ["rgba(255,255,255,0)", "rgba(255,255,255,0.5)", "rgba(255,255,255,0)"],
+
+  // =========================================
+  // SEMANTIC GRADIENTS (Habits, Progress)
+  // =========================================
+
+  successGradient: ["#10B981", "#5A9D68", "#4A8C58"],  // Verde sucesso
+  streakBg: "#FEF3C7",         // Fundo do streak (âmbar claro)
+  streakIcon: "#F59E0B",       // Ícone do streak
+  streakText: "#B45309",       // Texto do streak
+  completionLight: "#D4EDD9",  // Verde claro para progresso
+  completionMedium: "#A7D4B4", // Verde médio para progresso
+
+  // =========================================
+  // BREATHING EXERCISE COLORS
+  // =========================================
+
+  breathing: {
+    box: {
+      color: "#60A5FA",
+      bgColors: ["#DBEAFE", "#BFDBFE", "#93C5FD"] as const,
+    },
+    technique478: {
+      bgColors: ["#EDE9FE", "#DDD6FE", "#C4B5FD"] as const,
+    },
+    calm: {
+      bgColors: ["#DCFCE7", "#BBF7D0", "#86EFAC"] as const,
+    },
+  },
+
+  // NathIA Onboarding gradient
+  nathiaOnboarding: ["#FFF5F7", "#FEF3F2"] as const,
+
+  // Paywall pink gradients
+  paywallPink: ["#FDF2F8", "#FCE7F3", "#FBCFE8"] as const,
+
+  // Cycle phase colors (menstrual cycle tracking)
+  cycle: {
+    fertile: "#F472B6",       // Rosa (fase fértil)
+    menstrual: "#E11D48",     // Vermelho (menstruação)
+    follicular: "#8B5CF6",    // Violeta (folicular)
+    ovulation: "#A855F7",     // Roxo (ovulação)
+    luteal: "#EC4899",        // Pink (lútea)
+  },
+
+  // Rest/Sleep mode (dark theme)
+  rest: {
+    bgPrimary: "#1F2937",
+    bgSecondary: "#111827",
+    iconBg: "#374151",
+    infoIcon: "#C084FC",
+  },
+
+  // Notification reminder colors
+  notification: {
+    morning: "#F59E0B",     // Sol - manhã
+    checkIn: "#10B981",     // Verde - check-in
+    evening: "#6366F1",     // Índigo - noite
+  },
 
   // =========================================
   // LEGACY (backward compatibility)

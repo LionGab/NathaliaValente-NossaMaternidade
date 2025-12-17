@@ -2,6 +2,46 @@
 
 Este documento descreve como configurar os MCPs (Model Context Protocol) recomendados para o projeto.
 
+**Atualizado em**: Dezembro 2025
+
+## Instalação Rápida
+
+```bash
+# Supabase CLI (v2.67.1 instalado)
+supabase login
+supabase link --project-ref <SEU_PROJECT_REF>
+
+# Context7 (documentação atualizada)
+npx -y @smithery/cli@latest install @upstash/context7-mcp --client claude
+
+# Expo MCP
+claude mcp add --transport http expo-mcp https://mcp.expo.dev/mcp
+
+# Memory (persistência de contexto)
+claude mcp add memory-keeper -- npx -y mcp-memory-keeper
+
+# Playwright (testes visuais)
+claude mcp add playwright -- npx -y @anthropic/mcp-server-playwright
+npx playwright install chromium
+```
+
+## Slash Commands Disponíveis
+
+| Comando | Descrição |
+|---------|-----------|
+| `/build-ios` | Build iOS com quality gate |
+| `/build-android` | Build Android com quality gate |
+| `/db-migrate` | Gerenciar migrations Supabase |
+| `/db-types` | Gerar tipos TypeScript |
+| `/ai-debug` | Debug NathIA/Edge Functions |
+| `/ota-update` | Deploy OTA updates |
+| `/context7-docs` | Buscar documentação atualizada |
+| `/perf-check` | Verificações de performance |
+| `/design-check` | Verificar design system |
+| `/design-tokens` | Listar tokens disponíveis |
+| `/audit-colors` | Auditar cores hardcoded |
+| `/audit-a11y` | Auditoria de acessibilidade |
+
 ## MCPs Configurados
 
 ### 1. Supabase MCP (Prioridade Alta)
@@ -193,6 +233,39 @@ mcp_Playwright_browser_navigate({ url: "http://localhost:8081/" });
 mcp_Playwright_browser_snapshot();
 mcp_Playwright_browser_take_screenshot({ fullPage: true });
 ```
+
+### 7. Memory MCP (NOVO - Persistência de Contexto)
+
+**Status**: ⚠️ Requer instalação
+
+**Instalação**:
+
+```bash
+claude mcp add memory-keeper -- npx -y mcp-memory-keeper
+```
+
+**Configuração** (adicionar a `~/.claude/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "memory-keeper": {
+      "command": "npx",
+      "args": ["-y", "mcp-memory-keeper"],
+      "env": {
+        "MCP_MEMORY_DB_PATH": "/Users/lion/NossaMaternidade/.claude/context.db"
+      }
+    }
+  }
+}
+```
+
+**Uso**:
+
+- Manter contexto entre sessões
+- Histórico de decisões do projeto
+- Progresso de features
+- Debug de sessões anteriores
 
 ## Ordem de Implementação Recomendada
 

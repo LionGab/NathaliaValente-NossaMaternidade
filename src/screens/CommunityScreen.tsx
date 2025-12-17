@@ -117,7 +117,19 @@ export default function CommunityScreen({ navigation }: MainTabScreenProps<"Comm
               onPress={community.handlePostPress}
             />
           )}
-          ListHeaderComponent={<ComposerCard onPress={community.openNewPostModal} />}
+          ListHeaderComponent={
+            <View>
+              <ComposerCard onPress={community.openNewPostModal} />
+              {/* Separador de seção */}
+              <View style={styles.sectionDivider}>
+                <View style={[styles.dividerLine, { backgroundColor: borderColor }]} />
+                <Text style={[styles.sectionLabel, { color: textMuted }]}>
+                  Publicações recentes
+                </Text>
+                <View style={[styles.dividerLine, { backgroundColor: borderColor }]} />
+              </View>
+            </View>
+          }
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.listContent,
@@ -221,7 +233,24 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xs,
   },
   listContent: {
-    paddingTop: SPACING.md,
+    paddingTop: SPACING.lg,
+  },
+  sectionDivider: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: SPACING.xl,
+    gap: SPACING.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    fontFamily: "Manrope_600SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   fabContainer: {
     position: "absolute",

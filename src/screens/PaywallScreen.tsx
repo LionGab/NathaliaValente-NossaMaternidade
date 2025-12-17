@@ -38,7 +38,7 @@ import {
 import { useToast } from "../context/ToastContext";
 import { RootStackParamList } from "../types/navigation";
 import { IconName } from "../types/icons";
-import { COLORS } from "../theme/design-system";
+import { COLORS, GRADIENTS } from "../theme/design-system";
 import { cn } from "../utils/cn";
 import { logger } from "../utils/logger";
 
@@ -89,7 +89,7 @@ const SparkleIcon = () => {
   return (
     <Animated.View style={animatedStyle}>
       <LinearGradient
-        colors={[PRIMARY_COLOR, "#EC4899"]}
+        colors={[PRIMARY_COLOR, GRADIENTS.cycle.luteal]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={{
@@ -466,7 +466,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
   if (isExpoGo) {
     return (
       <LinearGradient
-        colors={["#FDF2F8", "#FCE7F3", "#FBCFE8"]}
+        colors={GRADIENTS.paywallPink}
         style={{ flex: 1 }}
       >
         <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -476,7 +476,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
               onPress={() => navigation.goBack()}
               className="w-10 h-10 rounded-full bg-white/80 items-center justify-center"
             >
-              <Ionicons name="close" size={24} color="#374151" />
+              <Ionicons name="close" size={24} color={COLORS.neutral[700]} />
             </Pressable>
           </View>
 
@@ -504,7 +504,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
 
   return (
     <LinearGradient
-      colors={["#FDF2F8", "#FCE7F3", "#FBCFE8"]}
+      colors={GRADIENTS.paywallPink}
       style={{ flex: 1 }}
     >
       <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
@@ -514,7 +514,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
             onPress={() => navigation.goBack()}
             className="w-10 h-10 rounded-full bg-white/80 items-center justify-center"
           >
-            <Ionicons name="close" size={24} color="#374151" />
+            <Ionicons name="close" size={24} color={COLORS.neutral[700]} />
           </Pressable>
         </View>
 
@@ -589,7 +589,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
           {/* Garantia */}
           <View className="px-6 mt-6">
             <View className="flex-row items-center justify-center bg-white/60 rounded-xl p-3">
-              <Ionicons name="shield-checkmark-outline" size={20} color="#10B981" />
+              <Ionicons name="shield-checkmark-outline" size={20} color={COLORS.semantic.success} />
               <Text className="text-sm text-gray-600 ml-2">
                 Cancele a qualquer momento. Sem compromisso.
               </Text>

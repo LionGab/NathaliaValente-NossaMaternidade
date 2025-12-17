@@ -264,7 +264,7 @@ const PostCard: React.FC<{
     return `há ${days} dias`;
   };
 
-  const bgCard = isDark ? COLORS.neutral[800] : "#FFFFFF";
+  const bgCard = isDark ? COLORS.neutral[800] : COLORS.neutral[0];
   const textPrimary = isDark ? COLORS.neutral[100] : COLORS.text.primary;
   const textSecondary = isDark ? COLORS.neutral[400] : COLORS.text.secondary;
   const borderColor = isDark ? COLORS.neutral[700] : COLORS.neutral[200];
@@ -485,9 +485,9 @@ const PostCard: React.FC<{
                 <Ionicons
                   name={post.platform === "instagram" ? "logo-instagram" : post.platform === "tiktok" ? "logo-tiktok" : "globe-outline"}
                   size={12}
-                  color="#FFFFFF"
+                  color={COLORS.neutral[0]}
                 />
-                <Text style={{ fontSize: 10, color: "#FFFFFF", marginLeft: 4, fontWeight: "600" }}>
+                <Text style={{ fontSize: 10, color: COLORS.neutral[0], marginLeft: 4, fontWeight: "600" }}>
                   {post.platform === "instagram" ? "Instagram" : post.platform === "tiktok" ? "TikTok" : "Abrir"}
                 </Text>
               </View>
@@ -633,7 +633,7 @@ const NewPostModal: React.FC<{
               borderRadius: RADIUS.full,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "600", color: "#FFFFFF" }}>Publicar</Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: COLORS.neutral[0] }}>Publicar</Text>
           </Pressable>
         </View>
 
@@ -681,7 +681,7 @@ const NewPostModal: React.FC<{
                   style={{
                     fontSize: 14,
                     fontWeight: "600",
-                    color: selectedType === item.type ? "#FFFFFF" : COLORS.text.secondary,
+                    color: selectedType === item.type ? COLORS.neutral[0] : COLORS.text.secondary,
                   }}
                 >
                   {item.label}
@@ -734,7 +734,7 @@ const NewPostModal: React.FC<{
                   padding: SPACING.sm,
                 }}
               >
-                <Ionicons name="close" size={20} color="#FFFFFF" />
+                <Ionicons name="close" size={20} color={COLORS.neutral[0]} />
               </Pressable>
             </View>
           )}
@@ -1067,7 +1067,7 @@ export default function MundoDaNathScreen({ navigation }: Props) {
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name="add" size={26} color="#FFFFFF" />
+                <Ionicons name="add" size={26} color={COLORS.neutral[0]} />
               </LinearGradient>
             </Pressable>
           </Animated.View>

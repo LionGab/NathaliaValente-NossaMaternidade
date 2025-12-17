@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useCycleStore } from "../state/store";
 import { useTheme } from "../hooks/useTheme";
+import { GRADIENTS } from "../theme/design-system";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DAY_SIZE = (SCREEN_WIDTH - 64) / 7;
@@ -66,24 +67,24 @@ export default function CycleTrackerScreen() {
 
     let phase = "Folicular";
     let phaseDescription = "Seu corpo esta se preparando para a ovulacao";
-    let phaseColor = "#F472B6";
+    let phaseColor: string = GRADIENTS.cycle.fertile;
 
     if (isInPeriod) {
       phase = "Menstruacao";
       phaseDescription = "Periodo menstrual";
-      phaseColor = "#E11D48";
+      phaseColor = GRADIENTS.cycle.menstrual;
     } else if (isOvulationDay) {
       phase = "Ovulacao";
       phaseDescription = "Dia mais fertil do ciclo";
-      phaseColor = "#8B5CF6";
+      phaseColor = GRADIENTS.cycle.follicular;
     } else if (isInFertileWindow) {
       phase = "Janela Fertil";
       phaseDescription = "Alta chance de concepcao";
-      phaseColor = "#A855F7";
+      phaseColor = GRADIENTS.cycle.ovulation;
     } else if (currentCycleDay > ovulationDay) {
       phase = "Lutea";
       phaseDescription = "Corpo se preparando para o proximo ciclo";
-      phaseColor = "#EC4899";
+      phaseColor = GRADIENTS.cycle.luteal;
     }
 
     return {

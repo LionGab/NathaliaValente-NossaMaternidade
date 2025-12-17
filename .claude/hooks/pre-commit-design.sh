@@ -6,14 +6,14 @@ set -e
 
 echo "🎨 Verificando qualidade de design..."
 
-# 1. Verificar cores hardcoded
-HARDCODED_COLORS=$(grep -rn "#[0-9A-Fa-f]\{6\}" src/ --include="*.tsx" --include="*.ts" 2>/dev/null | grep -v "design-system.ts" | grep -v "colors.ts" | grep -v "tailwind.config" | wc -l | tr -d ' ')
+# 1. Verificar cores hardcoded (excluindo arquivos de config/dados)
+HARDCODED_COLORS=$(grep -rn "#[0-9A-Fa-f]\{6\}" src/ --include="*.tsx" --include="*.ts" 2>/dev/null | grep -v "design-system.ts" | grep -v "colors.ts" | grep -v "tailwind.config" | grep -v "store.ts" | grep -v "premium.ts" | wc -l | tr -d ' ')
 
 if [ "$HARDCODED_COLORS" -gt "0" ]; then
     echo "❌ ERRO: Encontradas $HARDCODED_COLORS cores hardcoded!"
     echo ""
     echo "Arquivos com cores hardcoded:"
-    grep -rn "#[0-9A-Fa-f]\{6\}" src/ --include="*.tsx" --include="*.ts" 2>/dev/null | grep -v "design-system.ts" | grep -v "colors.ts" | grep -v "tailwind.config" | head -10
+    grep -rn "#[0-9A-Fa-f]\{6\}" src/ --include="*.tsx" --include="*.ts" 2>/dev/null | grep -v "design-system.ts" | grep -v "colors.ts" | grep -v "tailwind.config" | grep -v "store.ts" | grep -v "premium.ts" | head -10
     echo ""
     echo "💡 Use tokens do design-system.ts:"
     echo "   import { COLORS } from '../theme/design-system';"

@@ -35,6 +35,7 @@ import {
 } from "../services/notifications";
 import {
   COLORS,
+  GRADIENTS,
   SPACING,
   RADIUS,
   SHADOWS,
@@ -108,7 +109,7 @@ const NOTIFICATION_PREVIEWS = [
 ];
 
 const BENEFITS = [
-  { icon: "sunny" as const, text: "Check-in diário às 9h", color: "#F59E0B" },
+  { icon: "sunny" as const, text: "Check-in diário às 9h", color: GRADIENTS.notification.morning },
   {
     icon: "sparkles" as const,
     text: "Afirmações positivas às 8h",
@@ -117,12 +118,12 @@ const BENEFITS = [
   {
     icon: "leaf" as const,
     text: "Lembretes de hábitos às 20h",
-    color: "#10B981",
+    color: GRADIENTS.notification.checkIn,
   },
   {
     icon: "moon" as const,
     text: "Momento de relaxar às 14:30",
-    color: "#6366F1",
+    color: GRADIENTS.notification.evening,
   },
 ];
 
@@ -210,7 +211,7 @@ const NotificationPreview = memo(function NotificationPreview({
           marginRight: isCompact ? SPACING.sm : SPACING.md,
         }}
       >
-        <Ionicons name={icon} size={iconInnerSize} color="#FFFFFF" />
+        <Ionicons name={icon} size={iconInnerSize} color={COLORS.neutral[0]} />
       </LinearGradient>
 
       <View style={{ flex: 1 }}>
@@ -339,7 +340,7 @@ const Header = memo(function Header() {
           <Ionicons
             name="notifications"
             size={sizes.bellIconSize}
-            color="#FFFFFF"
+            color={COLORS.neutral[0]}
           />
         </LinearGradient>
       </View>
@@ -387,7 +388,7 @@ export default function NotificationPermissionScreen({ navigation }: Props) {
 
   return (
     <LinearGradient
-      colors={["#FFF0F6", "#FAF5FF", "#FFFFFF"]}
+      colors={[...GRADIENTS.nathiaOnboarding, COLORS.neutral[0]]}
       locations={[0, 0.5, 1]}
       style={{ flex: 1 }}
     >

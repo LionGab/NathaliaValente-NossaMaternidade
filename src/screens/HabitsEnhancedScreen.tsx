@@ -14,6 +14,7 @@ import * as Haptics from "expo-haptics";
 import { useNavigation } from "@react-navigation/native";
 import {
   COLORS,
+  GRADIENTS,
   SPACING,
   RADIUS,
   TYPOGRAPHY,
@@ -57,7 +58,7 @@ export default function HabitsEnhancedScreen() {
     <View style={{ flex: 1, backgroundColor: COLORS.background.primary }}>
       {/* Header */}
       <LinearGradient
-        colors={[COLORS.semantic.success, "#5A9D68", "#4A8C58"]}
+        colors={GRADIENTS.successGradient}
         style={{
           paddingTop: insets.top + SPACING.lg,
           paddingBottom: SPACING["2xl"],
@@ -90,7 +91,7 @@ export default function HabitsEnhancedScreen() {
             </Text>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: TYPOGRAPHY.headlineSmall.fontSize,
                 fontWeight: "700",
                 marginTop: 2,
@@ -138,7 +139,7 @@ export default function HabitsEnhancedScreen() {
             </View>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: 28,
                 fontWeight: "700",
               }}
@@ -183,7 +184,7 @@ export default function HabitsEnhancedScreen() {
             </View>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: 28,
                 fontWeight: "700",
               }}
@@ -228,7 +229,7 @@ export default function HabitsEnhancedScreen() {
             </View>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: 28,
                 fontWeight: "700",
               }}
@@ -267,17 +268,17 @@ export default function HabitsEnhancedScreen() {
                 height: 140,
                 borderRadius: 70,
                 borderWidth: 12,
-                borderColor: "#FFFFFF",
+                borderColor: COLORS.neutral[0],
                 borderTopColor: "transparent",
-                borderRightColor: completionPercentage >= 25 ? "#FFFFFF" : "transparent",
-                borderBottomColor: completionPercentage >= 50 ? "#FFFFFF" : "transparent",
-                borderLeftColor: completionPercentage >= 75 ? "#FFFFFF" : "transparent",
+                borderRightColor: completionPercentage >= 25 ? COLORS.neutral[0] : "transparent",
+                borderBottomColor: completionPercentage >= 50 ? COLORS.neutral[0] : "transparent",
+                borderLeftColor: completionPercentage >= 75 ? COLORS.neutral[0] : "transparent",
                 transform: [{ rotate: "-45deg" }],
               }}
             />
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: 36,
                 fontWeight: "700",
               }}
@@ -332,7 +333,7 @@ export default function HabitsEnhancedScreen() {
                       fontSize: TYPOGRAPHY.bodySmall.fontSize,
                       fontWeight: "600",
                       color:
-                        viewMode === mode ? "#FFFFFF" : COLORS.neutral[600],
+                        viewMode === mode ? COLORS.neutral[0] : COLORS.neutral[600],
                     }}
                   >
                     {mode === "today"
@@ -486,7 +487,7 @@ function HabitCard({ habit, index, onToggle }: HabitCardProps) {
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <View
                     style={{
-                      backgroundColor: "#FEF3C7",
+                      backgroundColor: GRADIENTS.streakBg,
                       borderRadius: RADIUS.full,
                       paddingHorizontal: SPACING.sm + 2,
                       paddingVertical: SPACING.xs,
@@ -494,10 +495,10 @@ function HabitCard({ habit, index, onToggle }: HabitCardProps) {
                       alignItems: "center",
                     }}
                   >
-                    <Ionicons name="flame" size={14} color="#F59E0B" />
+                    <Ionicons name="flame" size={14} color={GRADIENTS.streakIcon} />
                     <Text
                       style={{
-                        color: "#B45309",
+                        color: GRADIENTS.streakText,
                         fontSize: TYPOGRAPHY.labelSmall.fontSize,
                         fontWeight: "600",
                         marginLeft: 4,
@@ -612,9 +613,9 @@ function WeeklyHeatmap({ habits }: { habits: Habit[] }) {
                     completion >= 100
                       ? COLORS.semantic.success
                       : completion >= 50
-                      ? "#A7D4B4"
+                      ? GRADIENTS.completionMedium
                       : completion > 0
-                      ? "#D4EDD9"
+                      ? GRADIENTS.completionLight
                       : COLORS.neutral[100],
                 }}
               >
@@ -623,7 +624,7 @@ function WeeklyHeatmap({ habits }: { habits: Habit[] }) {
                     fontSize: TYPOGRAPHY.bodySmall.fontSize,
                     fontWeight: "700",
                     color:
-                      completion >= 50 ? "#FFFFFF" : COLORS.neutral[600],
+                      completion >= 50 ? COLORS.neutral[0] : COLORS.neutral[600],
                   }}
                 >
                   {day.date}

@@ -19,6 +19,7 @@ import * as Haptics from "expo-haptics";
 import { useNavigation } from "@react-navigation/native";
 import {
   COLORS,
+  GRADIENTS,
   SPACING,
   RADIUS,
   TYPOGRAPHY,
@@ -52,8 +53,8 @@ const TECHNIQUES: Record<BreathingTechnique, Technique> = {
       { name: "Expire", duration: 4000, instruction: "Expire lentamente pela boca" },
       { name: "Segure", duration: 4000, instruction: "Segure com os pulmoes vazios" },
     ],
-    color: "#60A5FA",
-    bgColors: ["#DBEAFE", "#BFDBFE", "#93C5FD"],
+    color: GRADIENTS.breathing.box.color,
+    bgColors: GRADIENTS.breathing.box.bgColors as unknown as [string, string, string],
   },
   "478": {
     name: "Tecnica 4-7-8",
@@ -65,7 +66,7 @@ const TECHNIQUES: Record<BreathingTechnique, Technique> = {
       { name: "Expire", duration: 8000, instruction: "Expire lentamente pela boca" },
     ],
     color: COLORS.secondary[500],
-    bgColors: ["#EDE9FE", "#DDD6FE", "#C4B5FD"],
+    bgColors: GRADIENTS.breathing.technique478.bgColors as unknown as [string, string, string],
   },
   calm: {
     name: "Respiracao Calma",
@@ -76,7 +77,7 @@ const TECHNIQUES: Record<BreathingTechnique, Technique> = {
       { name: "Expire", duration: 5000, instruction: "Expire relaxando" },
     ],
     color: COLORS.semantic.success,
-    bgColors: ["#DCFCE7", "#BBF7D0", "#86EFAC"],
+    bgColors: GRADIENTS.breathing.calm.bgColors as unknown as [string, string, string],
   },
 };
 
@@ -264,7 +265,7 @@ export default function BreathingExerciseScreen() {
                 <>
                   <Text
                     style={{
-                      color: "#FFFFFF",
+                      color: COLORS.neutral[0],
                       fontSize: 30,
                       fontWeight: "700",
                       marginBottom: SPACING.sm,
@@ -287,7 +288,7 @@ export default function BreathingExerciseScreen() {
                   <Ionicons name="leaf" size={48} color="#FFF" />
                   <Text
                     style={{
-                      color: "#FFFFFF",
+                      color: COLORS.neutral[0],
                       fontSize: TYPOGRAPHY.bodyLarge.fontSize,
                       fontWeight: "600",
                       marginTop: SPACING.md,
@@ -333,7 +334,7 @@ export default function BreathingExerciseScreen() {
             >
               <Text
                 style={{
-                  color: "#FFFFFF",
+                  color: COLORS.neutral[0],
                   fontSize: TYPOGRAPHY.labelLarge.fontSize,
                   fontWeight: "700",
                 }}
@@ -410,7 +411,7 @@ export default function BreathingExerciseScreen() {
                           fontSize: TYPOGRAPHY.bodySmall.fontSize,
                           fontWeight: "700",
                           textAlign: "center",
-                          color: isSelected ? "#FFFFFF" : COLORS.neutral[700],
+                          color: isSelected ? COLORS.neutral[0] : COLORS.neutral[700],
                         }}
                       >
                         {t.name.replace("Respiracao ", "").replace("Tecnica ", "")}

@@ -16,7 +16,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Dimensions,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -25,6 +24,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from "react-native";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
@@ -48,11 +48,10 @@ import { useTheme } from "../hooks/useTheme";
 import { useVoicePremiumGate } from "../hooks/useVoice";
 import { useIsPremium } from "../state/premium-store";
 import { Conversation, useAppStore, useChatStore } from "../state/store";
-import { COLORS_DARK, COLORS as DS_COLORS, SHADOWS } from "../theme/design-system";
+import { COLORS_DARK, COLORS as DS_COLORS, SHADOWS, SPACING } from "../theme/design-system";
 import { ChatMessage, MainTabScreenProps } from "../types/navigation";
+import { wp } from "../utils/dimensions";
 import { logger } from "../utils/logger";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // ============================================
 // DESIGN TOKENS - Usando design-system.ts
@@ -110,7 +109,17 @@ const MESSAGE_COUNT_KEY = "nathia_message_count";
 export default function AssistantScreen({ navigation, route }: MainTabScreenProps<"Assistant">) {
   const insets = useSafeAreaInsets();
   const { isDark } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const THEME = useMemo(() => getThemeColors(isDark), [isDark]);
+
+  // Valores responsivos
+  const { messageMaxWidth, horizontalPadding } = useMemo(() => {
+    const isTablet = screenWidth >= 768;
+    return {
+      messageMaxWidth: isTablet ? wp(60) : wp(80),
+      horizontalPadding: screenWidth < 375 ? 12 : 16,
+    };
+  }, [screenWidth]);
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
   const [inputText, setInputText] = useState("");
@@ -126,9 +135,6 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
   const isLoading = useChatStore((s) => s.isLoading);
   const setLoading = useChatStore((s) => s.setLoading);
   const addMessage = useChatStore((s) => s.addMessage);
-  const deleteConversation = useChatStore((s) => s.deleteConversation);
-  const setCurrentConversation = useChatStore((s) => s.setCurrentConversation);
-  const clearCurrentChat = useChatStore((s) => s.clearCurrentChat);
   const hasAcceptedAITerms = useChatStore((s) => s.hasAcceptedAITerms);
   const acceptAITerms = useChatStore((s) => s.acceptAITerms);
 
@@ -438,7 +444,7 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
   // MESSAGE BUBBLE COMPONENT
   // ============================================
   const MessageBubble = React.memo(
-    ({ message, index }: { message: ChatMessage; index: number }) => {
+    ({ message, index, maxWidth }: { message: ChatMessage; index: number; maxWidth: number }) => {
       const isUser = message.role === "user";
 
       return (
@@ -453,6 +459,7 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
           <View
             style={[
               styles.messageBubble,
+              { maxWidth },
               isUser
                 ? [styles.bubbleUser, { backgroundColor: THEME.userBubble }]
                 : [styles.bubbleAI, { backgroundColor: THEME.aiBubble }],
@@ -491,14 +498,13 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
   // MAIN RENDER
   // ============================================
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bgPrimary }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: THEME.bgPrimary }} edges={["top", "bottom"]}>
       <View style={[styles.container, { flex: 1, backgroundColor: THEME.bgPrimary }]}>
         {/* Header - Clean, minimal */}
         <View
           style={[
             styles.header,
             {
-              paddingTop: insets.top,
               backgroundColor: THEME.bgSecondary,
               borderBottomColor: THEME.borderLight,
             },
@@ -534,22 +540,27 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.messagesContainer}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? insets.top + 60 : 0}
         >
           {currentMessages.length === 0 ? (
             <ScrollView
-              contentContainerStyle={styles.emptyScrollContent}
+              contentContainerStyle={[
+                styles.emptyScrollContent,
+                { paddingHorizontal: horizontalPadding },
+              ]}
               showsVerticalScrollIndicator={false}
             >
-              <ChatEmptyState onSuggestedPrompt={handleSuggestedPrompt} />
+              <ChatEmptyState onSuggestedPrompt={handleSuggestedPrompt} screenWidth={screenWidth} />
             </ScrollView>
           ) : (
             <FlatList
               ref={flatListRef}
               data={currentMessages}
               keyExtractor={(item) => item.id}
-              renderItem={({ item, index }) => <MessageBubble message={item} index={index} />}
-              style={styles.messagesList}
+              renderItem={({ item, index }) => (
+                <MessageBubble message={item} index={index} maxWidth={messageMaxWidth} />
+              )}
+              style={[styles.messagesList, { paddingHorizontal: horizontalPadding }]}
               contentContainerStyle={styles.messagesListContent}
               showsVerticalScrollIndicator={false}
               onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -588,7 +599,9 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
             style={[
               styles.inputContainer,
               {
-                paddingBottom: Math.max(insets.bottom, 8) + (Platform.OS === "ios" ? 88 : 72),
+                paddingBottom: Math.max(insets.bottom, Platform.OS === "ios" ? 8 : 16),
+                paddingHorizontal: horizontalPadding,
+                paddingTop: SPACING.sm,
                 backgroundColor: THEME.bgPrimary,
               },
             ]}
@@ -734,7 +747,6 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     flex: 1,
-    paddingHorizontal: 16,
   },
   messagesListContent: {
     paddingVertical: 16,
@@ -755,7 +767,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   messageBubble: {
-    maxWidth: "80%",
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -813,14 +824,12 @@ const styles = StyleSheet.create({
 
   // Empty State
   emptyScrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingBottom: 20,
+    paddingTop: 0,
+    paddingBottom: 100, // Espaço para input area
   },
 
   // Input
   inputContainer: {
-    paddingHorizontal: 16,
     paddingTop: 8,
     backgroundColor: THEME_LIGHT.bgPrimary,
   },
@@ -854,7 +863,7 @@ const styles = StyleSheet.create({
     maxHeight: 120,
   },
   inputButton: {
-    padding: 11,
+    padding: 12,
   },
   textInput: {
     flex: 1,
@@ -875,7 +884,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   micButton: {
-    padding: 11,
+    padding: 12,
   },
   disclaimer: {
     fontSize: 11,

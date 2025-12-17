@@ -44,6 +44,7 @@ import {
 } from "../types/nathia-onboarding";
 import {
   COLORS,
+  GRADIENTS,
   SPACING,
   RADIUS,
   TYPOGRAPHY,
@@ -1433,7 +1434,7 @@ export default function NathIAOnboardingScreen({ navigation }: Props) {
       }}
     >
       <LinearGradient
-        colors={["#FFF5F7", "#FEF3F2", COLORS.background.primary]}
+        colors={[...GRADIENTS.nathiaOnboarding, COLORS.background.primary]}
         locations={[0, 0.3, 1]}
         style={{
           position: "absolute",

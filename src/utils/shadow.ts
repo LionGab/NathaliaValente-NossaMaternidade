@@ -9,9 +9,25 @@ export interface ShadowConfig {
 }
 
 /**
- * Cria estilos de shadow/elevation compatíveis com iOS e Android
+ * Converte shadow props para boxShadow CSS (web)
+ */
+function shadowToBoxShadow(
+  shadowColor: string,
+  shadowOffset: { width: number; height: number },
+  shadowOpacity: number,
+  shadowRadius: number
+): string {
+  const r = parseInt(shadowColor.slice(1, 3), 16);
+  const g = parseInt(shadowColor.slice(3, 5), 16);
+  const b = parseInt(shadowColor.slice(5, 7), 16);
+  const color = `rgba(${r}, ${g}, ${b}, ${shadowOpacity})`;
+  return `${shadowOffset.width}px ${shadowOffset.height}px ${shadowRadius}px ${color}`;
+}
+
+/**
+ * Cria estilos de shadow/elevation compatíveis com iOS, Android e Web
  * @param config Configuração de shadow
- * @returns Objeto de estilo com shadow para iOS e elevation para Android
+ * @returns Objeto de estilo com shadow para iOS, elevation para Android, boxShadow para Web
  */
 export function createShadow(config: ShadowConfig = {}): ViewStyle {
   const {
@@ -21,6 +37,13 @@ export function createShadow(config: ShadowConfig = {}): ViewStyle {
     shadowRadius = 8,
     elevation = 3,
   } = config;
+
+  if (Platform.OS === "web") {
+    // Web: usar boxShadow ao invés de shadow props deprecated
+    return {
+      boxShadow: shadowToBoxShadow(shadowColor, shadowOffset, shadowOpacity, shadowRadius),
+    } as ViewStyle;
+  }
 
   if (Platform.OS === "ios") {
     return {
@@ -79,4 +102,3 @@ export const shadowPresets = {
       elevation: 6,
     }),
 };
-

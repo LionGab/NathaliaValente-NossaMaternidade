@@ -5,14 +5,10 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
-import Animated, {
-  FadeIn,
-  FadeInDown,
-  FadeInUp,
-} from "react-native-reanimated";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useTheme } from "../../hooks/useTheme";
-import { COLORS, COLORS_DARK } from "../../theme/design-system";
+import { COLORS, COLORS_DARK, SPACING } from "../../theme/design-system";
 import { Avatar } from "../ui";
 
 interface SuggestedPrompt {
@@ -46,9 +42,13 @@ const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
 
 interface ChatEmptyStateProps {
   onSuggestedPrompt: (text: string) => void;
+  screenWidth?: number;
 }
 
-export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ onSuggestedPrompt }) => {
+export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({
+  onSuggestedPrompt,
+  screenWidth = 375,
+}) => {
   const { isDark } = useTheme();
   const palette = isDark ? COLORS_DARK : COLORS;
   const primaryColor = palette.primary[500];
@@ -58,11 +58,25 @@ export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ onSuggestedPromp
   const primaryLight = palette.primary[100];
   const border = palette.primary[200];
 
+  // Valores responsivos
+  const isTablet = screenWidth >= 768;
+  const maxContentWidth = isTablet ? 600 : screenWidth - 48;
+  const horizontalPadding = screenWidth < 375 ? 12 : 24;
+
   return (
-    <Animated.View entering={FadeIn.duration(600)} className="flex-1 items-center px-6">
+    <Animated.View
+      entering={FadeIn.duration(600)}
+      style={[
+        styles.container,
+        {
+          paddingHorizontal: horizontalPadding,
+          maxWidth: maxContentWidth,
+        },
+      ]}
+    >
       {/* Logo/Avatar */}
       <Animated.View entering={FadeInDown.delay(100).duration(600).springify()}>
-        <View className="mb-4">
+        <View style={styles.avatarContainer}>
           <Avatar size={72} isNathIA={true} />
         </View>
       </Animated.View>
@@ -70,7 +84,13 @@ export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ onSuggestedPromp
       {/* Title */}
       <Animated.Text
         entering={FadeInDown.delay(200).duration(600).springify()}
-        style={{ fontSize: 24, fontWeight: "700", color: textPrimary, textAlign: "center", marginBottom: 4 }}
+        style={{
+          fontSize: 24,
+          fontWeight: "700",
+          color: textPrimary,
+          textAlign: "center",
+          marginBottom: 4,
+        }}
       >
         NathIA
       </Animated.Text>
@@ -108,17 +128,21 @@ export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ onSuggestedPromp
           <Ionicons name="sparkles" size={20} color={primaryColor} />
         </View>
         <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: textSecondary }}>
-          Olá! Eu sou a NathIA. ✨ Estou aqui para tirar suas dúvidas, te acalmar e conversar sobre essa fase incrível. O que você gostaria de saber hoje?
+          Olá! Eu sou a NathIA. ✨ Estou aqui para tirar suas dúvidas, te acalmar e conversar sobre
+          essa fase incrível. O que você gostaria de saber hoje?
         </Text>
       </Animated.View>
 
       {/* Suggested Prompts Grid */}
-      <Animated.View entering={FadeInUp.delay(500).duration(600).springify()} className="flex-row flex-wrap w-full -mx-1.5">
+      <Animated.View
+        entering={FadeInUp.delay(500).duration(600).springify()}
+        style={styles.gridContainer}
+      >
         {SUGGESTED_PROMPTS.map((prompt, index) => (
           <Animated.View
             key={index}
             entering={FadeInUp.delay(600 + index * 80).duration(400)}
-            className="w-1/2 px-1.5 mb-3"
+            style={styles.gridItem}
           >
             <Pressable
               onPress={() => onSuggestedPrompt(prompt.subtitle)}
@@ -144,10 +168,15 @@ export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ onSuggestedPromp
               >
                 <Ionicons name={prompt.icon} size={20} color={primaryColor} />
               </View>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: textPrimary, marginBottom: 4 }}>
+              <Text
+                style={{ fontSize: 14, fontWeight: "600", color: textPrimary, marginBottom: 4 }}
+              >
                 {prompt.title}
               </Text>
-              <Text style={{ fontSize: 12, color: textSecondary, lineHeight: 16 }} numberOfLines={2}>
+              <Text
+                style={{ fontSize: 12, color: textSecondary, lineHeight: 16 }}
+                numberOfLines={2}
+              >
                 {prompt.subtitle}
               </Text>
             </Pressable>
@@ -158,3 +187,24 @@ export const ChatEmptyState: React.FC<ChatEmptyStateProps> = ({ onSuggestedPromp
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    width: "100%",
+    alignSelf: "center",
+  },
+  avatarContainer: {
+    marginBottom: SPACING.md,
+  },
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    width: "100%",
+    marginHorizontal: -SPACING.xs,
+  },
+  gridItem: {
+    width: "50%",
+    paddingHorizontal: SPACING.xs,
+    marginBottom: SPACING.md,
+  },
+});

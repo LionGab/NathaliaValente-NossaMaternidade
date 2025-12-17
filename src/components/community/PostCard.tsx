@@ -1,5 +1,10 @@
 /**
  * PostCard - Card de post da comunidade
+ *
+ * Design: Inspirado no Instagram/Twitter
+ * - Cards com espaçamento generoso
+ * - Hierarquia visual clara
+ * - Ações bem espaçadas
  */
 
 import { Ionicons } from "@expo/vector-icons";
@@ -54,7 +59,7 @@ export const PostCard: React.FC<PostCardProps> = React.memo(
 
     return (
       <Animated.View
-        entering={FadeInUp.delay(index * 50).duration(400).springify()}
+        entering={FadeInUp.delay(index * 60).duration(450).springify()}
         style={[styles.container, animatedStyle]}
       >
         <Pressable
@@ -79,8 +84,8 @@ export const PostCard: React.FC<PostCardProps> = React.memo(
 
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.avatar}>
-              <Ionicons name="person" size={18} color={COLORS.primary[500]} />
+            <View style={[styles.avatar, { backgroundColor: isDark ? COLORS.primary[900] : COLORS.primary[100] }]}>
+              <Ionicons name="person" size={20} color={COLORS.primary[500]} />
             </View>
             <View style={styles.authorInfo}>
               <Text style={[styles.authorName, { color: textPrimary }]}>
@@ -90,59 +95,74 @@ export const PostCard: React.FC<PostCardProps> = React.memo(
                 {formatTimeAgo(post.createdAt)}
               </Text>
             </View>
+            <Pressable
+              style={({ pressed }) => [styles.moreButton, { opacity: pressed ? 0.6 : 1 }]}
+              onPress={() => onPress(post.id)}
+            >
+              <Ionicons name="ellipsis-horizontal" size={18} color={textSecondary} />
+            </Pressable>
           </View>
 
           {/* Content */}
-          <Text style={[styles.content, { color: textPrimary }]}>
-            {post.content}
-          </Text>
+          <View style={styles.contentWrapper}>
+            <Text style={[styles.content, { color: textPrimary }]}>
+              {post.content}
+            </Text>
+          </View>
 
           {/* Image */}
           {post.imageUrl && (
-            <Image
-              source={{ uri: post.imageUrl }}
-              style={styles.image}
-              contentFit="cover"
-            />
+            <View style={styles.imageWrapper}>
+              <Image
+                source={{ uri: post.imageUrl }}
+                style={styles.image}
+                contentFit="cover"
+              />
+            </View>
           )}
 
           {/* Actions */}
-          <View style={[styles.actions, { borderTopColor: borderColor }]}>
-            <Pressable
-              onPress={handleLikePress}
-              style={({ pressed }) => [styles.actionButton, { opacity: pressed ? 0.7 : 1 }]}
-            >
-              <Ionicons
-                name={post.isLiked ? "heart" : "heart-outline"}
-                size={20}
-                color={post.isLiked ? COLORS.accent[500] : textSecondary}
-              />
-              <Text
-                style={[
-                  styles.actionText,
-                  { color: post.isLiked ? COLORS.accent[500] : textSecondary },
-                ]}
+          <View style={[styles.actionsWrapper, { borderTopColor: borderColor }]}>
+            <View style={styles.actionsRow}>
+              {/* Like */}
+              <Pressable
+                onPress={handleLikePress}
+                style={({ pressed }) => [styles.actionButton, { opacity: pressed ? 0.7 : 1 }]}
               >
-                {post.likesCount}
-              </Text>
-            </Pressable>
+                <Ionicons
+                  name={post.isLiked ? "heart" : "heart-outline"}
+                  size={22}
+                  color={post.isLiked ? COLORS.accent[500] : textSecondary}
+                />
+                <Text
+                  style={[
+                    styles.actionText,
+                    { color: post.isLiked ? COLORS.accent[500] : textSecondary },
+                  ]}
+                >
+                  {post.likesCount}
+                </Text>
+              </Pressable>
 
-            <Pressable
-              onPress={() => onComment(post.id)}
-              style={({ pressed }) => [styles.actionButton, { opacity: pressed ? 0.7 : 1 }]}
-            >
-              <Ionicons name="chatbubble-outline" size={18} color={textSecondary} />
-              <Text style={[styles.actionText, { color: textSecondary }]}>
-                {post.commentsCount}
-              </Text>
-            </Pressable>
+              {/* Comment */}
+              <Pressable
+                onPress={() => onComment(post.id)}
+                style={({ pressed }) => [styles.actionButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
+                <Ionicons name="chatbubble-outline" size={20} color={textSecondary} />
+                <Text style={[styles.actionText, { color: textSecondary }]}>
+                  {post.commentsCount}
+                </Text>
+              </Pressable>
 
-            <Pressable
-              onPress={() => onShare(post)}
-              style={({ pressed }) => [styles.shareButton, { opacity: pressed ? 0.7 : 1 }]}
-            >
-              <Ionicons name="share-outline" size={18} color={textSecondary} />
-            </Pressable>
+              {/* Share */}
+              <Pressable
+                onPress={() => onShare(post)}
+                style={({ pressed }) => [styles.shareButton, { opacity: pressed ? 0.7 : 1 }]}
+              >
+                <Ionicons name="share-outline" size={20} color={textSecondary} />
+              </Pressable>
+            </View>
           </View>
         </Pressable>
       </Animated.View>
@@ -154,89 +174,114 @@ PostCard.displayName = "PostCard";
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.xl, // 20pt entre cards (era 16pt)
   },
   card: {
-    borderRadius: RADIUS.xl,
-    padding: SPACING.lg,
+    borderRadius: RADIUS["2xl"], // 24pt border radius
     borderWidth: 1,
-    ...SHADOWS.sm,
+    ...SHADOWS.md,
+    overflow: "hidden",
   },
+
+  // === PENDING BADGE ===
   pendingBadge: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.primary[50],
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: SPACING.xs,
-    borderRadius: RADIUS.full,
-    marginBottom: SPACING.md,
-    alignSelf: "flex-start",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
     gap: SPACING.xs,
   },
   pendingText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     fontFamily: "Manrope_600SemiBold",
     color: COLORS.primary[600],
   },
+
+  // === HEADER ===
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: SPACING.md,
+    padding: SPACING.lg, // 16pt padding
+    paddingBottom: SPACING.md,
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: COLORS.primary[100],
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: SPACING.md,
   },
   authorInfo: {
     flex: 1,
+    marginLeft: SPACING.md,
   },
   authorName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "600",
     fontFamily: "Manrope_600SemiBold",
   },
   timeAgo: {
-    fontSize: 12,
+    fontSize: 13,
     fontFamily: "Manrope_500Medium",
     marginTop: 2,
   },
+  moreButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // === CONTENT ===
+  contentWrapper: {
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.lg,
+  },
   content: {
     fontSize: 15,
-    lineHeight: 22,
+    lineHeight: 24,
     fontFamily: "Manrope_500Medium",
-    marginBottom: SPACING.md,
+  },
+
+  // === IMAGE ===
+  imageWrapper: {
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
   },
   image: {
     width: "100%",
-    height: 180,
-    borderRadius: RADIUS.lg,
+    height: 200,
+    borderRadius: RADIUS.xl,
     backgroundColor: COLORS.neutral[200],
-    marginBottom: SPACING.md,
   },
-  actions: {
+
+  // === ACTIONS ===
+  actionsWrapper: {
+    borderTopWidth: 1,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+  },
+  actionsRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: SPACING["2xl"],
+    paddingVertical: SPACING.sm,
+    paddingRight: SPACING["2xl"], // 24pt entre botões
+    gap: SPACING.sm,
   },
   actionText: {
-    fontSize: 13,
-    marginLeft: SPACING.xs,
+    fontSize: 14,
     fontWeight: "600",
     fontFamily: "Manrope_600SemiBold",
   },
   shareButton: {
     marginLeft: "auto",
+    padding: SPACING.sm,
   },
 });

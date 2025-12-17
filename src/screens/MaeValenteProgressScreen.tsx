@@ -13,6 +13,7 @@ import * as Haptics from "expo-haptics";
 import { useAppStore, useCheckInStore } from "../state/store";
 import {
   COLORS,
+  GRADIENTS,
   SPACING,
   RADIUS,
   SHADOWS,
@@ -74,7 +75,7 @@ export default function MaeValenteProgressScreen() {
             </Text>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: TYPOGRAPHY.headlineSmall.fontSize,
                 fontWeight: "700",
                 marginTop: 4,
@@ -116,7 +117,7 @@ export default function MaeValenteProgressScreen() {
             </Text>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: TYPOGRAPHY.displaySmall.fontSize,
                 fontWeight: "700",
               }}
@@ -154,7 +155,7 @@ export default function MaeValenteProgressScreen() {
             </Text>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: TYPOGRAPHY.displaySmall.fontSize,
                 fontWeight: "700",
               }}
@@ -192,7 +193,7 @@ export default function MaeValenteProgressScreen() {
             </Text>
             <Text
               style={{
-                color: "#FFFFFF",
+                color: COLORS.neutral[0],
                 fontSize: TYPOGRAPHY.displaySmall.fontSize,
                 fontWeight: "700",
               }}
@@ -362,7 +363,7 @@ export default function MaeValenteProgressScreen() {
               description="7 dias seguidos de check-in"
               progress={currentStreak}
               total={7}
-              color="#F59E0B"
+              color={GRADIENTS.streakIcon}
               unlocked={currentStreak >= 7}
             />
             <AchievementCard
@@ -565,7 +566,7 @@ function WeeklyCalendar() {
                 style={{
                   fontWeight: "600",
                   color: completed[index]
-                    ? "#FFFFFF"
+                    ? COLORS.neutral[0]
                     : index === new Date().getDay()
                     ? COLORS.primary[600]
                     : COLORS.neutral[400],
@@ -592,9 +593,9 @@ function WeeklyCalendar() {
 // Mood Distribution Component
 function MoodDistribution() {
   const moods = [
-    { emoji: "😢", label: "Difícil", count: 2, color: "#6366F1" },
-    { emoji: "😕", label: "Cansada", count: 5, color: COLORS.secondary[500] },
-    { emoji: "😐", label: "Ok", count: 8, color: "#A855F7" },
+    { emoji: "😢", label: "Difícil", count: 2, color: COLORS.mood.calm },
+    { emoji: "😕", label: "Cansada", count: 5, color: COLORS.mood.tired },
+    { emoji: "😐", label: "Ok", count: 8, color: COLORS.secondary[400] },
     { emoji: "🙂", label: "Bem", count: 12, color: COLORS.primary[500] },
     { emoji: "😊", label: "Ótimo", count: 7, color: COLORS.primary[300] },
   ];

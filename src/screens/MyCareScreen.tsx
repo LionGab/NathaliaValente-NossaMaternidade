@@ -24,7 +24,7 @@ const getCareColors = (isDark: boolean) => ({
   lilacSoft: isDark ? "rgba(92, 163, 219, 0.15)" : DS_COLORS.secondary[50],
   // Rose/Rosa suave - sentimentos e emoções
   rose: isDark ? DS_COLORS.feeling.amada : DS_COLORS.feeling.amada,
-  roseSoft: isDark ? "rgba(254, 205, 211, 0.15)" : "#FDF0F0",
+  roseSoft: isDark ? "rgba(254, 205, 211, 0.15)" : DS_COLORS.surface.roseSoft,
   // Blue/Azul calmo - conexão e comunidade
   blueCalm: isDark ? DS_COLORS.primary[400] : DS_COLORS.primary[300],
   blueSoft: isDark ? "rgba(125, 185, 213, 0.15)" : DS_COLORS.primary[50],
@@ -33,11 +33,11 @@ const getCareColors = (isDark: boolean) => ({
   sageSoft: isDark ? "rgba(20, 184, 166, 0.15)" : DS_COLORS.accent[50],
   // Peach/Pêssego - afirmações e positividade
   peach: isDark ? DS_COLORS.legacyAccent.peach : DS_COLORS.legacyAccent.peach,
-  peachSoft: isDark ? "rgba(254, 215, 170, 0.15)" : "#FDF6F2",
+  peachSoft: isDark ? "rgba(254, 215, 170, 0.15)" : DS_COLORS.surface.peachSoft,
   // Bordas sutis
-  borderLilac: isDark ? "rgba(92, 163, 219, 0.3)" : "#E0D4F0",
-  borderRose: isDark ? "rgba(254, 205, 211, 0.3)" : "#F5E0E0",
-  borderBlue: isDark ? "rgba(125, 185, 213, 0.3)" : "#D6E6F2",
+  borderLilac: isDark ? "rgba(92, 163, 219, 0.3)" : DS_COLORS.surface.lilacBorder,
+  borderRose: isDark ? "rgba(254, 205, 211, 0.3)" : DS_COLORS.surface.roseBorder,
+  borderBlue: isDark ? "rgba(125, 185, 213, 0.3)" : DS_COLORS.surface.blueBorder,
 });
 
 // Afirmações no estilo Nathalia - autênticas, jovens, sem julgamentos
@@ -336,7 +336,7 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                 lineHeight: 28,
               }}
             >
-              "{todayAffirmation}"
+              {`"${todayAffirmation}"`}
             </Text>
 
             {/* Ações */}
@@ -615,7 +615,7 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                   marginRight: SPACING.md,
                 }}
               >
-                <Ionicons name="sparkles" size={24} color="#FFFFFF" />
+                <Ionicons name="sparkles" size={24} color={DS_COLORS.neutral[0]} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text

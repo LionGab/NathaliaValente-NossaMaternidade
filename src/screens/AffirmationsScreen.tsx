@@ -16,6 +16,7 @@ import Animated, {
 import { useAffirmationsStore } from "../state/store";
 import { RootStackScreenProps, Affirmation } from "../types/navigation";
 import { useTheme } from "../hooks/useTheme";
+import { AFFIRMATION_GRADIENTS } from "../theme/design-system";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -37,13 +38,8 @@ const AFFIRMATIONS: Affirmation[] = [
   { id: "15", text: "Minha jornada e unica e linda. Eu celebro cada passo.", category: "celebracao" },
 ];
 
-const GRADIENT_THEMES = [
-  { colors: ["#1E3A5F", "#2D5A87", "#3B7AB0"], name: "Oceano" },
-  { colors: ["#4A1942", "#6B2D5C", "#8B4177"], name: "Ametista" },
-  { colors: ["#1A3C34", "#2D5C4A", "#3F7D61"], name: "Floresta" },
-  { colors: ["#3D2914", "#5C3D1E", "#7A5128"], name: "Terra" },
-  { colors: ["#2E1065", "#4C1D95", "#6D28D9"], name: "Cosmos" },
-];
+// Alias para manter compatibilidade com código existente
+const GRADIENT_THEMES = AFFIRMATION_GRADIENTS;
 
 export default function AffirmationsScreen({ navigation }: RootStackScreenProps<"Affirmations">) {
   const insets = useSafeAreaInsets();

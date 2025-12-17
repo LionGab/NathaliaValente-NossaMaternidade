@@ -301,7 +301,7 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
                 >
                   <Text
                     style={{
-                      color: "#FFFFFF",
+                      color: colors.neutral[0],
                       fontSize: 15,
                       fontWeight: "700",
                       fontFamily: "Manrope_700Bold",

@@ -17,18 +17,19 @@ import { RootStackScreenProps, DailyLog } from "../types/navigation";
 import * as Haptics from "expo-haptics";
 import { wp } from "../utils/dimensions";
 import { useTheme } from "../hooks/useTheme";
+import { COLORS } from "../theme/design-system";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const MOODS = [
-  { id: "happy", emoji: "😊", label: "Feliz", color: "#10B981" },
-  { id: "calm", emoji: "😌", label: "Calma", color: "#6366F1" },
-  { id: "energetic", emoji: "⚡", label: "Energica", color: "#F59E0B" },
-  { id: "anxious", emoji: "😰", label: "Ansiosa", color: "#EF4444" },
-  { id: "sad", emoji: "😢", label: "Triste", color: "#3B82F6" },
-  { id: "irritated", emoji: "😤", label: "Irritada", color: "#F97316" },
-  { id: "sensitive", emoji: "🥺", label: "Sensivel", color: "#EC4899" },
-  { id: "tired", emoji: "😴", label: "Cansada", color: "#8B5CF6" },
+  { id: "happy", emoji: "😊", label: "Feliz", color: COLORS.mood.happy },
+  { id: "calm", emoji: "😌", label: "Calma", color: COLORS.mood.calm },
+  { id: "energetic", emoji: "⚡", label: "Energica", color: COLORS.mood.energetic },
+  { id: "anxious", emoji: "😰", label: "Ansiosa", color: COLORS.mood.anxious },
+  { id: "sad", emoji: "😢", label: "Triste", color: COLORS.mood.sad },
+  { id: "irritated", emoji: "😤", label: "Irritada", color: COLORS.mood.irritated },
+  { id: "sensitive", emoji: "🥺", label: "Sensivel", color: COLORS.mood.sensitive },
+  { id: "tired", emoji: "😴", label: "Cansada", color: COLORS.mood.tired },
 ];
 
 export default function DailyLogScreen({ navigation, route }: RootStackScreenProps<"DailyLog">) {
@@ -287,10 +288,10 @@ export default function DailyLogScreen({ navigation, route }: RootStackScreenPro
                       width: 60,
                       height: 60,
                       borderRadius: 30,
-                      backgroundColor: selectedMoodData?.color || "#E11D48",
+                      backgroundColor: selectedMoodData?.color || COLORS.primary[500],
                       alignItems: "center",
                       justifyContent: "center",
-                      shadowColor: selectedMoodData?.color || "#E11D48",
+                      shadowColor: selectedMoodData?.color || COLORS.primary[500],
                       shadowOffset: { width: 0, height: 4 },
                       shadowOpacity: 0.4,
                       shadowRadius: 12,

@@ -92,6 +92,44 @@ Adicionar fallback para quando a API falhar.
 Garantir lazy loading de imagens e reduzir re-renders.
 ```
 
+### 🚀 Build+Deploy Agent (NOVO)
+
+**Quando usar**: Builds EAS, OTA updates, Edge Functions deploy
+
+**MCPs**:
+
+- Expo MCP (builds, OTA)
+- Supabase MCP (Edge Functions)
+
+**Arquivos de configuração**:
+- `.claude/agents/build-deploy.md`
+
+**Comandos relacionados**:
+- `/build-ios` - Build iOS com quality gate
+- `/build-android` - Build Android com quality gate
+- `/ota-update` - Gerenciar OTA updates
+
+**Exemplo de prompt**:
+
+```
+@Build+Deploy Agent: Criar build de produção para iOS.
+Verificar quality gate e criar tag de versão.
+```
+
+## Configs de Agentes
+
+Cada agente possui um arquivo de configuração detalhado em `.claude/agents/`:
+
+| Agente | Arquivo de Config |
+|--------|------------------|
+| Build+Deploy | `.claude/agents/build-deploy.md` |
+| Database | `.claude/agents/database.md` |
+| AI/NathIA | `.claude/agents/ai-nathia.md` |
+| Performance | `.claude/agents/performance.md` |
+| Design+UI | `.claude/agents/design-ui.md` |
+
+Consulte esses arquivos para regras detalhadas, MCPs necessários e checklists.
+
 ## Como Escolher o Agente
 
 1. **Identifique a área** da tarefa

@@ -14,6 +14,7 @@ import { Audio } from "expo-av";
 import { useNavigation } from "@react-navigation/native";
 import {
   COLORS,
+  GRADIENTS,
   SPACING,
   RADIUS,
   TYPOGRAPHY,
@@ -137,8 +138,8 @@ const SOUNDS: SoundItem[] = [
  */
 const getRestColors = (_isDark: boolean) => ({
   // Backgrounds - always dark for relaxation
-  bgPrimary: "#1F2937",
-  bgSecondary: "#111827",
+  bgPrimary: GRADIENTS.rest.bgPrimary,
+  bgSecondary: GRADIENTS.rest.bgSecondary,
   cardBg: "rgba(255, 255, 255, 0.1)",
   cardBgActive: (color: string) => `${color}20`,
   // Text
@@ -146,14 +147,14 @@ const getRestColors = (_isDark: boolean) => ({
   textSecondary: COLORS.neutral[400],
   textMuted: "rgba(255, 255, 255, 0.6)",
   // UI elements
-  iconBg: "#374151",
+  iconBg: GRADIENTS.rest.iconBg,
   iconBgActive: (color: string) => color,
   border: "rgba(255, 255, 255, 0.1)",
   borderActive: (color: string) => color,
   // Info card
   infoBg: "rgba(255, 255, 255, 0.1)",
   infoIconBg: "rgba(192, 132, 252, 0.2)",
-  infoIcon: "#C084FC",
+  infoIcon: GRADIENTS.rest.infoIcon,
   // Tab
   tabBg: "rgba(255, 255, 255, 0.1)",
   tabActive: "rgba(255, 255, 255, 0.2)",
