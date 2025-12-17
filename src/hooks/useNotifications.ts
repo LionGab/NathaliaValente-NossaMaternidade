@@ -27,9 +27,7 @@ import Constants from "expo-constants";
 import { useAppStore } from "@/state/store";
 import { supabase } from "@/api/supabase";
 import { logger } from "@/utils/logger";
-import { useNavigation } from "@react-navigation/native";
-import type { RootStackParamList } from "@/types/navigation";
-import type { NavigationProp } from "@react-navigation/native";
+import { navigationRef } from "@/navigation/navigationRef";
 
 // =======================
 // TYPES
@@ -179,11 +177,9 @@ function handleNotificationReceived(notification: Notifications.Notification) {
 
 /**
  * Handle notification tap (user clicked on notification)
+ * Uses navigationRef instead of useNavigation to work outside NavigationContainer
  */
-function handleNotificationResponse(
-  response: Notifications.NotificationResponse,
-  navigation: NavigationProp<RootStackParamList>
-) {
+function handleNotificationResponse(response: Notifications.NotificationResponse) {
   const data = response.notification.request.content.data as NotificationData;
   const type = data?.type;
 
@@ -192,42 +188,48 @@ function handleNotificationResponse(
   // Clear badge when user opens notification
   Notifications.setBadgeCountAsync(0);
 
+  // Check if navigation is ready before navigating
+  if (!navigationRef.isReady()) {
+    logger.warn("Navigation not ready, cannot navigate from notification", "notifications");
+    return;
+  }
+
   // Navigate based on notification type
   switch (type) {
     case "community_comment":
     case "community_like":
       if (data.postId) {
-        navigation.navigate("PostDetail", { postId: data.postId });
+        navigationRef.navigate("PostDetail", { postId: data.postId });
       } else {
-        navigation.navigate("MainTabs", { screen: "Community" });
+        navigationRef.navigate("MainTabs", { screen: "Community" });
       }
       break;
 
     case "community_group_post":
-      navigation.navigate("MainTabs", { screen: "Community" });
+      navigationRef.navigate("MainTabs", { screen: "Community" });
       break;
 
     case "habit_reminder":
     case "habit_streak":
-      navigation.navigate("Habits");
+      navigationRef.navigate("Habits");
       break;
 
     case "daily_check_in":
-      navigation.navigate("DailyLog", {});
+      navigationRef.navigate("DailyLog", {});
       break;
 
     case "daily_affirmation":
-      navigation.navigate("Affirmations");
+      navigationRef.navigate("Affirmations");
       break;
 
     case "cycle_period_coming":
     case "cycle_fertile_window":
       // Navigate to MyCare tab which has cycle tracking
-      navigation.navigate("MainTabs", { screen: "MyCare" });
+      navigationRef.navigate("MainTabs", { screen: "MyCare" });
       break;
 
     case "chat_reminder":
-      navigation.navigate("MainTabs", { screen: "Assistant" });
+      navigationRef.navigate("MainTabs", { screen: "Assistant" });
       break;
 
     default:
@@ -241,7 +243,6 @@ function handleNotificationResponse(
 // =======================
 
 export function useNotifications(): UseNotificationsReturn {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const user = useAppStore((s) => s.user);
 
   const [isEnabled, setIsEnabled] = useState(false);
@@ -369,7 +370,7 @@ export function useNotifications(): UseNotificationsReturn {
 
     // Listener for when user taps on notification
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
-      (response) => handleNotificationResponse(response, navigation)
+      handleNotificationResponse
     );
 
     return () => {
@@ -380,7 +381,7 @@ export function useNotifications(): UseNotificationsReturn {
         responseListener.current.remove();
       }
     };
-  }, [navigation]);
+  }, []);
 
   /**
    * Auto-register token when user logs in
