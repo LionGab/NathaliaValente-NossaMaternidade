@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { RootStackScreenProps, Post } from "../types/navigation";
 import { useCommunityStore, useAppStore } from "../state/store";
 import * as Haptics from "expo-haptics";
+import { COLORS } from "../theme/design-system";
 
 export default function NewPostScreen({ navigation }: RootStackScreenProps<"NewPost">) {
   const insets = useSafeAreaInsets();
@@ -76,7 +77,7 @@ export default function NewPostScreen({ navigation }: RootStackScreenProps<"NewP
       <View className="flex-1 px-4 pt-4">
         <View className="flex-row items-start">
           <View className="w-11 h-11 rounded-full bg-blush-200 items-center justify-center mr-3">
-            <Ionicons name="person" size={22} color="#9E7269" />
+            <Ionicons name="person" size={22} color={COLORS.primary[600]} />
           </View>
           <View className="flex-1">
             <Text className="text-warmGray-800 text-base font-semibold">{user?.name || "Voce"}</Text>
@@ -84,7 +85,7 @@ export default function NewPostScreen({ navigation }: RootStackScreenProps<"NewP
               value={content}
               onChangeText={setContent}
               placeholder="O que voce quer compartilhar?"
-              placeholderTextColor="#A8A29E"
+              placeholderTextColor={COLORS.text.tertiary}
               multiline
               autoFocus
               className="text-warmGray-700 text-base leading-6 mt-2"
@@ -100,11 +101,11 @@ export default function NewPostScreen({ navigation }: RootStackScreenProps<"NewP
         style={{ paddingBottom: insets.bottom + 8 }}
       >
         <Pressable onPress={handlePhotoPress} className="flex-row items-center mr-6">
-          <Ionicons name="image-outline" size={24} color="#BC8B7B" />
+          <Ionicons name="image-outline" size={24} color={COLORS.primary[500]} />
           <Text className="ml-2 text-warmGray-500 text-sm">Foto</Text>
         </Pressable>
         <Pressable onPress={handleCameraPress} className="flex-row items-center">
-          <Ionicons name="camera-outline" size={24} color="#BC8B7B" />
+          <Ionicons name="camera-outline" size={24} color={COLORS.primary[500]} />
           <Text className="ml-2 text-warmGray-500 text-sm">Câmera</Text>
         </Pressable>
         <View className="flex-1" />

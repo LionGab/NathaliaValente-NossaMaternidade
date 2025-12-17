@@ -243,3 +243,43 @@ scripts/           # Build and setup scripts
 - See [docs/MCP_SETUP.md](docs/MCP_SETUP.md) for MCP configuration
 - See [docs/AGENTS_GUIDE.md](docs/AGENTS_GUIDE.md) for agent usage
 - Available MCPs: Supabase, Context7, Playwright (Figma and Linear require setup)
+
+### Community Feature Architecture
+
+The Community feature follows best practices with proper separation of concerns:
+
+```
+src/
+├── config/community.ts       # MOCK_POSTS, COMMUNITY_TOPICS, POST_TYPES
+├── utils/formatters.ts       # formatTimeAgo(), formatCompactNumber(), truncateText()
+├── hooks/useCommunity.ts     # All state + handlers (search, like, share, etc.)
+└── components/community/
+    ├── PostCard.tsx          # Post display with React.memo
+    ├── ComposerCard.tsx      # New post composer with topics
+    ├── NewPostModal.tsx      # Modal for creating posts
+    └── index.ts              # Barrel exports
+```
+
+**Pattern**: Screen uses hook for logic, components are UI-only:
+```typescript
+// In CommunityScreen.tsx
+const community = useCommunity(navigation);
+// community.filteredPosts, community.handleLike, community.openNewPostModal, etc.
+```
+
+### Design Quality Standards
+
+Run `/design-quality` to check:
+- **Cores**: Use `COLORS` from design-system.ts (not hardcoded hex)
+- **Tap targets**: Minimum 44pt (iOS HIG) - use `ACCESSIBILITY.minTapTarget`
+- **Spacing**: Use `SPACING` tokens (8pt grid system)
+- **Dark mode**: All screens should use `useTheme()` hook
+
+**Semantic colors available**:
+- `COLORS.semantic.error/errorLight` - Medical warnings, errors
+- `COLORS.semantic.warning/warningLight` - Caution states
+- `COLORS.semantic.info/infoLight` - Informational
+- `COLORS.semantic.success/successLight` - Confirmations
+
+**Special gradients**:
+- `AFFIRMATION_GRADIENTS` - Immersive affirmation themes (Oceano, Ametista, etc.)

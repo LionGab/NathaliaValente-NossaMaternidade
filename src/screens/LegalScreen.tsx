@@ -88,29 +88,29 @@ const INFO_ITEMS = [
 const getLegalColors = (isDark: boolean) => ({
   // Backgrounds
   cardBg: isDark ? DS_COLORS.background.secondary : DS_COLORS.text.inverse,
-  // Medical warning
-  medicalBg: isDark ? "rgba(239, 68, 68, 0.15)" : "#FEF2F2",
-  medicalBorder: isDark ? "rgba(239, 68, 68, 0.3)" : "#FECACA",
-  medicalIconBg: isDark ? "rgba(254, 226, 226, 0.2)" : "#FEE2E2",
-  medicalTitle: isDark ? DS_COLORS.semantic.error : "#B91C1C",
-  medicalText: isDark ? "#FCA5A5" : "#DC2626",
-  // LGPD
-  lgpdCheckBg: isDark ? "rgba(99, 102, 241, 0.2)" : "#E0E7FF",
+  // Medical warning - using semantic error colors
+  medicalBg: isDark ? DS_COLORS.semantic.errorLight : DS_COLORS.semantic.errorLight,
+  medicalBorder: isDark ? `${DS_COLORS.semantic.error}30` : DS_COLORS.legacyAccent.coral,
+  medicalIconBg: isDark ? `${DS_COLORS.semantic.error}20` : DS_COLORS.semantic.errorLight,
+  medicalTitle: DS_COLORS.semantic.error,
+  medicalText: DS_COLORS.semantic.error,
+  // LGPD - using info/primary colors
+  lgpdCheckBg: isDark ? DS_COLORS.semantic.infoLight : DS_COLORS.semantic.infoLight,
   lgpdCheck: DS_COLORS.primary[500],
-  lgpdContactBg: isDark ? "rgba(245, 243, 255, 0.1)" : "#F5F3FF",
+  lgpdContactBg: isDark ? `${DS_COLORS.primary[500]}10` : DS_COLORS.primary[50],
   lgpdContactText: DS_COLORS.primary[500],
-  // AI section
-  aiBg: isDark ? "rgba(168, 85, 247, 0.1)" : "#FDF4FF",
-  aiBorder: isDark ? "rgba(245, 208, 254, 0.2)" : "#F5D0FE",
-  aiIconBg: isDark ? "rgba(250, 232, 255, 0.15)" : "#FAE8FF",
-  aiTitle: isDark ? DS_COLORS.secondary[300] : "#6B21A8",
-  aiText: isDark ? DS_COLORS.secondary[400] : "#7C3AED",
-  aiInfo: isDark ? DS_COLORS.secondary[400] : "#9333EA",
-  aiInfoText: isDark ? DS_COLORS.secondary[300] : "#7C3AED",
-  // Gradient for header
+  // AI section - using secondary colors
+  aiBg: isDark ? `${DS_COLORS.secondary[500]}10` : DS_COLORS.secondary[50],
+  aiBorder: isDark ? `${DS_COLORS.secondary[300]}20` : DS_COLORS.secondary[200],
+  aiIconBg: isDark ? `${DS_COLORS.secondary[400]}15` : DS_COLORS.secondary[100],
+  aiTitle: isDark ? DS_COLORS.secondary[300] : DS_COLORS.secondary[700],
+  aiText: isDark ? DS_COLORS.secondary[400] : DS_COLORS.secondary[600],
+  aiInfo: isDark ? DS_COLORS.secondary[400] : DS_COLORS.secondary[500],
+  aiInfoText: isDark ? DS_COLORS.secondary[300] : DS_COLORS.secondary[600],
+  // Gradient for header - using primary soft gradient
   headerGradient: isDark
     ? [DS_COLORS.background.primary, DS_COLORS.background.secondary, DS_COLORS.background.tertiary] as const
-    : ["#F5F3FF", "#FDF4FF", "#FFFCF9"] as const,
+    : [DS_COLORS.primary[50], DS_COLORS.secondary[50], DS_COLORS.background.secondary] as const,
 });
 
 export default function LegalScreen({ navigation }: RootStackScreenProps<"Legal">) {

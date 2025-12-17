@@ -26,7 +26,7 @@ interface ChatHistorySidebarProps {
 
 export const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({
   visible,
-  conversations,
+  conversations: _conversations,
   currentConversationId,
   groupedConversations,
   onClose,

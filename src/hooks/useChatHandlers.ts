@@ -9,11 +9,11 @@ import { useChatStore } from "../state/store";
 import { useIsPremium } from "../state/premium-store";
 import { useAppStore } from "../state/store";
 import { MainTabScreenProps } from "../types/navigation";
-import { logger } from "../utils/logger";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const FREE_MESSAGE_LIMIT = 10;
-const MESSAGE_COUNT_KEY = "nathia_message_count";
+// TODO: Uncomment when implementing message limits
+// import { logger } from "../utils/logger";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// const FREE_MESSAGE_LIMIT = 10;
+// const MESSAGE_COUNT_KEY = "nathia_message_count";
 
 interface UseChatHandlersProps {
   navigation: MainTabScreenProps<"Assistant">["navigation"];
@@ -24,21 +24,16 @@ interface UseChatHandlersProps {
   flatListRef: React.RefObject<any>;
 }
 
-export function useChatHandlers({
-  navigation,
-  inputText,
-  setInputText,
-  messageCount,
-  setMessageCount,
-  flatListRef,
-}: UseChatHandlersProps) {
-  const isPremium = useIsPremium();
-  const user = useAppStore((s) => s.user);
-  const conversations = useChatStore((s) => s.conversations);
-  const currentConversationId = useChatStore((s) => s.currentConversationId);
-  const isLoading = useChatStore((s) => s.isLoading);
-  const setLoading = useChatStore((s) => s.setLoading);
-  const addMessage = useChatStore((s) => s.addMessage);
+export function useChatHandlers(props: UseChatHandlersProps) {
+  const { navigation, setInputText } = props;
+  // TODO: Use these for message limit feature
+  void useIsPremium();
+  void useAppStore((s) => s.user);
+  void useChatStore((s) => s.conversations);
+  void useChatStore((s) => s.currentConversationId);
+  void useChatStore((s) => s.isLoading);
+  void useChatStore((s) => s.setLoading);
+  void useChatStore((s) => s.addMessage);
   const setCurrentConversation = useChatStore((s) => s.setCurrentConversation);
   const clearCurrentChat = useChatStore((s) => s.clearCurrentChat);
   const deleteConversation = useChatStore((s) => s.deleteConversation);

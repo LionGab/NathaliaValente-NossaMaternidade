@@ -423,49 +423,100 @@ export const RADIUS = {
 // SOMBRAS
 // ===========================================
 
+import { Platform } from "react-native";
+
+/**
+ * Converte shadow props para boxShadow CSS (web)
+ */
+function shadowToBoxShadow(
+  shadowColor: string,
+  shadowOffset: { width: number; height: number },
+  shadowOpacity: number,
+  shadowRadius: number
+): string {
+  if (shadowColor === "transparent") {
+    return "none";
+  }
+  const r = parseInt(shadowColor.slice(1, 3), 16);
+  const g = parseInt(shadowColor.slice(3, 5), 16);
+  const b = parseInt(shadowColor.slice(5, 7), 16);
+  const color = `rgba(${r}, ${g}, ${b}, ${shadowOpacity})`;
+  return `${shadowOffset.width}px ${shadowOffset.height}px ${shadowRadius}px ${color}`;
+}
+
+/**
+ * Cria shadow compatível com web (boxShadow) e mobile (shadow props)
+ */
+function createWebCompatibleShadow(config: {
+  shadowColor: string;
+  shadowOffset: { width: number; height: number };
+  shadowOpacity: number;
+  shadowRadius: number;
+  elevation: number;
+}) {
+  if (Platform.OS === "web") {
+    return {
+      boxShadow: shadowToBoxShadow(
+        config.shadowColor,
+        config.shadowOffset,
+        config.shadowOpacity,
+        config.shadowRadius
+      ),
+    };
+  }
+  return {
+    shadowColor: config.shadowColor,
+    shadowOffset: config.shadowOffset,
+    shadowOpacity: config.shadowOpacity,
+    shadowRadius: config.shadowRadius,
+    elevation: config.elevation,
+  };
+}
+
 export const SHADOWS = {
-  none: {
+  none: createWebCompatibleShadow({
     shadowColor: "transparent",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0,
     shadowRadius: 0,
     elevation: 0,
-  },
-  sm: {
+  }),
+  sm: createWebCompatibleShadow({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 1,
-  },
-  md: {
+  }),
+  md: createWebCompatibleShadow({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 3,
-  },
-  lg: {
+  }),
+  lg: createWebCompatibleShadow({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 24,
     elevation: 5,
-  },
-  xl: {
+  }),
+  xl: createWebCompatibleShadow({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 32,
     elevation: 8,
-  },
-  glow: (color: string) => ({
-    shadowColor: color,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 6,
   }),
+  glow: (color: string) =>
+    createWebCompatibleShadow({
+      shadowColor: color,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 16,
+      elevation: 6,
+    }),
 } as const;
 
 // ===========================================
@@ -739,6 +790,23 @@ export const GRADIENTS = {
   aurora: ["#7DB9D5", "#5CA3DB", "#14B8A6"],  // Azul pastel aurora
   heroPrimary: [COLORS.primary[400], COLORS.primary[500], COLORS.primary[600]],
 } as const;
+
+// ===========================================
+// AFFIRMATION GRADIENTS (Temas de Afirmações)
+// ===========================================
+
+/**
+ * Gradientes temáticos para tela de afirmações
+ * - Cores profundas para modo imersivo
+ * - Cada tema evoca uma emoção específica
+ */
+export const AFFIRMATION_GRADIENTS = [
+  { colors: ["#1E3A5F", "#2D5A87", "#3B7AB0"] as const, name: "Oceano" },
+  { colors: ["#4A1942", "#6B2D5C", "#8B4177"] as const, name: "Ametista" },
+  { colors: ["#1A3C34", "#2D5C4A", "#3F7D61"] as const, name: "Floresta" },
+  { colors: ["#3D2914", "#5C3D1E", "#7A5128"] as const, name: "Terra" },
+  { colors: ["#2E1065", "#4C1D95", "#6D28D9"] as const, name: "Cosmos" },
+] as const;
 
 // ===========================================
 // ELEVATIONS (z-index system)

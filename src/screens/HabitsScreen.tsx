@@ -76,6 +76,10 @@ export default function HabitsScreen() {
       >
         <Pressable
           onPress={() => handleToggleHabit(habit)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: habit.completed }}
+          accessibilityLabel={`${habit.title}. ${habit.description}`}
+          accessibilityHint={habit.completed ? "Toque para desmarcar" : "Toque para marcar como feito"}
           style={({ pressed }) => ({
             marginBottom: SPACING.md,
             opacity: pressed ? 0.9 : 1,
@@ -145,12 +149,12 @@ export default function HabitsScreen() {
                 </Text>
               </View>
 
-              {/* Checkbox */}
+              {/* Checkbox - 44pt min tap target (iOS HIG) */}
               <View
                 style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor: habit.completed ? habit.color : "transparent",
@@ -159,7 +163,7 @@ export default function HabitsScreen() {
                 }}
               >
                 {habit.completed && (
-                  <Ionicons name="checkmark" size={16} color={colors.neutral[0]} />
+                  <Ionicons name="checkmark" size={22} color={colors.neutral[0]} />
                 )}
               </View>
             </View>
