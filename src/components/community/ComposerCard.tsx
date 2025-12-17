@@ -84,12 +84,20 @@ export const ComposerCard: React.FC<ComposerCardProps> = React.memo(({ onPress }
         </View>
       </Pressable>
 
-      {/* Tópicos */}
-      <View style={styles.topicsSection}>
-        <Text style={[styles.topicsTitle, { color: textMain }]}>
+      {/* Tópicos - estilo original */}
+      <View style={{ marginTop: SPACING.lg }}>
+        <Text
+          style={{
+            fontSize: 15,
+            fontWeight: "600",
+            fontFamily: "Manrope_600SemiBold",
+            color: textMain,
+            marginBottom: SPACING.md,
+          }}
+        >
           Sobre o que você quer falar?
         </Text>
-        <View style={styles.topicsGrid}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: SPACING.sm }}>
           {COMMUNITY_TOPICS.map((topic) => {
             const { color, bg, border } = getTopicColors(topic.accent);
 
@@ -97,18 +105,35 @@ export const ComposerCard: React.FC<ComposerCardProps> = React.memo(({ onPress }
               <Pressable
                 key={topic.label}
                 onPress={handleTopicPress}
-                style={({ pressed }) => [
-                  styles.topicChip,
-                  {
-                    backgroundColor: bg,
-                    borderColor: border,
-                    opacity: pressed ? 0.85 : 1,
-                    transform: [{ scale: pressed ? 0.97 : 1 }],
-                  },
-                ]}
+                style={({ pressed }) => ({
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: bg,
+                  paddingHorizontal: SPACING.md,
+                  paddingVertical: SPACING.sm,
+                  borderRadius: RADIUS.full,
+                  borderWidth: 1,
+                  borderColor: border,
+                  opacity: pressed ? 0.85 : 1,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                })}
               >
-                <Ionicons name={topic.icon} size={16} color={color} style={styles.topicIcon} />
-                <Text style={[styles.topicText, { color }]}>{topic.label}</Text>
+                <Ionicons
+                  name={topic.icon}
+                  size={14}
+                  color={color}
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: "600",
+                    fontFamily: "Manrope_600SemiBold",
+                    color,
+                  }}
+                >
+                  {topic.label}
+                </Text>
               </Pressable>
             );
           })}
@@ -162,36 +187,6 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   actionText: {
-    fontSize: 13,
-    fontWeight: "600",
-    fontFamily: "Manrope_600SemiBold",
-  },
-  topicsSection: {
-    marginTop: SPACING.xl,
-  },
-  topicsTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    fontFamily: "Manrope_600SemiBold",
-    marginBottom: SPACING.md,
-  },
-  topicsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.sm,
-  },
-  topicChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.full,
-    borderWidth: 1,
-  },
-  topicIcon: {
-    marginRight: 6,
-  },
-  topicText: {
     fontSize: 13,
     fontWeight: "600",
     fontFamily: "Manrope_600SemiBold",
