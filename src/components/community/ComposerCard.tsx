@@ -183,17 +183,17 @@ const styles = StyleSheet.create({
   actionsSection: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-evenly",
     borderTopWidth: 1,
-    paddingVertical: SPACING.sm,
+    paddingVertical: SPACING.md,
   },
   actionBtn: {
-    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: SPACING.sm,
-    gap: SPACING.xs,
+    paddingHorizontal: SPACING.xl,
+    gap: SPACING.sm,
   },
   actionLabel: {
     fontSize: 14,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
   actionDivider: {
     width: 1,
-    height: 20,
+    height: 24,
   },
 
   // === TOPICS SECTION ===
@@ -224,19 +224,20 @@ const styles = StyleSheet.create({
   topicsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: SPACING.sm,
+    gap: SPACING.md,
+    rowGap: SPACING.sm,
   },
   topicChip: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
+    paddingHorizontal: SPACING.md + 2,
+    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.full,
     borderWidth: 1,
-    gap: SPACING.xs,
+    gap: SPACING.xs + 2,
   },
   topicText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     fontFamily: "Manrope_600SemiBold",
   },
