@@ -2,7 +2,7 @@ import React from "react";
 import { View, Image, ImageSourcePropType, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { cn } from "../../utils/cn";
-import { COLORS } from "../../theme/design-system";
+import { COLORS, OVERLAY } from "../../theme/design-system";
 
 export interface AvatarProps {
   size?: number;
@@ -22,7 +22,7 @@ const Avatar = React.memo(function Avatar({
   source,
   fallbackIcon = "person",
   fallbackColor = COLORS.neutral[600],
-  fallbackBgColor = "rgba(188, 139, 123, 0.15)",
+  fallbackBgColor = OVERLAY.white.soft,
   isNathalia = false,
   isNathIA = false,
   isCommunity = false,
