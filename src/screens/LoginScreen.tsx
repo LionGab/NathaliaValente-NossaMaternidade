@@ -31,6 +31,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as LocalAuthentication from "expo-local-authentication";
 import { useAppStore } from "../state/store";
 import * as Haptics from "expo-haptics";
+import { signIn, signUp, getSession, resetPassword } from "../api/auth";
 import {
   UserProfile,
   PregnancyStage,
@@ -491,7 +492,7 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
-  // Handler para Biometric Login
+  // Handler para Biometric Login - requires existing session
   const handleBiometricLogin = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -501,41 +502,50 @@ export default function LoginScreen({ navigation }: Props) {
 
       if (result.success) {
         setIsLoading(true);
-        setTimeout(() => {
-          const mockUser: UserProfile = {
-            id: Date.now().toString(),
-            name: "Usuária",
-            email: "user@nossmaternidade.com",
-            avatarUrl: "",
-            stage: "pregnant" as PregnancyStage,
-            dueDate: undefined,
-            interests: [] as Interest[],
-            createdAt: new Date().toISOString(),
-            hasCompletedOnboarding: false,
-          };
-          setUser(mockUser);
-          setAuthenticated(true);
+
+        // Check for existing Supabase session
+        const { session, error } = await getSession();
+
+        if (error || !session?.user) {
           setIsLoading(false);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }, 1000);
+          showAlert(
+            "Sessão não encontrada",
+            "Faça login com email e senha primeiro para ativar a biometria."
+          );
+          return;
+        }
+
+        // Restore user from existing session
+        const authUser = session.user;
+        const userProfile: UserProfile = {
+          id: authUser.id,
+          name: authUser.user_metadata?.name || "Usuária",
+          email: authUser.email || "",
+          avatarUrl: authUser.user_metadata?.avatar_url || "",
+          stage: (authUser.user_metadata?.stage as PregnancyStage) || "pregnant",
+          dueDate: authUser.user_metadata?.dueDate,
+          interests: (authUser.user_metadata?.interests as Interest[]) || [],
+          createdAt: authUser.created_at || new Date().toISOString(),
+          hasCompletedOnboarding: authUser.user_metadata?.hasCompletedOnboarding || false,
+        };
+
+        setUser(userProfile);
+        setAuthenticated(true);
+        setIsLoading(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     } catch {
       showAlert("Erro", "Falha na autenticação biométrica");
     }
   };
 
-  // Handlers para Social Login
+  // Handlers para Social Login - em desenvolvimento
   const handleSocialLogin = async (provider: "apple" | "google") => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      showAlert(
-        `Login com ${provider === "apple" ? "Apple" : "Google"}`,
-        `Integrando com ${provider === "apple" ? "Apple" : "Google"}...`
-      );
-      // Integração real seria feita aqui com expo-auth-session
-    } catch {
-      showAlert("Erro", `Falha no login com ${provider}`);
-    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    showAlert(
+      "Em breve",
+      `Login com ${provider === "apple" ? "Apple" : "Google"} estará disponível em breve. Por enquanto, use email e senha.`
+    );
   };
 
   const buttonScale = useSharedValue(1);
@@ -585,26 +595,82 @@ export default function LoginScreen({ navigation }: Props) {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const mockUser: UserProfile = {
-        id: Date.now().toString(),
-        name: name || "Usuária",
-        email,
-        avatarUrl: "",
-        stage: "pregnant" as PregnancyStage,
-        dueDate: undefined,
-        interests: [] as Interest[],
-        createdAt: new Date().toISOString(),
-        hasCompletedOnboarding: false,
-      };
+    try {
+      if (isLogin) {
+        // Real Supabase login
+        const { user: authUser, error } = await signIn(email, password);
 
-      setUser(mockUser);
-      setAuthenticated(true);
+        if (error || !authUser) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          // Map common Supabase errors to PT-BR
+          if (errorMessage.includes("Invalid login credentials")) {
+            showAlert("Email ou senha incorretos", "Verifique suas credenciais e tente novamente.");
+          } else if (errorMessage.includes("Email not confirmed")) {
+            showAlert("Email não confirmado", "Verifique sua caixa de entrada e confirme seu email.");
+          } else {
+            showAlert("Erro no login", errorMessage || "Tente novamente mais tarde.");
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Create user profile from auth data
+        const userProfile: UserProfile = {
+          id: authUser.id,
+          name: authUser.user_metadata?.name || name || "Usuária",
+          email: authUser.email || email,
+          avatarUrl: authUser.user_metadata?.avatar_url || "",
+          stage: (authUser.user_metadata?.stage as PregnancyStage) || "pregnant",
+          dueDate: authUser.user_metadata?.dueDate,
+          interests: (authUser.user_metadata?.interests as Interest[]) || [],
+          createdAt: authUser.created_at || new Date().toISOString(),
+          hasCompletedOnboarding: authUser.user_metadata?.hasCompletedOnboarding || false,
+        };
+
+        setUser(userProfile);
+        setAuthenticated(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        // Real Supabase signup
+        const { user: authUser, error } = await signUp(email, password, name);
+
+        if (error || !authUser) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          // Map common Supabase errors to PT-BR
+          if (errorMessage.includes("already registered")) {
+            showAlert("Email já cadastrado", "Este email já está em uso. Tente fazer login.");
+          } else if (errorMessage.includes("Password should be")) {
+            showAlert("Senha fraca", "A senha deve ter no mínimo 6 caracteres.");
+          } else {
+            showAlert("Erro no cadastro", errorMessage || "Tente novamente mais tarde.");
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Create user profile from auth data
+        const userProfile: UserProfile = {
+          id: authUser.id,
+          name: name,
+          email: authUser.email || email,
+          avatarUrl: "",
+          stage: "pregnant" as PregnancyStage,
+          dueDate: undefined,
+          interests: [] as Interest[],
+          createdAt: authUser.created_at || new Date().toISOString(),
+          hasCompletedOnboarding: false,
+        };
+
+        setUser(userProfile);
+        setAuthenticated(true);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Erro desconhecido";
+      showAlert("Erro", errorMessage);
+    } finally {
       setIsLoading(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // Navigation handled by RootNavigator
-    }, 1500);
+    }
   };
 
   const toggleMode = () => {
@@ -842,12 +908,26 @@ export default function LoginScreen({ navigation }: Props) {
               {/* Esqueceu a senha (apenas login) */}
               {isLogin && (
                 <Pressable
-                  onPress={() => {
+                  onPress={async () => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    showAlert(
-                      "Recuperar senha",
-                      "Um link será enviado para seu e-mail."
-                    );
+                    if (!email || !validateEmail(email)) {
+                      showAlert(
+                        "Email necessário",
+                        "Digite seu email acima para receber o link de recuperação."
+                      );
+                      return;
+                    }
+                    setIsLoading(true);
+                    const { error } = await resetPassword(email);
+                    setIsLoading(false);
+                    if (error) {
+                      showAlert("Erro", "Não foi possível enviar o email. Tente novamente.");
+                    } else {
+                      showAlert(
+                        "Email enviado",
+                        "Verifique sua caixa de entrada para redefinir sua senha."
+                      );
+                    }
                   }}
                   style={{
                     alignSelf: "flex-end",
