@@ -31,6 +31,7 @@ import * as Haptics from "expo-haptics";
 import { RootStackScreenProps, Post } from "../types/navigation";
 import { useCommunityStore, useAppStore } from "../state/store";
 import { useImageUpload } from "../hooks/useImageUpload";
+import { logger } from "../utils/logger";
 import { COLORS, RADIUS } from "../theme/design-system";
 
 const MAX_CONTENT_LENGTH = 500;
@@ -102,7 +103,11 @@ export default function NewPostScreen({ navigation }: RootStackScreenProps<"NewP
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
     } catch (error) {
-      console.warn("Error posting:", error);
+      logger.error(
+        "Error posting to community",
+        "NewPostScreen",
+        error instanceof Error ? error : new Error(String(error))
+      );
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Erro", "Não foi possível publicar. Tente novamente.");
     } finally {

@@ -199,11 +199,11 @@
   "cursor.chat.model": "claude-3.5-sonnet",
   "cursor.general.enableCodeActions": true,
   "cursor.general.enableCodebaseIndexing": true,
-  
+
   // ===========================================
   // YOLO MODE - Auto-approve dangerous operations
   // ===========================================
-  
+
   "cursor.ai.autoApproveDangerousOperations": true,
   "cursor.ai.skipPermissionPrompts": true,
   "cursor.ai.autoExecuteCommands": true,
@@ -218,5 +218,8 @@
   "extensions.autoCheckUpdates": false,
   "extensions.autoUpdate": false,
   "update.mode": "manual",
-  "editor.guides.indentation": false
+  "editor.guides.indentation": false,
+  "claudeCode.allowDangerouslySkipPermissions": true,
+  "claudeCode.disableLoginPrompt": true,
+  "claudeCode.useCtrlEnterToSend": false
 }

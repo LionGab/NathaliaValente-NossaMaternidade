@@ -7,6 +7,13 @@
 
 import { AIMessage, AIResponse } from "../types/ai";
 import { logger } from "../utils/logger";
+import { fetchWithRetry, TIMEOUT_PRESETS } from "../utils/fetch-utils";
+import {
+  AppError,
+  ErrorCode,
+  wrapError,
+  isAppError,
+} from "../utils/error-handler";
 import { supabase } from "./supabase";
 
 const FUNCTIONS_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTIONS_URL;
@@ -37,6 +44,7 @@ interface EdgeFunctionPayload {
 /**
  * Obter resposta da NathIA (Claude ou Gemini)
  * Decide automaticamente o provider com base no contexto
+ * Inclui retry + timeout automático
  */
 export async function getNathIAResponse(
   messages: AIMessage[],
@@ -45,7 +53,13 @@ export async function getNathIAResponse(
   try {
     // 1. Verificar autenticação
     if (!supabase) {
-      throw new Error("Supabase não está configurado.");
+      throw new AppError(
+        "Supabase não está configurado",
+        ErrorCode.API_ERROR,
+        "Erro de configuração. Contate o suporte.",
+        undefined,
+        { component: "AIService" }
+      );
     }
 
     const {
@@ -53,7 +67,13 @@ export async function getNathIAResponse(
     } = await supabase.auth.getSession();
 
     if (!session?.access_token) {
-      throw new Error("Usuário não autenticado. Faça login para continuar.");
+      throw new AppError(
+        "Session token not found",
+        ErrorCode.UNAUTHORIZED,
+        "Você não está autenticado. Faça login para continuar.",
+        undefined,
+        { component: "AIService" }
+      );
     }
 
     // 2. Decidir provider
@@ -79,35 +99,52 @@ export async function getNathIAResponse(
       ...(context.imageData && { imageData: context.imageData }),
     };
 
-    // 4. Chamar Edge Function COM JWT
-    const response = await fetch(`${FUNCTIONS_URL}/ai`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.access_token}`,
+    // 4. Chamar Edge Function COM JWT + RETRY + TIMEOUT
+    const response = await fetchWithRetry(
+      `${FUNCTIONS_URL}/ai`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(payload),
+        // AI pode demorar até 60s dependendo do provider
+        timeoutMs: TIMEOUT_PRESETS.CRITICAL,
+        context: "AIService",
       },
-      body: JSON.stringify(payload),
-    });
-
-    // 5. Tratar erros
-    if (!response.ok) {
-      const error = await response.json();
-
-      if (response.status === 429) {
-        throw new Error(
-          "Você está enviando muitas mensagens. Aguarde um minuto e tente novamente."
-        );
+      {
+        // Não retry em erros de autenticação/validação
+        maxAttempts: 3,
+        initialDelay: 1000,
+        maxDelay: 5000,
+        retryable: (error) => {
+          if (isAppError(error)) {
+            // Não retry em erros que não devem ser retentados
+            return ![
+              ErrorCode.UNAUTHORIZED,
+              ErrorCode.FORBIDDEN,
+              ErrorCode.INVALID_INPUT,
+            ].includes(error.code as ErrorCode);
+          }
+          return true;
+        },
       }
+    );
 
-      if (response.status === 401) {
-        throw new Error("Sessão expirada. Faça login novamente.");
-      }
-
-      throw new Error(error.error || "Erro ao processar sua mensagem.");
-    }
-
-    // 6. Parse resposta
+    // 5. Parse resposta
     const data = await response.json();
+
+    // Validar estrutura da resposta
+    if (!data.content || !data.usage || !data.provider) {
+      throw new AppError(
+        "Invalid response structure from AI service",
+        ErrorCode.API_ERROR,
+        "Resposta inválida do servidor. Tente novamente.",
+        undefined,
+        { received: Object.keys(data) }
+      );
+    }
 
     logger.info(
       `AI response: ${data.provider}, ${data.latency}ms, ${data.usage.totalTokens} tokens`,
@@ -128,15 +165,17 @@ export async function getNathIAResponse(
       fallback: data.fallback,
     };
   } catch (error) {
-    logger.error("AI service error", "AIService", error as Error);
-
-    // Re-throw com mensagem user-friendly
-    if (error instanceof Error) {
+    // Se já é AppError, re-throw mantendo contexto
+    if (isAppError(error)) {
       throw error;
     }
 
-    throw new Error(
-      "Não consegui processar sua mensagem. Tente novamente em instantes."
+    // Converter erro genérico para AppError
+    throw wrapError(
+      error,
+      ErrorCode.AI_SERVICE_ERROR,
+      "Não consegui processar sua mensagem. Tente novamente em instantes.",
+      { component: "AIService", messageCount: messages.length }
     );
   }
 }

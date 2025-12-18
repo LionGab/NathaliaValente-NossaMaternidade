@@ -24,6 +24,7 @@ import CommunityScreen from "../screens/CommunityScreen";
 import HabitsScreen from "../screens/HabitsScreen";
 import HomeScreen from "../screens/HomeScreen";
 import MundoDaNathScreenOriginal from "../screens/MundoDaNathScreen";
+import { ScreenErrorBoundary } from "../components/ScreenErrorBoundary";
 
 // Foto da Nathalia para o botão NathIA
 const NATHIA_AVATAR_URL = "https://i.imgur.com/a4O1jAT.jpg";
@@ -43,6 +44,19 @@ const MundoDaNathScreen = ({ navigation }: MainTabScreenProps<"MundoNath">) => {
     />
   );
 };
+
+// Wrappers com ScreenErrorBoundary para telas críticas
+const AssistantScreenWithBoundary = (props: MainTabScreenProps<"Assistant">) => (
+  <ScreenErrorBoundary screenName="NathIA" navigation={props.navigation}>
+    <AssistantScreen {...props} />
+  </ScreenErrorBoundary>
+);
+
+const CommunityScreenWithBoundary = (props: MainTabScreenProps<"Community">) => (
+  <ScreenErrorBoundary screenName="Comunidade" navigation={props.navigation}>
+    <CommunityScreen {...props} />
+  </ScreenErrorBoundary>
+);
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -269,7 +283,7 @@ export default function MainTabNavigator() {
       />
       <Tab.Screen
         name="Community"
-        component={CommunityScreen}
+        component={CommunityScreenWithBoundary}
         options={{
           tabBarLabel: "Mães",
           tabBarAccessibilityLabel: "Mães - Conecte-se com outras mães",
@@ -284,7 +298,7 @@ export default function MainTabNavigator() {
       />
       <Tab.Screen
         name="Assistant"
-        component={AssistantScreen}
+        component={AssistantScreenWithBoundary}
         options={{
           tabBarLabel: "NathIA",
           tabBarAccessibilityLabel: "NathIA - Assistente de inteligência artificial",

@@ -10,6 +10,13 @@ import * as FileSystem from "expo-file-system/legacy";
 import { Audio } from "expo-av";
 import Constants from "expo-constants";
 import { logger } from "../utils/logger";
+import { fetchWithRetry, TIMEOUT_PRESETS } from "../utils/fetch-utils";
+import {
+  AppError,
+  ErrorCode,
+  wrapError,
+  isAppError,
+} from "../utils/error-handler";
 
 // ============================================
 // CONFIGURACAO
@@ -86,11 +93,15 @@ export function isElevenLabsConfigured(): boolean {
 /**
  * Gera fala a partir de texto usando a API do ElevenLabs
  * Retorna URI local do arquivo de audio para playback
+ * Inclui retry + timeout para melhor reliability
  *
  * @param options - Opcoes de geracao
  * @returns URI do arquivo de audio local
+ * @throws AppError se configuração inválida ou geração falhar
  */
-export async function generateSpeech(options: GenerateSpeechOptions): Promise<string> {
+export async function generateSpeech(
+  options: GenerateSpeechOptions
+): Promise<string> {
   const {
     text,
     voiceId = NATHIA_VOICE_ID,
@@ -100,66 +111,107 @@ export async function generateSpeech(options: GenerateSpeechOptions): Promise<st
 
   // Validacoes
   if (!isElevenLabsConfigured()) {
-    throw new Error("ElevenLabs API key not configured");
+    throw new AppError(
+      "ElevenLabs API key not configured",
+      ErrorCode.API_ERROR,
+      "Áudio não está configurado. Contate o suporte.",
+      undefined,
+      { component: "ElevenLabs" }
+    );
   }
 
   if (!text || text.trim().length === 0) {
-    throw new Error("Text is required for speech generation");
+    throw new AppError(
+      "Text is required for speech generation",
+      ErrorCode.INVALID_INPUT,
+      "Texto vazio não pode ser convertido em áudio.",
+      undefined,
+      { component: "ElevenLabs" }
+    );
   }
 
-  // Limitar texto para evitar custos excessivos (max 5000 caracteres)
-  const trimmedText = text.slice(0, 5000);
+  // Validar limite de caracteres (ElevenLabs tem limites)
+  const MAX_CHARS = 5000; // Limite conservador
+  if (text.length > MAX_CHARS) {
+    throw new AppError(
+      `Text exceeds maximum length: ${text.length} > ${MAX_CHARS}`,
+      ErrorCode.INVALID_INPUT,
+      `Texto muito longo. Máximo ${MAX_CHARS} caracteres.`,
+      undefined,
+      { component: "ElevenLabs", textLength: text.length, maxChars: MAX_CHARS }
+    );
+  }
 
-  logger.info("Generating speech", "ElevenLabs", {
+  const trimmedText = text.trim();
+
+  logger.debug("Generating speech", "ElevenLabs", {
     textLength: trimmedText.length,
     voiceId,
     modelId,
   });
 
   try {
-    // Chamada a API
-    const response = await fetch(
+    // Chamar API COM RETRY + TIMEOUT
+    const response = await fetchWithRetry(
       `${ELEVENLABS_API_URL}/text-to-speech/${voiceId}`,
       {
         method: "POST",
         headers: {
           "xi-api-key": ELEVENLABS_API_KEY,
           "Content-Type": "application/json",
-          "Accept": "audio/mpeg",
+          Accept: "audio/mpeg",
         },
         body: JSON.stringify({
           text: trimmedText,
           model_id: modelId,
           voice_settings: voiceSettings,
         }),
+        // TTS pode demorar dependendo do tamanho do texto
+        timeoutMs: TIMEOUT_PRESETS.LONG,
+        context: "ElevenLabs",
+      },
+      {
+        maxAttempts: 3,
+        initialDelay: 1000,
+        maxDelay: 5000,
+        retryable: (error) => {
+          if (isAppError(error)) {
+            // Não retry em erros de autenticação ou validação
+            return ![
+              ErrorCode.UNAUTHORIZED,
+              ErrorCode.INVALID_INPUT,
+            ].includes(error.code as ErrorCode);
+          }
+          return true;
+        },
       }
     );
 
-    // Verificar resposta
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error("ElevenLabs API error", "ElevenLabs", new Error(errorText));
-
-      if (response.status === 401) {
-        throw new Error("Invalid ElevenLabs API key");
-      } else if (response.status === 429) {
-        throw new Error("Rate limit exceeded. Please try again later.");
-      } else if (response.status === 400) {
-        throw new Error("Invalid request to ElevenLabs API");
-      }
-
-      throw new Error(`ElevenLabs API error: ${response.status}`);
-    }
-
     // Obter audio como blob
     const audioBlob = await response.blob();
+
+    if (audioBlob.size === 0) {
+      throw new AppError(
+        "Empty audio response from ElevenLabs",
+        ErrorCode.API_ERROR,
+        "Resposta inválida do servidor de áudio.",
+        undefined,
+        { component: "ElevenLabs" }
+      );
+    }
 
     // Converter blob para base64
     const base64Audio = await blobToBase64(audioBlob);
 
     // Salvar em arquivo local para playback
     if (!FileSystem.cacheDirectory) {
-      throw new Error("Cache directory not available");
+      throw new AppError(
+        "Cache directory not available",
+        ErrorCode.API_ERROR,
+        "Erro ao salvar arquivo de áudio.",
+        undefined,
+        { component: "ElevenLabs" }
+      );
     }
 
     const filename = `nathia_voice_${Date.now()}.mp3`;
@@ -171,17 +223,27 @@ export async function generateSpeech(options: GenerateSpeechOptions): Promise<st
 
     logger.info("Speech generated successfully", "ElevenLabs", {
       textLength: trimmedText.length,
+      audioSize: audioBlob.size,
       fileUri,
     });
 
     return fileUri;
   } catch (error) {
-    logger.error(
-      "Speech generation failed",
-      "ElevenLabs",
-      error instanceof Error ? error : new Error(String(error))
+    // Se já é AppError, re-throw
+    if (isAppError(error)) {
+      throw error;
+    }
+
+    // Converter erro genérico
+    throw wrapError(
+      error,
+      ErrorCode.AUDIO_PROCESSING_ERROR,
+      "Erro ao gerar áudio. Tente novamente.",
+      {
+        component: "ElevenLabs",
+        textLength: trimmedText.length,
+      }
     );
-    throw error;
   }
 }
 

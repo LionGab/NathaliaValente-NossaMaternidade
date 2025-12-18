@@ -15,6 +15,7 @@
  * Features:
  * - JWT validation (authenticated users only)
  * - Rate limiting via Upstash Redis (20 req/min por usuário)
+ * - Circuit breakers (protege contra cascade failures)
  * - Structured logging & monitoring
  * - Payload caps (prevent abuse)
  * - Fallback chain: Gemini → Claude → OpenAI
@@ -23,13 +24,14 @@
  * - Citations extraídas corretamente
  * - CORS restrito
  *
- * @version 2.0.0 - Gemini como default (2025-01)
+ * @version 2.1.0 - Circuit breakers implementados (2025-12)
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Anthropic } from "https://esm.sh/@anthropic-ai/sdk@0.28.0";
 import OpenAI from "https://esm.sh/openai@4.89.0";
 import { Redis } from "https://esm.sh/@upstash/redis@1.28.0";
+import { CircuitBreaker } from "../_shared/circuit-breaker.ts";
 
 // =======================
 // STRUCTURED LOGGING
@@ -67,6 +69,32 @@ interface RequestMetrics {
   rateLimitSource: "redis" | "memory";
   hasImage: boolean;
   hasGrounding: boolean;
+}
+
+// =======================
+// MESSAGE TYPES
+// =======================
+
+interface AIMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
+interface ApiResponse {
+  content: string;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  provider: string;
+  grounding?: boolean;
+  citations?: string[];
+}
+
+interface ImageData {
+  base64: string;
+  mediaType: string;
 }
 
 /**
@@ -244,6 +272,44 @@ if (UPSTASH_REDIS_URL && UPSTASH_REDIS_TOKEN) {
     console.error("⚠️ Failed to initialize Redis, using in-memory fallback:", err);
   }
 }
+
+// =======================
+// CIRCUIT BREAKERS
+// =======================
+
+/**
+ * Circuit breakers para cada provider de IA
+ * Evitam cascade failures quando um provider está instável
+ */
+const geminiCircuit = new CircuitBreaker(
+  "gemini",
+  {
+    failureThreshold: 5, // 5 falhas consecutivas → OPEN
+    timeoutMs: 30_000, // 30s em OPEN antes de tentar HALF_OPEN
+    halfOpenMaxCalls: 3, // 3 tentativas em HALF_OPEN
+  },
+  logger
+);
+
+const claudeCircuit = new CircuitBreaker(
+  "claude",
+  {
+    failureThreshold: 5,
+    timeoutMs: 30_000,
+    halfOpenMaxCalls: 3,
+  },
+  logger
+);
+
+const openaiCircuit = new CircuitBreaker(
+  "openai",
+  {
+    failureThreshold: 5,
+    timeoutMs: 30_000,
+    halfOpenMaxCalls: 3,
+  },
+  logger
+);
 
 // =======================
 // RATE LIMITING (Redis + Fallback)
@@ -428,7 +494,7 @@ const PAYLOAD_CAPS = {
   maxTotalChars: 200_000, // ~50K tokens total
 };
 
-function validatePayload(messages: any[]): { valid: boolean; error?: string } {
+function validatePayload(messages: AIMessage[]): { valid: boolean; error?: string } {
   if (messages.length > PAYLOAD_CAPS.maxMessages) {
     return {
       valid: false,
@@ -719,252 +785,287 @@ Deno.serve(async (req) => {
  * Claude Sonnet 4.5 (FALLBACK) - Texto apenas
  * Usado quando Gemini falha ou para casos especiais (vision)
  */
-async function callClaude(messages: any[], systemPrompt?: string) {
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-5-20250929",
-    max_tokens: 2048,
-    temperature: 0.7,
-    system: systemPrompt || DEFAULT_SYSTEM_PROMPT,
-    messages: messages.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
+async function callClaude(
+  messages: AIMessage[],
+  systemPrompt?: string
+): Promise<ApiResponse> {
+  return claudeCircuit.execute(async () => {
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-5-20250929",
+      max_tokens: 2048,
+      temperature: 0.7,
+      system: systemPrompt || DEFAULT_SYSTEM_PROMPT,
+      messages: messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+    });
+
+    const textContent = response.content.find((block) => block.type === "text");
+
+    return {
+      content: textContent?.type === "text" ? textContent.text : "",
+      usage: {
+        promptTokens: response.usage.input_tokens,
+        completionTokens: response.usage.output_tokens,
+        totalTokens:
+          response.usage.input_tokens + response.usage.output_tokens,
+      },
+      provider: "claude",
+    };
   });
-
-  const textContent = response.content.find((block) => block.type === "text");
-
-  return {
-    content: textContent?.type === "text" ? textContent.text : "",
-    usage: {
-      promptTokens: response.usage.input_tokens,
-      completionTokens: response.usage.output_tokens,
-      totalTokens: response.usage.input_tokens + response.usage.output_tokens,
-    },
-    provider: "claude",
-  };
 }
 
 /**
  * Claude Vision - Suporta imagens (ultrassons, fotos)
  */
 async function callClaudeVision(
-  messages: any[],
+  messages: AIMessage[],
   systemPrompt: string | undefined,
-  imageData: { base64: string; mediaType: string }
-) {
-  // Converter mensagens para formato Claude (content como array de blocks)
-  const claudeMessages = messages.map((m, idx) => {
-    // Última mensagem do usuário pode ter imagem
-    if (idx === messages.length - 1 && m.role === "user") {
-      return {
-        role: "user",
-        content: [
-          {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: imageData.mediaType,
-              data: imageData.base64,
+  imageData: ImageData
+): Promise<ApiResponse> {
+  return claudeCircuit.execute(async () => {
+    // Converter mensagens para formato Claude (content como array de blocks)
+    const claudeMessages = messages.map((m, idx) => {
+      // Última mensagem do usuário pode ter imagem
+      if (idx === messages.length - 1 && m.role === "user") {
+        return {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: imageData.mediaType,
+                data: imageData.base64,
+              },
             },
-          },
-          {
-            type: "text",
-            text: m.content,
-          },
-        ],
+            {
+              type: "text",
+              text: m.content,
+            },
+          ],
+        };
+      }
+
+      return {
+        role: m.role,
+        content: m.content, // Texto simples
       };
-    }
+    });
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-5-20250929",
+      max_tokens: 2048,
+      temperature: 0.7,
+      system: systemPrompt || DEFAULT_SYSTEM_PROMPT,
+      messages: claudeMessages,
+    });
+
+    const textContent = response.content.find((block) => block.type === "text");
 
     return {
-      role: m.role,
-      content: m.content, // Texto simples
+      content: textContent?.type === "text" ? textContent.text : "",
+      usage: {
+        promptTokens: response.usage.input_tokens,
+        completionTokens: response.usage.output_tokens,
+        totalTokens: response.usage.input_tokens + response.usage.output_tokens,
+      },
+      provider: "claude-vision",
     };
   });
-
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-5-20250929",
-    max_tokens: 2048,
-    temperature: 0.7,
-    system: systemPrompt || DEFAULT_SYSTEM_PROMPT,
-    messages: claudeMessages,
-  });
-
-  const textContent = response.content.find((block) => block.type === "text");
-
-  return {
-    content: textContent?.type === "text" ? textContent.text : "",
-    usage: {
-      promptTokens: response.usage.input_tokens,
-      completionTokens: response.usage.output_tokens,
-      totalTokens: response.usage.input_tokens + response.usage.output_tokens,
-    },
-    provider: "claude-vision",
-  };
 }
 
 /**
  * Gemini 2.5 Flash (DEFAULT) - NathIA principal
  * Rápido, direto, persona estável
  */
-async function callGemini(messages: any[], systemPrompt?: string) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_KEY}`;
+async function callGemini(
+  messages: AIMessage[],
+  systemPrompt?: string
+): Promise<ApiResponse> {
+  return geminiCircuit.execute(async () => {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_KEY}`;
 
-  // Converter para formato Gemini
-  const contents = messages.map((msg) => ({
-    role: msg.role === "assistant" ? "model" : "user",
-    parts: [{ text: msg.content }],
-  }));
+    // Converter para formato Gemini
+    const contents = messages.map((msg) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }],
+    }));
 
-  const payload = {
-    contents,
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 2048,
-    },
-    ...(systemPrompt && {
-      systemInstruction: {
-        parts: [{ text: systemPrompt }],
+    const payload = {
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
       },
-    }),
-  };
+      ...(systemPrompt && {
+        systemInstruction: {
+          parts: [{ text: systemPrompt }],
+        },
+      }),
+    };
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Gemini API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const candidate = data.candidates?.[0];
+    const text = candidate?.content?.parts?.[0]?.text || "";
+
+    return {
+      content: text,
+      usage: {
+        promptTokens: data.usageMetadata?.promptTokenCount || 0,
+        completionTokens: data.usageMetadata?.candidatesTokenCount || 0,
+        totalTokens: data.usageMetadata?.totalTokenCount || 0,
+      },
+      provider: "gemini",
+    };
   });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Gemini API error: ${error}`);
-  }
-
-  const data = await response.json();
-  const candidate = data.candidates?.[0];
-  const text = candidate?.content?.parts?.[0]?.text || "";
-
-  return {
-    content: text,
-    usage: {
-      promptTokens: data.usageMetadata?.promptTokenCount || 0,
-      completionTokens: data.usageMetadata?.candidatesTokenCount || 0,
-      totalTokens: data.usageMetadata?.totalTokenCount || 0,
-    },
-    provider: "gemini",
-  };
 }
 
 /**
  * Gemini 2.5 Flash + Grounding (Google Search)
  * Para perguntas médicas que precisam de fontes atualizadas
  */
-async function callGeminiWithGrounding(messages: any[], systemPrompt?: string) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_KEY}`;
-
-  const contents = messages.map((msg) => ({
-    role: msg.role === "assistant" ? "model" : "user",
-    parts: [{ text: msg.content }],
-  }));
-
-  const payload = {
-    contents,
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 2048,
-    },
-    ...(systemPrompt && {
-      systemInstruction: {
-        parts: [{ text: systemPrompt }],
-      },
-    }),
-    // Google Search tool (correção: google_search, não googleSearch)
-    tools: [
-      {
-        google_search: {},
-      },
-    ],
+interface GroundingChunk {
+  web?: {
+    title?: string;
+    uri?: string;
   };
+}
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+async function callGeminiWithGrounding(
+  messages: AIMessage[],
+  systemPrompt?: string
+): Promise<ApiResponse> {
+  return geminiCircuit.execute(async () => {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_KEY}`;
+
+    const contents = messages.map((msg) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }],
+    }));
+
+    const payload = {
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 2048,
+      },
+      ...(systemPrompt && {
+        systemInstruction: {
+          parts: [{ text: systemPrompt }],
+        },
+      }),
+      // Google Search tool (correção: google_search, não googleSearch)
+      tools: [
+        {
+          google_search: {},
+        },
+      ],
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Gemini grounding error: ${error}`);
+    }
+
+    const data = await response.json();
+    const candidate = data.candidates?.[0];
+    const text = candidate?.content?.parts?.[0]?.text || "";
+
+    // Extrair citations corretamente (groundingChunks)
+    const groundingChunks: GroundingChunk[] =
+      candidate?.groundingMetadata?.groundingChunks || [];
+    const searchEntryPoint =
+      candidate?.groundingMetadata?.searchEntryPoint?.renderedContent;
+
+    const citations = groundingChunks.map((chunk) => ({
+      title: chunk.web?.title,
+      url: chunk.web?.uri,
+    }));
+
+    return {
+      content: text,
+      usage: {
+        promptTokens: data.usageMetadata?.promptTokenCount || 0,
+        completionTokens: data.usageMetadata?.candidatesTokenCount || 0,
+        totalTokens: data.usageMetadata?.totalTokenCount || 0,
+      },
+      provider: "gemini-grounding",
+      grounding: {
+        searchEntryPoint,
+        citations,
+      },
+    };
   });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Gemini grounding error: ${error}`);
-  }
-
-  const data = await response.json();
-  const candidate = data.candidates?.[0];
-  const text = candidate?.content?.parts?.[0]?.text || "";
-
-  // Extrair citations corretamente (groundingChunks)
-  const groundingChunks = candidate?.groundingMetadata?.groundingChunks || [];
-  const searchEntryPoint =
-    candidate?.groundingMetadata?.searchEntryPoint?.renderedContent;
-
-  const citations = groundingChunks.map((chunk: any) => ({
-    title: chunk.web?.title,
-    url: chunk.web?.uri,
-  }));
-
-  return {
-    content: text,
-    usage: {
-      promptTokens: data.usageMetadata?.promptTokenCount || 0,
-      completionTokens: data.usageMetadata?.candidatesTokenCount || 0,
-      totalTokens: data.usageMetadata?.totalTokenCount || 0,
-    },
-    provider: "gemini-grounding",
-    grounding: {
-      searchEntryPoint,
-      citations,
-    },
-  };
 }
 
 /**
  * OpenAI GPT-4o (ÚLTIMO RECURSO)
  * Só usado quando Gemini E Claude falharam
  */
-async function callOpenAI(messages: any[], systemPrompt?: string) {
-  const openaiMessages = [
-    ...(systemPrompt
-      ? [{ role: "system" as const, content: systemPrompt }]
-      : [{ role: "system" as const, content: DEFAULT_SYSTEM_PROMPT }]),
-    ...messages.map((m: any) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    })),
-  ];
+async function callOpenAI(
+  messages: AIMessage[],
+  systemPrompt?: string
+): Promise<ApiResponse> {
+  return openaiCircuit.execute(async () => {
+    const openaiMessages = [
+      ...(systemPrompt
+        ? [{ role: "system" as const, content: systemPrompt }]
+        : [{ role: "system" as const, content: DEFAULT_SYSTEM_PROMPT }]),
+      ...messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+    ];
 
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: openaiMessages,
-    max_tokens: 2048,
-    temperature: 0.7,
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: openaiMessages,
+      max_tokens: 2048,
+      temperature: 0.7,
+    });
+
+    const content = response.choices[0]?.message?.content || "";
+
+    return {
+      content,
+      usage: {
+        promptTokens: response.usage?.prompt_tokens || 0,
+        completionTokens: response.usage?.completion_tokens || 0,
+        totalTokens: response.usage?.total_tokens || 0,
+      },
+      provider: "openai-fallback",
+    };
   });
-
-  const content = response.choices[0]?.message?.content || "";
-
-  return {
-    content,
-    usage: {
-      promptTokens: response.usage?.prompt_tokens || 0,
-      completionTokens: response.usage?.completion_tokens || 0,
-      totalTokens: response.usage?.total_tokens || 0,
-    },
-    provider: "openai-fallback",
-  };
 }
 
 // =======================
 // HELPERS
 // =======================
 
-function jsonResponse(data: any, status: number, origin: string) {
+function jsonResponse(
+  data: Record<string, unknown>,
+  status: number,
+  origin: string
+): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {

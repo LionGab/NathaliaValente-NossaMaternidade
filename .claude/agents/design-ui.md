@@ -1,3 +1,7 @@
+---
+name: "Design+UI Agent"
+---
+
 # Design+UI Agent
 
 Agente especializado em design system, UI e acessibilidade.

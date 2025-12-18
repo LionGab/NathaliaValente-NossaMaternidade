@@ -1,3 +1,7 @@
+---
+name: "AI/NathIA Agent"
+---
+
 # AI/NathIA Agent
 
 Agente especializado na NathIA (assistente de IA) e integrações de AI.

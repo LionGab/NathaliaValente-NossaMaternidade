@@ -1,3 +1,7 @@
+---
+name: "Database Agent"
+---
+
 # Database Agent
 
 Agente especializado em operações de banco de dados Supabase.
