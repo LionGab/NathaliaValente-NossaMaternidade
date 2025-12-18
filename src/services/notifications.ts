@@ -18,6 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { supabase } from "../api/supabase";
 import { COLORS } from "../theme/design-system";
+import { logger } from "../utils/logger";
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -96,14 +97,14 @@ export async function registerTokenWithSupabase(
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.warn("[Notifications] Token registration failed:", error);
+      const errorData = await response.json();
+      logger.warn("Token registration failed", "Notifications", { error: errorData });
       return false;
     }
 
     return true;
-  } catch (error) {
-    console.warn("[Notifications] Token registration error:", error);
+  } catch (err) {
+    logger.warn("Token registration error", "Notifications", { error: err });
     return false;
   }
 }

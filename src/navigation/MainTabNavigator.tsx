@@ -16,9 +16,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-na
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS, SHADOWS, SPACING } from "../theme/design-system";
 import { brand } from "../theme/presets/calmFemtech";
-
-// Foto da Nathalia para o botão NathIA
-const NATHIA_AVATAR_URL = "https://i.imgur.com/a4O1jAT.jpg";
 import { MainTabParamList, MainTabScreenProps } from "../types/navigation";
 
 // Screens
@@ -27,6 +24,9 @@ import CommunityScreen from "../screens/CommunityScreen";
 import HabitsScreen from "../screens/HabitsScreen";
 import HomeScreen from "../screens/HomeScreen";
 import MundoDaNathScreenOriginal from "../screens/MundoDaNathScreen";
+
+// Foto da Nathalia para o botão NathIA
+const NATHIA_AVATAR_URL = "https://i.imgur.com/a4O1jAT.jpg";
 
 // Wrapper para MundoDaNathScreen (compatibiliza props de Tab com Stack)
 const MundoDaNathScreen = ({ navigation }: MainTabScreenProps<"MundoNath">) => {

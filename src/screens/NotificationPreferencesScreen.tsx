@@ -275,6 +275,7 @@ export default function NotificationPreferencesScreen({
 
   useEffect(() => {
     loadPreferences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   if (isLoading) {

@@ -31,6 +31,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { useTheme } from "../hooks/useTheme";
 import { useAppStore } from "../state/store";
 import { MainTabScreenProps } from "../types/navigation";
+import { OVERLAY } from "../theme/design-system";
 
 // Componentes da Home
 import { EmotionalCheckInPrimary, HealthInsightCard } from "../components/home";
@@ -278,7 +279,7 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
 
                 {/* Gradiente overlay */}
                 <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.6)"]}
+                  colors={["transparent", OVERLAY.scrim]}
                   style={{
                     position: "absolute",
                     bottom: 0,
@@ -312,7 +313,7 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
                   </Text>
                   <Text
                     style={{
-                      color: "rgba(255,255,255,0.9)",
+                      color: OVERLAY.light,
                       fontSize: 13,
                       fontWeight: "500",
                       fontFamily: "Manrope_500Medium",

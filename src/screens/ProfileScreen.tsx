@@ -10,6 +10,7 @@ import { useTheme } from "../hooks/useTheme";
 import { useAppStore } from "../state/store";
 import { RootStackScreenProps } from "../types/navigation";
 import { logger } from "../utils/logger";
+import { TYPOGRAPHY } from "../theme/design-system";
 
 interface MenuItem {
   id: string;
@@ -239,7 +240,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
           style={{ paddingTop: insets.top + 20, paddingHorizontal: 24, paddingBottom: 32 }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-            <Text style={{ color: textMain, fontSize: 30, fontFamily: "DMSerifDisplay_400Regular" }}>Perfil</Text>
+            <Text style={{ color: textMain, fontSize: TYPOGRAPHY.headlineLarge.fontSize, fontFamily: "DMSerifDisplay_400Regular" }}>Perfil</Text>
             <Pressable
               onPress={handleSettingsPress}
               style={{
@@ -282,7 +283,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
               >
                 <Ionicons name="person" size={52} color={textSecondary} />
               </View>
-              <Text style={{ color: textMain, fontSize: 24, fontFamily: "DMSerifDisplay_400Regular", marginBottom: 12 }}>
+              <Text style={{ color: textMain, fontSize: TYPOGRAPHY.headlineSmall.fontSize, fontFamily: "DMSerifDisplay_400Regular", marginBottom: 12 }}>
                 {user?.name || "Usuaria"}
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -294,7 +295,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                     backgroundColor: isDark ? colors.primary[800] : colors.primary[50],
                   }}
                 >
-                  <Text style={{ color: colors.primary[500], fontSize: 16, fontWeight: "600" }}>{getStageLabel()}</Text>
+                  <Text style={{ color: colors.primary[500], fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600" }}>{getStageLabel()}</Text>
                 </View>
               </View>
             </View>
@@ -302,20 +303,20 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
             {/* Stats */}
             <View style={{ flexDirection: "row", marginTop: 32, paddingTop: 32, borderTopWidth: 1, borderTopColor: borderColor }}>
               <View style={{ flex: 1, alignItems: "center" }}>
-                <Text style={{ color: textMain, fontSize: 24, fontWeight: "700", marginBottom: 4 }}>0</Text>
-                <Text style={{ color: textSecondary, fontSize: 14 }}>Posts</Text>
+                <Text style={{ color: textMain, fontSize: TYPOGRAPHY.headlineSmall.fontSize, fontWeight: "700", marginBottom: 4 }}>0</Text>
+                <Text style={{ color: textSecondary, fontSize: TYPOGRAPHY.titleSmall.fontSize }}>Posts</Text>
               </View>
               <View style={{ width: 1, backgroundColor: borderColor }} />
               <View style={{ flex: 1, alignItems: "center" }}>
-                <Text style={{ color: textMain, fontSize: 24, fontWeight: "700", marginBottom: 4 }}>0</Text>
-                <Text style={{ color: textSecondary, fontSize: 14 }}>Grupos</Text>
+                <Text style={{ color: textMain, fontSize: TYPOGRAPHY.headlineSmall.fontSize, fontWeight: "700", marginBottom: 4 }}>0</Text>
+                <Text style={{ color: textSecondary, fontSize: TYPOGRAPHY.titleSmall.fontSize }}>Grupos</Text>
               </View>
               <View style={{ width: 1, backgroundColor: borderColor }} />
               <View style={{ flex: 1, alignItems: "center" }}>
-                <Text style={{ color: textMain, fontSize: 24, fontWeight: "700", marginBottom: 4 }}>
+                <Text style={{ color: textMain, fontSize: TYPOGRAPHY.headlineSmall.fontSize, fontWeight: "700", marginBottom: 4 }}>
                   {user?.interests?.length || 0}
                 </Text>
-                <Text style={{ color: textSecondary, fontSize: 14 }}>Interesses</Text>
+                <Text style={{ color: textSecondary, fontSize: TYPOGRAPHY.titleSmall.fontSize }}>Interesses</Text>
               </View>
             </View>
           </View>
@@ -327,7 +328,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
             entering={FadeInUp.delay(200).duration(600).springify()}
             style={{ paddingHorizontal: 24, marginBottom: 32 }}
           >
-            <Text style={{ color: textMain, fontSize: 20, fontWeight: "600", marginBottom: 16 }}>Seus interesses</Text>
+            <Text style={{ color: textMain, fontSize: TYPOGRAPHY.sizes["4xl"], fontWeight: "600", marginBottom: 16 }}>Seus interesses</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
               {user.interests.map((interest, index) => (
                 <Animated.View
@@ -350,7 +351,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                       shadowRadius: 8,
                     }}
                   >
-                    <Text style={{ color: textMain, fontSize: 16, textTransform: "capitalize" }}>
+                    <Text style={{ color: textMain, fontSize: TYPOGRAPHY.sizes.xl, textTransform: "capitalize" }}>
                       {interest.replace("_", " ")}
                     </Text>
                   </View>
@@ -365,7 +366,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
           entering={FadeInUp.delay(300).duration(600).springify()}
           style={{ paddingHorizontal: 24, marginBottom: 32 }}
         >
-          <Text style={{ color: textMain, fontSize: 20, fontWeight: "600", marginBottom: 16 }}>Aparência</Text>
+          <Text style={{ color: textMain, fontSize: TYPOGRAPHY.sizes["4xl"], fontWeight: "600", marginBottom: 16 }}>Aparência</Text>
           <View
             style={{
               backgroundColor: colors.background.card,
@@ -402,7 +403,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                 />
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: TYPOGRAPHY.titleSmall.fontSize,
                     fontWeight: "600",
                     marginTop: 8,
                     color: theme === "light" ? colors.primary[500] : textSecondary,
@@ -436,7 +437,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                 />
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: TYPOGRAPHY.titleSmall.fontSize,
                     fontWeight: "600",
                     marginTop: 8,
                     color: theme === "dark" ? colors.primary[500] : textSecondary,
@@ -470,7 +471,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                 />
                 <Text
                   style={{
-                    fontSize: 14,
+                    fontSize: TYPOGRAPHY.titleSmall.fontSize,
                     fontWeight: "600",
                     marginTop: 8,
                     color: theme === "system" ? colors.primary[500] : textSecondary,
@@ -485,7 +486,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
 
         {/* Menu Items */}
         <Animated.View entering={FadeInUp.delay(400).duration(600).springify()} style={{ paddingHorizontal: 24 }}>
-          <Text style={{ color: textMain, fontSize: 20, fontWeight: "600", marginBottom: 16 }}>Configurações</Text>
+          <Text style={{ color: textMain, fontSize: TYPOGRAPHY.sizes["4xl"], fontWeight: "600", marginBottom: 16 }}>Configurações</Text>
           <View
             style={{
               backgroundColor: colors.background.card,
@@ -523,7 +524,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                 >
                   <Ionicons name={item.icon} size={22} color={textSecondary} />
                 </View>
-                <Text style={{ flex: 1, color: textMain, fontSize: 16, fontWeight: "500" }}>{item.label}</Text>
+                <Text style={{ flex: 1, color: textMain, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "500" }}>{item.label}</Text>
                 <Ionicons name="chevron-forward" size={20} color={textSecondary} />
               </Pressable>
             ))}
@@ -550,7 +551,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
             }}
           >
             <Ionicons name="log-out-outline" size={22} color={colors.semantic.error} />
-            <Text style={{ color: colors.semantic.error, fontSize: 16, fontWeight: "600", marginLeft: 8 }}>Sair da conta</Text>
+            <Text style={{ color: colors.semantic.error, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600", marginLeft: 8 }}>Sair da conta</Text>
           </Pressable>
         </Animated.View>
 
@@ -559,7 +560,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
           entering={FadeInUp.delay(600).duration(600).springify()}
           style={{ paddingHorizontal: 24, marginTop: 32 }}
         >
-          <Text style={{ color: textSecondary, fontSize: 14, fontWeight: "600", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
+          <Text style={{ color: textSecondary, fontSize: TYPOGRAPHY.titleSmall.fontSize, fontWeight: "600", marginBottom: 12, textTransform: "uppercase", letterSpacing: 1 }}>
             Zona de Perigo
           </Text>
           <Pressable
@@ -577,14 +578,14 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
             }}
           >
             <Ionicons name="trash-outline" size={22} color={colors.semantic.error} />
-            <Text style={{ color: colors.semantic.error, fontSize: 16, fontWeight: "600", marginLeft: 8 }}>Deletar minha conta</Text>
+            <Text style={{ color: colors.semantic.error, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600", marginLeft: 8 }}>Deletar minha conta</Text>
           </Pressable>
         </Animated.View>
 
         {/* App Info */}
         <View style={{ alignItems: "center", marginTop: 40 }}>
-          <Text style={{ color: textSecondary, fontSize: 16, fontWeight: "500" }}>Nossa Maternidade</Text>
-          <Text style={{ color: textSecondary, fontSize: 14, marginTop: 4 }}>Por Nathalia</Text>
+          <Text style={{ color: textSecondary, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "500" }}>Nossa Maternidade</Text>
+          <Text style={{ color: textSecondary, fontSize: TYPOGRAPHY.titleSmall.fontSize, marginTop: 4 }}>Por Nathalia</Text>
           <Text style={{ color: isDark ? colors.neutral[600] : colors.neutral[400], fontSize: 12, marginTop: 8 }}>Versao 1.0.0</Text>
         </View>
       </ScrollView>
@@ -632,7 +633,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
 
                 <Text style={{
                   color: textMain,
-                  fontSize: 24,
+                  fontSize: TYPOGRAPHY.headlineSmall.fontSize,
                   fontFamily: "DMSerifDisplay_400Regular",
                   textAlign: "center",
                   marginBottom: 12,
@@ -642,7 +643,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
 
                 <Text style={{
                   color: textSecondary,
-                  fontSize: 16,
+                  fontSize: TYPOGRAPHY.sizes.xl,
                   lineHeight: 24,
                   textAlign: "center",
                   marginBottom: 24,
@@ -656,7 +657,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                   padding: 20,
                   marginBottom: 24,
                 }}>
-                  <Text style={{ color: textMain, fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
+                  <Text style={{ color: textMain, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600", marginBottom: 12 }}>
                     O que será deletado:
                   </Text>
                   <View style={{ gap: 8 }}>
@@ -685,7 +686,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
 
                 <Text style={{
                   color: textSecondary,
-                  fontSize: 14,
+                  fontSize: TYPOGRAPHY.titleSmall.fontSize,
                   marginBottom: 8,
                 }}>
                   Por que você quer sair? (opcional)
@@ -702,7 +703,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                     borderRadius: 12,
                     padding: 16,
                     color: textMain,
-                    fontSize: 16,
+                    fontSize: TYPOGRAPHY.sizes.xl,
                     textAlignVertical: "top",
                     marginBottom: 24,
                     borderWidth: 1,
@@ -721,7 +722,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                       alignItems: "center",
                     }}
                   >
-                    <Text style={{ color: textMain, fontSize: 16, fontWeight: "600" }}>Cancelar</Text>
+                    <Text style={{ color: textMain, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600" }}>Cancelar</Text>
                   </Pressable>
                   <Pressable
                     onPress={handleNextStep}
@@ -733,7 +734,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                       alignItems: "center",
                     }}
                   >
-                    <Text style={{ color: colors.text.inverse, fontSize: 16, fontWeight: "600" }}>Continuar</Text>
+                    <Text style={{ color: colors.text.inverse, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600" }}>Continuar</Text>
                   </Pressable>
                 </View>
               </>
@@ -757,7 +758,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
 
                 <Text style={{
                   color: textMain,
-                  fontSize: 24,
+                  fontSize: TYPOGRAPHY.headlineSmall.fontSize,
                   fontFamily: "DMSerifDisplay_400Regular",
                   textAlign: "center",
                   marginBottom: 12,
@@ -767,7 +768,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
 
                 <Text style={{
                   color: textSecondary,
-                  fontSize: 16,
+                  fontSize: TYPOGRAPHY.sizes.xl,
                   lineHeight: 24,
                   textAlign: "center",
                   marginBottom: 24,
@@ -806,7 +807,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                       alignItems: "center",
                     }}
                   >
-                    <Text style={{ color: textMain, fontSize: 16, fontWeight: "600" }}>Voltar</Text>
+                    <Text style={{ color: textMain, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600" }}>Voltar</Text>
                   </Pressable>
                   <Pressable
                     onPress={handleConfirmDelete}
@@ -820,7 +821,7 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
                       opacity: confirmText.toUpperCase() === "DELETAR" ? 1 : 0.5,
                     }}
                   >
-                    <Text style={{ color: colors.text.inverse, fontSize: 16, fontWeight: "600" }}>
+                    <Text style={{ color: colors.text.inverse, fontSize: TYPOGRAPHY.sizes.xl, fontWeight: "600" }}>
                       {isDeleting ? "Deletando..." : "Deletar conta"}
                     </Text>
                   </Pressable>

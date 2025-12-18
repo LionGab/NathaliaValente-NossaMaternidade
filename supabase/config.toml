@@ -73,34 +73,29 @@ enable_confirmations = false
 # EDGE FUNCTIONS
 # ============================================
 
-[[functions]]
-name = "ai"
-# verify_jwt = true
+[functions.ai]
+verify_jwt = true
 
-[[functions]]
-name = "notifications"
-# verify_jwt = true
+[functions.notifications]
+verify_jwt = true
 
-[[functions]]
-name = "delete-account"
-# verify_jwt = true
+[functions.delete-account]
+verify_jwt = true
 
-[[functions]]
-name = "upload-image"
-# verify_jwt = true
+[functions.upload-image]
+verify_jwt = true
 
-[[functions]]
-name = "analytics"
-# verify_jwt = true
+[functions.analytics]
+verify_jwt = true
 
-[[functions]]
-name = "webhook"
-# verify_jwt = false
+[functions.webhook]
+verify_jwt = false
 
-[[functions]]
-name = "export-data"
-# verify_jwt = true
+[functions.export-data]
+verify_jwt = true
 
-[[functions]]
-name = "moderate-content"
-# verify_jwt = true
+[functions.moderate-content]
+verify_jwt = true
+
+[functions.transcribe]
+verify_jwt = true

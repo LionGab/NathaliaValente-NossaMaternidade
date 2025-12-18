@@ -18,7 +18,7 @@ import Animated, {
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "../../hooks/useTheme";
-import { COLORS, SPACING, RADIUS } from "../../theme/design-system";
+import { COLORS, SPACING, RADIUS, OVERLAY } from "../../theme/design-system";
 
 interface BelongingCardProps {
   onPress: () => void;
@@ -46,8 +46,8 @@ export const BelongingCard: React.FC<BelongingCardProps> = ({ onPress }) => {
   }));
 
   // Cores discretas (sem gradiente chamativo)
-  const cardBg = isDark ? "rgba(244, 37, 140, 0.08)" : COLORS.primary[50];
-  const borderColor = isDark ? "rgba(244, 37, 140, 0.15)" : COLORS.primary[100];
+  const cardBg = isDark ? OVERLAY.hoverDark : COLORS.primary[50];
+  const borderColor = isDark ? OVERLAY.pressDark : COLORS.primary[100];
   const textMain = isDark ? COLORS.primary[300] : COLORS.primary[700];
   const textMuted = isDark ? colors.neutral[400] : COLORS.primary[600];
   const iconColor = isDark ? COLORS.primary[400] : COLORS.primary[500];
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    backgroundColor: OVERLAY.light,
     alignItems: "center",
     justifyContent: "center",
   },

@@ -264,8 +264,8 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
 
     try {
       setIsLoadingPrices(true);
-      const purchases = await import("../services/purchases");
-      const packages = await purchases.getPackages();
+      const revenuecat = await import("../services/revenuecat");
+      const packages = await revenuecat.getPackages();
 
       if (packages && packages.length > 0) {
         const monthlyPkg = packages.find((p) =>
@@ -345,15 +345,15 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
         source,
       });
 
-      const purchases = await import("../services/purchases");
-      const packages = await purchases.getPackages();
+      const revenuecat = await import("../services/revenuecat");
+      const packages = await revenuecat.getPackages();
       const selectedPackage = packages?.find((p) => p.identifier === productId);
 
       if (!selectedPackage) {
         throw new Error("Pacote nao encontrado");
       }
 
-      const result = await purchases.purchasePackage(selectedPackage);
+      const result = await revenuecat.purchasePackage(selectedPackage);
 
       if (result) {
         // Sincroniza estado
@@ -396,8 +396,8 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
     try {
       setIsRestoring(true);
 
-      const purchases = await import("../services/purchases");
-      const result = await purchases.restorePurchases();
+      const revenuecat = await import("../services/revenuecat");
+      const result = await revenuecat.restorePurchases();
 
       if (result.success && result.customerInfo) {
         await syncWithRevenueCat();

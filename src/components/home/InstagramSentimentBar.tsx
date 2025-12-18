@@ -21,7 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useTheme } from "../../hooks/useTheme";
-import { COLORS, SPACING, SHADOWS } from "../../theme/design-system";
+import { COLORS, SPACING, SHADOWS, OVERLAY } from "../../theme/design-system";
 
 interface InstagramSentimentBarProps {
   /** Current value (0..1) */
@@ -182,8 +182,8 @@ export const InstagramSentimentBar: React.FC<InstagramSentimentBarProps> = ({
             {
               left: `${(i / segments) * 100}%`,
               backgroundColor: isDark
-                ? "rgba(255,255,255,0.15)"
-                : "rgba(0,0,0,0.08)",
+                ? OVERLAY.white.medium
+                : OVERLAY.pressLight,
             },
           ]}
         />

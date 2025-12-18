@@ -20,7 +20,11 @@
       "Bash(npx tsc --noEmit)",
       "Bash(npm run typecheck:*)",
       "Bash(node scripts/check-env.js:*)",
-      "Bash(npm run check-env:*)"
+      "Bash(npm run check-env:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run lint:fix:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: DesignOps audit + NathIA v2 enhancements + RevenueCat migration\n\n## DesignOps \\(Fase 1-5 Completa\\)\n- Adiciona OVERLAY.white.* tokens \\(10 variações\\) para dark backgrounds\n- Adiciona TYPOGRAPHY.sizes \\(11-32px\\) para migrations consistentes\n- Migra 12 arquivos de rgba\\(\\) hardcoded → OVERLAY tokens \\(-24%\\)\n- Migra ProfileScreen fontSize → TYPOGRAPHY.sizes \\(-11%\\)\n- Arquivos: DailyCheckIn, AffirmationsScreen, MyCareScreen, HomeScreen, BelongingCard, InstagramSentimentBar, HabitsEnhancedScreen, MaeValenteProgressScreen, RestSoundsScreen\n\n## NathIA v2 Phase 1\n- Implementa image attachments com Claude Vision\n- Adiciona voice recording hook \\(useVoiceRecording\\)\n- Cria transcription edge function \\(supabase/functions/transcribe\\)\n- Atualiza supabase/config.toml para novo formato [functions.name]\n\n## RevenueCat Migration\n- Renomeia src/services/purchases.ts → revenuecat.ts\n- Atualiza imports em App.tsx, auth.ts\n- Atualiza react-native-purchases: 9.6.7 → 9.6.10\n- Adiciona validação isConfigured\\(\\) no startup\n\n## Admin & Security\n- Adiciona sistema de verificação admin \\(config/admin.ts + hooks/useAdmin.ts\\)\n- Implementa ADMIN_USERS allowlist por email\n\n## DX Improvements\n- Adiciona npm run lint:* e lint:fix:* ao auto-approval\n- Fix console.warn → logger.warn \\(src/services/notifications.ts\\)\n- Fix unused imports \\(useChatHandlers, MainTabNavigator, Card\\)\n- Atualiza CLAUDE.md com session notes \\(2025-12-18\\)\n\n## Build Status\n- TypeScript: 0 errors ✅\n- ESLint: warnings reduzidos\n- RGBA violations: 174 → 132 \\(-24%\\)\n- fontSize violations: 310 → 277 \\(-11%\\)\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ],
     "deny": []
   }

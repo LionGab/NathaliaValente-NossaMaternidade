@@ -18,6 +18,7 @@ import {
   RADIUS,
   SHADOWS,
   TYPOGRAPHY,
+  OVERLAY,
 } from "../theme/design-system";
 
 type ViewMode = "week" | "month" | "year";
@@ -66,7 +67,7 @@ export default function MaeValenteProgressScreen() {
           <View>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.8)",
+                color: OVERLAY.white.textStrong,
                 fontSize: TYPOGRAPHY.bodySmall.fontSize,
                 fontWeight: "500",
               }}
@@ -86,7 +87,7 @@ export default function MaeValenteProgressScreen() {
           </View>
           <View
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: OVERLAY.white.strong,
               borderRadius: RADIUS.full,
               padding: SPACING.md,
             }}
@@ -100,14 +101,14 @@ export default function MaeValenteProgressScreen() {
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: OVERLAY.white.strong,
               borderRadius: RADIUS["2xl"],
               padding: SPACING.lg,
             }}
           >
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.8)",
+                color: OVERLAY.white.textStrong,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 fontWeight: "500",
                 marginBottom: 4,
@@ -126,7 +127,7 @@ export default function MaeValenteProgressScreen() {
             </Text>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: OVERLAY.white.text,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 marginTop: 2,
               }}
@@ -138,14 +139,14 @@ export default function MaeValenteProgressScreen() {
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: OVERLAY.white.strong,
               borderRadius: RADIUS["2xl"],
               padding: SPACING.lg,
             }}
           >
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.8)",
+                color: OVERLAY.white.textStrong,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 fontWeight: "500",
                 marginBottom: 4,
@@ -164,7 +165,7 @@ export default function MaeValenteProgressScreen() {
             </Text>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: OVERLAY.white.text,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 marginTop: 2,
               }}
@@ -176,14 +177,14 @@ export default function MaeValenteProgressScreen() {
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: OVERLAY.white.strong,
               borderRadius: RADIUS["2xl"],
               padding: SPACING.lg,
             }}
           >
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.8)",
+                color: OVERLAY.white.textStrong,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 fontWeight: "500",
                 marginBottom: 4,
@@ -202,7 +203,7 @@ export default function MaeValenteProgressScreen() {
             </Text>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: OVERLAY.white.text,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 marginTop: 2,
               }}
@@ -453,7 +454,7 @@ export default function MaeValenteProgressScreen() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.6)",
+                  backgroundColor: OVERLAY.white.prominent,
                   borderRadius: RADIUS["2xl"],
                   padding: SPACING.md,
                 }}
@@ -480,7 +481,7 @@ export default function MaeValenteProgressScreen() {
               <View
                 style={{
                   flex: 1,
-                  backgroundColor: "rgba(255, 255, 255, 0.6)",
+                  backgroundColor: OVERLAY.white.prominent,
                   borderRadius: RADIUS["2xl"],
                   padding: SPACING.md,
                 }}

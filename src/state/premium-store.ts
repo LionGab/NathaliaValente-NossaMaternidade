@@ -101,11 +101,11 @@ export const usePremiumStore = create<PremiumState>()(
         set({ isLoading: true, error: null });
 
         try {
-          // Import dinâmico do purchases service (Expo Go fallback)
+          // Import dinâmico do revenuecat service (Expo Go fallback)
           let customerInfo: RevenueCatCustomerInfo | null = null;
           try {
-            const purchases = await import("../services/purchases");
-            customerInfo = await purchases.getCustomerInfo();
+            const revenuecat = await import("../services/revenuecat");
+            customerInfo = await revenuecat.getCustomerInfo();
           } catch (err) {
             logger.warn("RevenueCat indisponível (provável Expo Go). Mantendo free.", "PremiumStore", {
               error: err instanceof Error ? err.message : String(err),

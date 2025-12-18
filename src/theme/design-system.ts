@@ -30,6 +30,12 @@
  * - feeling: cores do check-in emocional
  */
 
+// ===========================================
+// SOMBRAS
+// ===========================================
+
+import { Platform } from "react-native";
+
 export const COLORS = {
   // =========================================
   // BRAND COLORS
@@ -415,6 +421,23 @@ export const TYPOGRAPHY = {
     fontWeight: "600" as const,
     letterSpacing: 0.5,
   },
+
+  // Tamanhos adicionais comuns (aliases para facilitar migração)
+  sizes: {
+    xs: 11,      // → labelSmall
+    sm: 12,      // Tamanho muito comum
+    md: 13,      // → bodySmall
+    base: 14,    // → titleSmall
+    lg: 15,      // → bodyMedium
+    xl: 16,      // Tamanho muito comum
+    "2xl": 17,   // → bodyLarge
+    "3xl": 18,   // → titleMedium
+    "4xl": 20,   // Tamanho comum
+    "5xl": 22,   // → titleLarge
+    "6xl": 24,   // → headlineSmall
+    "7xl": 28,   // → headlineMedium
+    "8xl": 32,   // → headlineLarge
+  },
 } as const;
 
 // ===========================================
@@ -451,12 +474,6 @@ export const RADIUS = {
   "3xl": 28,
   full: 9999,
 } as const;
-
-// ===========================================
-// SOMBRAS
-// ===========================================
-
-import { Platform } from "react-native";
 
 /**
  * Converte shadow props para boxShadow CSS (web)
@@ -949,6 +966,19 @@ export const OVERLAY = {
   // Disabled states
   disabled: "rgba(0, 0, 0, 0.12)",
   disabledDark: "rgba(255, 255, 255, 0.12)",
+  // White overlays - para elementos em fundos escuros/gradientes
+  white: {
+    subtle: "rgba(255, 255, 255, 0.02)",    // Decorações muito sutis
+    faint: "rgba(255, 255, 255, 0.03)",     // Decorações sutis
+    soft: "rgba(255, 255, 255, 0.1)",       // Cards em gradientes
+    medium: "rgba(255, 255, 255, 0.15)",    // Botões em gradientes
+    strong: "rgba(255, 255, 255, 0.2)",     // Botões destacados
+    muted: "rgba(255, 255, 255, 0.3)",      // Indicadores inativos
+    semiTransparent: "rgba(255, 255, 255, 0.5)", // Semi-transparente
+    prominent: "rgba(255, 255, 255, 0.6)",  // Elementos destacados
+    text: "rgba(255, 255, 255, 0.7)",       // Texto secundário em gradientes
+    textStrong: "rgba(255, 255, 255, 0.8)", // Texto primário em gradientes
+  },
 } as const;
 
 // ===========================================

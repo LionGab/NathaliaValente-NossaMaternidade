@@ -77,7 +77,7 @@ export function Card({
   style,
   ...props
 }: CardProps) {
-  const { card: cardTokens, border, brand, isDark } = useTheme();
+  const { card: cardTokens, brand, isDark } = useTheme();
 
   const baseStyle = useMemo(
     () => ({
@@ -118,7 +118,7 @@ export function Card({
           : brand.accent[50],
       },
     }),
-    [isDark, cardTokens, brand, border, color]
+    [isDark, cardTokens, brand, color]
   );
 
   const combinedStyle = [baseStyle, variantStyle[variant], style];

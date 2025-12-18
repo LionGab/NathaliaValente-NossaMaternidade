@@ -238,6 +238,25 @@ scripts/           # Build and setup scripts
 - This checks: TypeScript, ESLint, build readiness, and console.log usage
 - ESLint now blocks `console.log` (use `logger.*` instead), `alert`, and `any` types
 
+### Session Notes (2025-12-18)
+
+**Completed:**
+- Fixed `console.warn` → `logger.warn` in `src/services/notifications.ts`
+- Created admin verification system: `src/config/admin.ts` + `src/hooks/useAdmin.ts`
+- Implemented voice recording: `src/hooks/useVoiceRecording.ts`
+- Created transcription edge function: `supabase/functions/transcribe/index.ts` (deployed)
+- Implemented image attachments in NathIA chat (uses Claude Vision)
+- Updated `supabase/config.toml` to new format `[functions.name]`
+
+**Pending:**
+- Post comments feature (currently goes to ComingSoon screen)
+- Changes not committed to Git yet
+
+**Environment:**
+- All API keys configured in `.env.local`
+- Edge functions deployed: ai, notifications, delete-account, upload-image, analytics, transcribe
+- Supabase secrets configured: ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
+
 ### MCPs and Agents
 
 - See [docs/MCP_SETUP.md](docs/MCP_SETUP.md) for MCP configuration

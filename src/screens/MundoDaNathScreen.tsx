@@ -26,9 +26,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-
-// URL da foto da Nathalia Valente
-const NATHALIA_AVATAR_URL = "https://i.imgur.com/37dbPJE.jpg";
 import Animated, {
   FadeIn,
   FadeInDown,
@@ -39,9 +36,13 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAdmin } from "../hooks/useAdmin";
 import { useTheme } from "../hooks/useTheme";
 import { COLORS, GRADIENTS, RADIUS, SPACING } from "../theme/design-system";
 import { RootStackScreenProps } from "../types/navigation";
+
+// URL da foto da Nathalia Valente
+const NATHALIA_AVATAR_URL = "https://i.imgur.com/37dbPJE.jpg";
 
 // Types
 interface NathPost {
@@ -782,8 +783,8 @@ export default function MundoDaNathScreen({ navigation }: Props) {
   const [posts, setPosts] = useState<NathPost[]>(MOCK_POSTS);
   const [isNewPostModalVisible, setIsNewPostModalVisible] = useState(false);
 
-  // TODO: Verificar se usuário é admin (a própria Nath)
-  const isAdmin = true; // Temporariamente true para teste
+  // Verificação de admin (Nathalia Valente)
+  const { isAdmin } = useAdmin();
 
   const bgPrimary = isDark ? colors.background.primary : COLORS.background.primary;
   const textPrimary = isDark ? colors.neutral[100] : COLORS.text.primary;
@@ -827,7 +828,7 @@ export default function MundoDaNathScreen({ navigation }: Props) {
       if (canOpen) {
         await Linking.openURL(url);
       }
-    } catch (error) {
+    } catch {
       // Silently fail - could show a toast here
     }
   }, []);

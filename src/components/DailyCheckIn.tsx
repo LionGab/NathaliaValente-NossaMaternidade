@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeInUp, ZoomIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { useCheckInStore } from "../state/store";
 import { useTheme } from "../hooks/useTheme";
-import { COLORS as DS_COLORS } from "../theme/design-system";
+import { COLORS as DS_COLORS, OVERLAY } from "../theme/design-system";
 
 const MOOD_OPTIONS = [
   { value: 1, emoji: "😢", label: "Difícil" },
@@ -39,35 +39,36 @@ interface DailyCheckInProps {
 
 /**
  * Cores semânticas para check-in com suporte a dark mode
+ * Todas as cores mapeadas para o design-system
  */
 const getCheckInColors = (isDark: boolean) => ({
   // Estado completo - verde suave
   completeBg: isDark ? "rgba(20, 184, 166, 0.15)" : DS_COLORS.semantic.successLight,
-  completeBorder: isDark ? "rgba(20, 184, 166, 0.3)" : "#D1FAE5",
+  completeBorder: isDark ? "rgba(20, 184, 166, 0.3)" : DS_COLORS.semantic.successLight,
   completeIcon: DS_COLORS.semantic.success,
-  completeText: isDark ? DS_COLORS.accent[300] : "#065F46",
-  completeSubtext: isDark ? DS_COLORS.accent[400] : "#047857",
+  completeText: isDark ? DS_COLORS.accent[300] : DS_COLORS.accent[900],
+  completeSubtext: isDark ? DS_COLORS.accent[400] : DS_COLORS.accent[700],
   // Estado pendente - amarelo suave
   pendingBg: isDark ? "rgba(245, 158, 11, 0.15)" : DS_COLORS.semantic.warningLight,
-  pendingBorder: isDark ? "rgba(245, 158, 11, 0.3)" : "#FDE68A",
+  pendingBorder: isDark ? "rgba(245, 158, 11, 0.3)" : DS_COLORS.semantic.warningLight,
   pendingIcon: DS_COLORS.semantic.warning,
-  pendingText: isDark ? DS_COLORS.legacyAccent.peach : "#92400E",
-  pendingSubtext: isDark ? DS_COLORS.neutral[400] : "#B45309",
-  pendingChevron: isDark ? DS_COLORS.neutral[400] : "#D97706",
+  pendingText: isDark ? DS_COLORS.legacyAccent.peach : DS_COLORS.neutral[800],
+  pendingSubtext: isDark ? DS_COLORS.neutral[400] : DS_COLORS.neutral[600],
+  pendingChevron: isDark ? DS_COLORS.neutral[400] : DS_COLORS.semantic.warning,
   // Modal
   modalBg: isDark ? DS_COLORS.background.secondary : DS_COLORS.text.inverse,
-  modalOverlay: "rgba(0, 0, 0, 0.5)",
-  closeBg: isDark ? DS_COLORS.neutral[700] : "#F5F5F4",
+  modalOverlay: OVERLAY.backdropStrong,
+  closeBg: isDark ? DS_COLORS.neutral[700] : DS_COLORS.neutral[100],
   closeIcon: DS_COLORS.neutral[500],
   // Progress bar
   progressActive: DS_COLORS.primary[500],
   progressComplete: DS_COLORS.semantic.success,
-  progressPending: isDark ? DS_COLORS.neutral[600] : "#E5E5E5",
+  progressPending: isDark ? DS_COLORS.neutral[600] : DS_COLORS.neutral[200],
   // Text
-  title: isDark ? DS_COLORS.text.primary : "#1F2937",
+  title: isDark ? DS_COLORS.text.primary : DS_COLORS.text.primary,
   subtitle: DS_COLORS.neutral[500],
   // Options
-  optionBg: isDark ? DS_COLORS.neutral[700] : "#FBF9F7",
+  optionBg: isDark ? DS_COLORS.neutral[700] : DS_COLORS.background.warm,
 });
 
 export default function DailyCheckIn({ onComplete }: DailyCheckInProps) {

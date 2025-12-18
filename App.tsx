@@ -11,7 +11,7 @@ import {
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
 import RootNavigator from "./src/navigation/RootNavigator";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Platform } from "react-native";
 import { useEffect } from "react";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { OfflineBanner } from "./src/components/OfflineBanner";
@@ -57,8 +57,15 @@ export default function App() {
     // Initialize RevenueCat on app startup (with Expo Go fallback)
     const initPremium = async () => {
       try {
-        const purchases = await import("./src/services/purchases");
-        await purchases.initializePurchases();
+        const revenuecat = await import("./src/services/revenuecat");
+        await revenuecat.initializePurchases();
+        
+        // Validação: verificar se RevenueCat foi configurado
+        const isConfigured = revenuecat.getIsConfigured();
+        logger.info(`RevenueCat isConfigured: ${isConfigured}`, "App", {
+          platform: Platform.OS,
+        });
+        
         await syncWithRevenueCat();
       } catch (err) {
         logger.warn("RevenueCat indisponível (provável Expo Go). App rodando como free.", "App", {

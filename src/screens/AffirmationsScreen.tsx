@@ -16,7 +16,7 @@ import Animated, {
 import { useAffirmationsStore } from "../state/store";
 import { RootStackScreenProps, Affirmation } from "../types/navigation";
 import { useTheme } from "../hooks/useTheme";
-import { AFFIRMATION_GRADIENTS } from "../theme/design-system";
+import { AFFIRMATION_GRADIENTS, OVERLAY } from "../theme/design-system";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -153,7 +153,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             width: 200,
             height: 200,
             borderRadius: 100,
-            backgroundColor: "rgba(255, 255, 255, 0.03)",
+            backgroundColor: OVERLAY.white.faint,
           }}
         />
         <View
@@ -164,7 +164,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             width: 300,
             height: 300,
             borderRadius: 150,
-            backgroundColor: "rgba(255, 255, 255, 0.02)",
+            backgroundColor: OVERLAY.white.subtle,
           }}
         />
         <View
@@ -175,7 +175,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             width: 100,
             height: 100,
             borderRadius: 50,
-            backgroundColor: "rgba(255, 255, 255, 0.02)",
+            backgroundColor: OVERLAY.white.subtle,
           }}
         />
 
@@ -188,7 +188,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             <Pressable
               onPress={() => navigation.goBack()}
               className="w-10 h-10 rounded-full items-center justify-center"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+              style={{ backgroundColor: OVERLAY.white.medium }}
             >
               <Ionicons name="arrow-back" size={22} color={colors.neutral[0]} />
             </Pressable>
@@ -198,7 +198,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             <Pressable
               onPress={handleChangeTheme}
               className="w-10 h-10 rounded-full items-center justify-center"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+              style={{ backgroundColor: OVERLAY.white.medium }}
             >
               <Ionicons name="color-palette-outline" size={22} color={colors.neutral[0]} />
             </Pressable>
@@ -216,7 +216,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
           <Animated.View style={animatedTextStyle}>
             <View
               className="rounded-3xl p-8"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              style={{ backgroundColor: OVERLAY.white.soft }}
             >
               <Text className="text-white/30 text-6xl font-serif mb-4">&ldquo;</Text>
               <Text
@@ -236,7 +236,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
           >
             <View
               className="px-4 py-2 rounded-full"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+              style={{ backgroundColor: OVERLAY.white.medium }}
             >
               <Text className="text-white/70 text-xs uppercase tracking-wider">
                 {affirmation.category}
@@ -256,7 +256,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             <Pressable
               onPress={handlePrevious}
               className="w-12 h-12 rounded-full items-center justify-center mx-4"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+              style={{ backgroundColor: OVERLAY.white.medium }}
             >
               <Ionicons name="chevron-back" size={24} color={colors.neutral[0]} />
             </Pressable>
@@ -275,7 +275,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
                       backgroundColor:
                         actualIndex === currentIndex
                           ? colors.neutral[0]
-                          : "rgba(255, 255, 255, 0.3)",
+                          : OVERLAY.white.muted,
                       transform: [{ scale: actualIndex === currentIndex ? 1.3 : 1 }],
                     }}
                   />
@@ -286,7 +286,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             <Pressable
               onPress={handleNext}
               className="w-12 h-12 rounded-full items-center justify-center mx-4"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+              style={{ backgroundColor: OVERLAY.white.medium }}
             >
               <Ionicons name="chevron-forward" size={24} color={colors.neutral[0]} />
             </Pressable>
@@ -297,7 +297,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             <Pressable
               onPress={handleToggleFavorite}
               className="w-14 h-14 rounded-full items-center justify-center mx-3"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+              style={{ backgroundColor: OVERLAY.white.strong }}
             >
               <Animated.View style={animatedHeartStyle}>
                 <Ionicons
@@ -311,7 +311,7 @@ export default function AffirmationsScreen({ navigation }: RootStackScreenProps<
             <Pressable
               onPress={handleShare}
               className="w-14 h-14 rounded-full items-center justify-center mx-3"
-              style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
+              style={{ backgroundColor: OVERLAY.white.strong }}
             >
               <Ionicons name="share-outline" size={26} color={colors.neutral[0]} />
             </Pressable>

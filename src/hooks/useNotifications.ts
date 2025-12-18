@@ -391,6 +391,7 @@ export function useNotifications(): UseNotificationsReturn {
     if (user?.id && !expoPushToken) {
       registerToken();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   /**

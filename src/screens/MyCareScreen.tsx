@@ -9,7 +9,7 @@ import { useAppStore } from "../state/store";
 import * as Haptics from "expo-haptics";
 import { useTheme } from "../hooks/useTheme";
 import { IconName } from "../types/icons";
-import { COLORS as DS_COLORS, SPACING, RADIUS } from "../theme/design-system";
+import { COLORS as DS_COLORS, SPACING, RADIUS, OVERLAY } from "../theme/design-system";
 
 // Foto da Nathalia com o bebê Thales
 const NATHALIA_AVATAR_URL = "https://i.imgur.com/37dbPJE.jpg";
@@ -616,7 +616,7 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                   width: 48,
                   height: 48,
                   borderRadius: RADIUS.lg,
-                  backgroundColor: "rgba(255,255,255,0.2)",
+                  backgroundColor: OVERLAY.white.strong,
                   alignItems: "center",
                   justifyContent: "center",
                   marginRight: SPACING.md,

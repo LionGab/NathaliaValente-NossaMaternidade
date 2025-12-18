@@ -18,6 +18,7 @@ import {
   SPACING,
   RADIUS,
   TYPOGRAPHY,
+  OVERLAY,
 } from "../theme/design-system";
 import { useTheme } from "../hooks/useTheme";
 
@@ -140,25 +141,25 @@ const getRestColors = (_isDark: boolean) => ({
   // Backgrounds - always dark for relaxation
   bgPrimary: GRADIENTS.rest.bgPrimary,
   bgSecondary: GRADIENTS.rest.bgSecondary,
-  cardBg: "rgba(255, 255, 255, 0.1)",
+  cardBg: OVERLAY.white.soft,
   cardBgActive: (color: string) => `${color}20`,
   // Text
   textPrimary: COLORS.text.inverse,
   textSecondary: COLORS.neutral[400],
-  textMuted: "rgba(255, 255, 255, 0.6)",
+  textMuted: OVERLAY.white.prominent,
   // UI elements
   iconBg: GRADIENTS.rest.iconBg,
   iconBgActive: (color: string) => color,
-  border: "rgba(255, 255, 255, 0.1)",
+  border: OVERLAY.white.soft,
   borderActive: (color: string) => color,
   // Info card
-  infoBg: "rgba(255, 255, 255, 0.1)",
-  infoIconBg: "rgba(192, 132, 252, 0.2)",
+  infoBg: OVERLAY.white.soft,
+  infoIconBg: "rgba(192, 132, 252, 0.2)", // Purple theme for rest screen
   infoIcon: GRADIENTS.rest.infoIcon,
   // Tab
-  tabBg: "rgba(255, 255, 255, 0.1)",
-  tabActive: "rgba(255, 255, 255, 0.2)",
-  // Tip
+  tabBg: OVERLAY.white.soft,
+  tabActive: OVERLAY.white.strong,
+  // Tip - Purple theme for rest screen
   tipBg: "rgba(168, 85, 247, 0.1)",
   tipBorder: "rgba(168, 85, 247, 0.2)",
 });

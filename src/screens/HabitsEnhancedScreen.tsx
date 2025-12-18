@@ -19,6 +19,7 @@ import {
   RADIUS,
   TYPOGRAPHY,
   SHADOWS,
+  OVERLAY,
 } from "../theme/design-system";
 
 type ViewMode = "today" | "week" | "month";
@@ -82,7 +83,7 @@ export default function HabitsEnhancedScreen() {
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.8)",
+                color: OVERLAY.white.textStrong,
                 fontSize: TYPOGRAPHY.bodySmall.fontSize,
                 fontWeight: "500",
               }}
@@ -114,7 +115,7 @@ export default function HabitsEnhancedScreen() {
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: OVERLAY.white.strong,
               borderRadius: RADIUS["2xl"],
               padding: SPACING.lg,
             }}
@@ -130,7 +131,7 @@ export default function HabitsEnhancedScreen() {
               <Ionicons name="checkmark-circle" size={20} color={COLORS.text.inverse} />
               <Text
                 style={{
-                  color: "rgba(255, 255, 255, 0.8)",
+                  color: OVERLAY.white.textStrong,
                   fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 }}
               >
@@ -148,7 +149,7 @@ export default function HabitsEnhancedScreen() {
             </Text>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: OVERLAY.white.text,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
               }}
             >
@@ -159,7 +160,7 @@ export default function HabitsEnhancedScreen() {
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: OVERLAY.white.strong,
               borderRadius: RADIUS["2xl"],
               padding: SPACING.lg,
             }}
@@ -175,7 +176,7 @@ export default function HabitsEnhancedScreen() {
               <Ionicons name="flame" size={20} color={COLORS.text.inverse} />
               <Text
                 style={{
-                  color: "rgba(255, 255, 255, 0.8)",
+                  color: OVERLAY.white.textStrong,
                   fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 }}
               >
@@ -193,7 +194,7 @@ export default function HabitsEnhancedScreen() {
             </Text>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: OVERLAY.white.text,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
               }}
             >
@@ -204,7 +205,7 @@ export default function HabitsEnhancedScreen() {
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              backgroundColor: OVERLAY.white.strong,
               borderRadius: RADIUS["2xl"],
               padding: SPACING.lg,
             }}
@@ -220,7 +221,7 @@ export default function HabitsEnhancedScreen() {
               <Ionicons name="trophy" size={20} color={COLORS.text.inverse} />
               <Text
                 style={{
-                  color: "rgba(255, 255, 255, 0.8)",
+                  color: OVERLAY.white.textStrong,
                   fontSize: TYPOGRAPHY.labelSmall.fontSize,
                 }}
               >
@@ -238,7 +239,7 @@ export default function HabitsEnhancedScreen() {
             </Text>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: OVERLAY.white.text,
                 fontSize: TYPOGRAPHY.labelSmall.fontSize,
               }}
             >
@@ -255,7 +256,7 @@ export default function HabitsEnhancedScreen() {
               height: 140,
               borderRadius: 70,
               borderWidth: 12,
-              borderColor: "rgba(255, 255, 255, 0.2)",
+              borderColor: OVERLAY.white.strong,
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: "transparent",
@@ -287,7 +288,7 @@ export default function HabitsEnhancedScreen() {
             </Text>
             <Text
               style={{
-                color: "rgba(255, 255, 255, 0.8)",
+                color: OVERLAY.white.textStrong,
                 fontSize: TYPOGRAPHY.bodySmall.fontSize,
                 marginTop: 2,
               }}

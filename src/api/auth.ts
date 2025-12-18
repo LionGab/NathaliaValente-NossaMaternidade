@@ -61,8 +61,8 @@ export async function signIn(email: string, password: string) {
     // Identify user in RevenueCat (with Expo Go fallback)
     if (data.user) {
       try {
-        const purchases = await import("../services/purchases");
-        await purchases.loginUser(data.user.id);
+        const revenuecat = await import("../services/revenuecat");
+        await revenuecat.loginUser(data.user.id);
       } catch (err) {
         logger.warn("RevenueCat indisponível (provável Expo Go). Ignorando login.", "Auth", {
           error: err instanceof Error ? err.message : String(err),
@@ -86,8 +86,8 @@ export async function signOut() {
 
     // Logout from RevenueCat first (with Expo Go fallback)
     try {
-      const purchases = await import("../services/purchases");
-      await purchases.logoutUser();
+      const revenuecat = await import("../services/revenuecat");
+      await revenuecat.logoutUser();
     } catch (err) {
       logger.warn("RevenueCat indisponível (provável Expo Go). Ignorando logout.", "Auth", {
         error: err instanceof Error ? err.message : String(err),
@@ -282,8 +282,8 @@ export async function deleteAccount(reason?: string): Promise<DeleteAccountResul
 
     // Logout from RevenueCat (with Expo Go fallback)
     try {
-      const purchases = await import("../services/purchases");
-      await purchases.logoutUser();
+      const revenuecat = await import("../services/revenuecat");
+      await revenuecat.logoutUser();
     } catch (err) {
       logger.warn("RevenueCat indisponível. Ignorando logout.", "Auth", {
         error: err instanceof Error ? err.message : String(err),

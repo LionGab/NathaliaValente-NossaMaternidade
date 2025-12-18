@@ -5,9 +5,8 @@
 
 import { useCallback } from "react";
 import * as Haptics from "expo-haptics";
-import { useChatStore } from "../state/store";
+import { useChatStore, useAppStore } from "../state/store";
 import { useIsPremium } from "../state/premium-store";
-import { useAppStore } from "../state/store";
 import { MainTabScreenProps } from "../types/navigation";
 // TODO: Uncomment when implementing message limits
 // import { logger } from "../utils/logger";

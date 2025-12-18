@@ -14,9 +14,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -29,7 +31,7 @@ import {
 } from "react-native";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { detectMedicalQuestion, estimateTokens, getNathIAResponse } from "../api/ai-service";
+import { detectMedicalQuestion, estimateTokens, getNathIAResponse, imageUriToBase64 } from "../api/ai-service";
 import { AIConsentModal } from "../components/chat/AIConsentModal";
 import { ChatEmptyState } from "../components/chat/ChatEmptyState";
 import { ChatHistorySidebar } from "../components/chat/ChatHistorySidebar";
@@ -46,6 +48,7 @@ import {
 import { useChatHandlers } from "../hooks/useChatHandlers";
 import { useTheme } from "../hooks/useTheme";
 import { useVoicePremiumGate } from "../hooks/useVoice";
+import { useVoiceRecording } from "../hooks/useVoiceRecording";
 import { useIsPremium } from "../state/premium-store";
 import { Conversation, useAppStore, useChatStore } from "../state/store";
 import { COLORS_DARK, COLORS as DS_COLORS, SHADOWS, SPACING } from "../theme/design-system";
@@ -146,6 +149,16 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
 
   // Voice premium gate
   const { hasAccess: hasVoiceAccess } = useVoicePremiumGate();
+
+  // Voice recording
+  const voiceRecording = useVoiceRecording();
+
+  // Image attachment state
+  const [selectedImage, setSelectedImage] = useState<{
+    uri: string;
+    base64?: string;
+    mediaType?: string;
+  } | null>(null);
 
   // Load message count on mount
   React.useEffect(() => {
@@ -252,18 +265,23 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
     }
 
     const userInput = inputText.trim();
+    const hasImage = !!selectedImage;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    // Criar mensagem do usuário
+    // Criar mensagem do usuário (com indicador de imagem se houver)
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: userInput,
+      content: hasImage ? `${userInput}\n\n📷 [Imagem anexada]` : userInput,
       createdAt: new Date().toISOString(),
     };
     addMessage(userMessage);
     setInputText("");
     setLoading(true);
+
+    // Salvar referência da imagem e limpar estado
+    const imageToSend = selectedImage;
+    setSelectedImage(null);
 
     // Incrementar contador de mensagens para usuários free
     if (!isPremium) {
@@ -307,10 +325,29 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
       const estimated = estimateTokens(apiMessages);
       const requiresGrounding = detectMedicalQuestion(userInput);
 
+      // Converter imagem para base64 se houver
+      let imageData: { base64: string; mediaType: string } | undefined;
+      if (imageToSend?.uri) {
+        try {
+          imageData = await imageUriToBase64(imageToSend.uri);
+          logger.info("Image converted to base64", "AssistantScreen", {
+            mediaType: imageData.mediaType,
+            size: imageData.base64.length,
+          });
+        } catch (imgError) {
+          logger.error(
+            "Failed to convert image",
+            "AssistantScreen",
+            imgError instanceof Error ? imgError : new Error(String(imgError))
+          );
+        }
+      }
+
       // Chamar a Edge Function segura
       const response = await getNathIAResponse(apiMessages, {
         estimatedTokens: estimated,
         requiresGrounding,
+        imageData,
       });
 
       let aiContent = response.content;
@@ -392,6 +429,7 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
     messageCount,
     navigation,
     user,
+    selectedImage,
   ]);
 
   // Handlers usando hook customizado
@@ -423,8 +461,59 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
     [handleSuggestedPromptBase]
   );
 
-  const handleMicPress = handlers.handleMicPress;
-  const handleAttachment = handlers.handleAttachment;
+  // Voice recording handlers
+  const handleMicPress = useCallback(async () => {
+    // Check if already recording - if so, stop and transcribe
+    if (voiceRecording.isRecording) {
+      const transcribedText = await voiceRecording.stopRecording();
+      if (transcribedText) {
+        setInputText(transcribedText);
+        // Optionally auto-send
+        // handleSend();
+      }
+      return;
+    }
+
+    // Start recording
+    await voiceRecording.startRecording();
+  }, [voiceRecording]);
+
+  const handleCancelRecording = useCallback(async () => {
+    await voiceRecording.cancelRecording();
+  }, [voiceRecording]);
+
+  // Image attachment handler
+  const handleAttachment = useCallback(async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    // Request permissions
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      logger.warn("Image picker permission denied", "AssistantScreen");
+      return;
+    }
+
+    // Pick image
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      quality: 0.8,
+      base64: false, // We'll convert later for better memory management
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setSelectedImage({
+        uri: asset.uri,
+      });
+      logger.info("Image selected for attachment", "AssistantScreen");
+    }
+  }, []);
+
+  // Clear selected image
+  const handleClearImage = useCallback(() => {
+    setSelectedImage(null);
+  }, []);
 
   const handleAcceptAITerms = useCallback(async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -631,6 +720,16 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
               </ScrollView>
             )}
 
+            {/* Image Preview */}
+            {selectedImage && (
+              <Animated.View entering={FadeIn} style={styles.imagePreviewContainer}>
+                <Image source={{ uri: selectedImage.uri }} style={styles.imagePreview} />
+                <Pressable onPress={handleClearImage} style={styles.imagePreviewClose}>
+                  <Ionicons name="close-circle" size={24} color={DS_COLORS.semantic.error} />
+                </Pressable>
+              </Animated.View>
+            )}
+
             {/* Input Box */}
             <View
               style={[
@@ -640,7 +739,7 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
             >
               {/* Attachment */}
               <Pressable onPress={handleAttachment} style={styles.inputButton}>
-                <Ionicons name="add-circle-outline" size={26} color={THEME.textMuted} />
+                <Ionicons name="add-circle-outline" size={26} color={selectedImage ? THEME.primary : THEME.textMuted} />
               </Pressable>
 
               {/* Text Input */}
@@ -655,8 +754,37 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
                 style={[styles.textInput, { color: THEME.textPrimary }]}
               />
 
-              {/* Send/Mic Button */}
-              {inputText.trim() ? (
+              {/* Send/Mic/Recording Button */}
+              {voiceRecording.isRecording ? (
+                // Recording state
+                <View style={styles.recordingContainer}>
+                  <Pressable onPress={handleCancelRecording} style={styles.cancelRecordingButton}>
+                    <Ionicons name="close" size={20} color={DS_COLORS.semantic.error} />
+                  </Pressable>
+                  <View style={styles.recordingIndicator}>
+                    <Animated.View
+                      entering={FadeIn}
+                      style={[styles.recordingDot, { backgroundColor: DS_COLORS.semantic.error }]}
+                    />
+                    <Text style={[styles.recordingDuration, { color: THEME.textPrimary }]}>
+                      {Math.floor(voiceRecording.duration / 60)}:{(voiceRecording.duration % 60).toString().padStart(2, "0")}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={handleMicPress}
+                    style={[styles.sendButton, { backgroundColor: DS_COLORS.semantic.error }]}
+                  >
+                    <Ionicons name="stop" size={18} color={DS_COLORS.text.inverse} />
+                  </Pressable>
+                </View>
+              ) : voiceRecording.isTranscribing ? (
+                // Transcribing state
+                <View style={styles.transcribingContainer}>
+                  <Text style={[styles.transcribingText, { color: THEME.textSecondary }]}>
+                    Transcrevendo...
+                  </Text>
+                </View>
+              ) : inputText.trim() ? (
                 <Pressable
                   onPress={handleSend}
                   style={[styles.sendButton, { backgroundColor: THEME.primary }]}
@@ -893,6 +1021,64 @@ const styles = StyleSheet.create({
     color: THEME_LIGHT.textMuted,
     textAlign: "center",
     marginTop: 8,
+  },
+
+  // Recording UI
+  recordingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  cancelRecordingButton: {
+    padding: 8,
+  },
+  recordingIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  recordingDuration: {
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: "Manrope_600SemiBold",
+  },
+  transcribingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  transcribingText: {
+    fontSize: 14,
+    fontStyle: "italic",
+  },
+
+  // Image Preview
+  imagePreviewContainer: {
+    position: "relative",
+    marginBottom: 8,
+    alignSelf: "flex-start",
+  },
+  imagePreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    backgroundColor: THEME_LIGHT.bgSecondary,
+  },
+  imagePreviewClose: {
+    position: "absolute",
+    top: -8,
+    right: -8,
+    backgroundColor: THEME_LIGHT.bgPrimary,
+    borderRadius: 12,
   },
 
   // Modal
