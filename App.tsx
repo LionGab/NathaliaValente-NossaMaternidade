@@ -54,18 +54,26 @@ export default function App() {
   const syncWithRevenueCat = usePremiumStore((s) => s.syncWithRevenueCat);
 
   useEffect(() => {
+    // Initialize Sentry for production monitoring
+    const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+    if (sentryDsn && sentryDsn.trim().length > 0) {
+      logger.initSentry(sentryDsn);
+    } else {
+      logger.debug("Sentry DSN não configurado. Monitoramento desabilitado.", "App");
+    }
+
     // Initialize RevenueCat on app startup (with Expo Go fallback)
     const initPremium = async () => {
       try {
         const revenuecat = await import("./src/services/revenuecat");
         await revenuecat.initializePurchases();
-        
+
         // Validação: verificar se RevenueCat foi configurado
         const isConfigured = revenuecat.getIsConfigured();
         logger.info(`RevenueCat isConfigured: ${isConfigured}`, "App", {
           platform: Platform.OS,
         });
-        
+
         await syncWithRevenueCat();
       } catch (err) {
         logger.warn("RevenueCat indisponível (provável Expo Go). App rodando como free.", "App", {
