@@ -8,12 +8,12 @@
  * - Facebook como opção secundária
  */
 
+import * as AppleAuthentication from "expo-apple-authentication";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import * as AppleAuthentication from "expo-apple-authentication";
 import { Platform } from "react-native";
-import { supabase } from "./supabase";
 import { logger } from "../utils/logger";
+import { supabase } from "./supabase";
 
 // Permitir que o browser feche corretamente após OAuth
 WebBrowser.maybeCompleteAuthSession();
@@ -32,11 +32,24 @@ export interface SocialAuthResult {
   error?: string;
 }
 
-// URLs de redirect
-const REDIRECT_URI = AuthSession.makeRedirectUri({
-  scheme: "nossamaternidade",
-  path: "auth/callback",
-});
+// URLs de redirect - Tratamento especial para Web
+function getRedirectUri(): string {
+  // Na web, usar a URL atual como base
+  if (Platform.OS === "web") {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}/auth/callback`;
+  }
+
+  // Native: usar o scheme do app
+  const uri = AuthSession.makeRedirectUri({
+    scheme: "nossamaternidade",
+    path: "auth/callback",
+  });
+
+  return uri || "nossamaternidade://auth/callback";
+}
+
+const REDIRECT_URI = getRedirectUri();
 
 /**
  * Verifica se o Supabase está configurado
@@ -51,68 +64,157 @@ function checkSupabase() {
 }
 
 /**
+ * Mensagem de erro amigável para OAuth não configurado
+ */
+function getOAuthNotConfiguredMessage(provider: SocialProvider): string {
+  const providerNames = {
+    google: "Google",
+    apple: "Apple",
+    facebook: "Facebook",
+  };
+
+  if (Platform.OS === "web") {
+    return `Login com ${providerNames[provider]} não está disponível no navegador. Por favor, use email/senha ou baixe o app.`;
+  }
+
+  return `Login com ${providerNames[provider]} não está configurado. Configure o provider no Supabase Dashboard ou use email/senha.`;
+}
+
+/**
+ * Detecta se o erro é causado por provider OAuth não configurado
+ */
+function isOAuthNotConfiguredError(error: unknown): boolean {
+  if (!error) return false;
+
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorString = String(error).toLowerCase();
+
+  // Padrões de erro quando provider não está configurado
+  const patterns = [
+    "provider is not enabled",
+    "oauth provider not configured",
+    "provider not found",
+    "invalid provider",
+    "cannot read property 'replace'",
+    "replace is not a function",
+    "malformed",
+    "invalid response",
+  ];
+
+  return patterns.some(
+    (pattern) => errorMessage.toLowerCase().includes(pattern) || errorString.includes(pattern)
+  );
+}
+
+/**
  * Login com Google usando Supabase OAuth
  *
  * Baseado nos padrões do Flo e Clue que priorizam Google no Android
  */
 export async function signInWithGoogle(): Promise<SocialAuthResult> {
   try {
+    // Verificar se estamos na web - OAuth social não funciona bem no simulador web
+    if (Platform.OS === "web") {
+      return {
+        success: false,
+        error: getOAuthNotConfiguredMessage("google"),
+      };
+    }
+
     const client = checkSupabase();
 
     logger.info("Iniciando login com Google", "SocialAuth", {
       redirectUri: REDIRECT_URI,
     });
 
-    const { data, error } = await client.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: REDIRECT_URI,
-        skipBrowserRedirect: true,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
+    let data: { provider: string; url: string | null } | null = null;
+    let error: unknown = null;
+
+    try {
+      const result = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: REDIRECT_URI,
+          skipBrowserRedirect: true,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
         },
-      },
-    });
+      });
+
+      data = result.data;
+      error = result.error;
+    } catch (err) {
+      // Captura erros de parsing (ex: .replace() em undefined)
+      error = err;
+      logger.error("Exceção ao chamar signInWithOAuth (Google)", "SocialAuth", err as Error);
+    }
 
     if (error) {
-      logger.error("Erro no OAuth Google", "SocialAuth", error);
+      logger.error("Erro no OAuth Google", "SocialAuth", error as Error);
+
+      // Verificar se é erro de provider não configurado
+      if (isOAuthNotConfiguredError(error)) {
+        return {
+          success: false,
+          error:
+            "Google OAuth não está configurado no Supabase. Configure no Dashboard: Authentication → Providers → Google",
+        };
+      }
+
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
 
-    if (!data.url) {
+    if (!data || !data.url) {
       return {
         success: false,
-        error: "URL de autenticação não gerada",
+        error:
+          "URL de autenticação não gerada. Verifique se o provider Google está habilitado no Supabase Dashboard.",
       };
     }
 
     // Abrir browser para autenticação
-    const result = await WebBrowser.openAuthSessionAsync(
-      data.url,
-      REDIRECT_URI,
-      {
+    let browserResult;
+    try {
+      browserResult = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI, {
         showInRecents: true,
-      }
-    );
+      });
+    } catch (err) {
+      logger.error("Erro ao abrir browser para OAuth", "SocialAuth", err as Error);
+      return {
+        success: false,
+        error: "Erro ao abrir navegador para autenticação",
+      };
+    }
 
-    if (result.type === "success" && result.url) {
+    if (browserResult.type === "success" && browserResult.url) {
       // Extrair tokens da URL
-      const url = new URL(result.url);
-      const params = new URLSearchParams(url.hash.substring(1));
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
+      let accessToken: string | null = null;
+      let refreshToken: string | null = null;
+
+      try {
+        const url = new URL(browserResult.url);
+        const params = new URLSearchParams(url.hash.substring(1));
+        accessToken = params.get("access_token");
+        refreshToken = params.get("refresh_token");
+      } catch (err) {
+        logger.error("Erro ao parsear URL de callback", "SocialAuth", err as Error);
+        return {
+          success: false,
+          error: "Erro ao processar resposta de autenticação",
+        };
+      }
 
       if (accessToken) {
         // Definir sessão com os tokens
-        const { data: sessionData, error: sessionError } =
-          await client.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || "",
-          });
+        const { data: sessionData, error: sessionError } = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || "",
+        });
 
         if (sessionError) {
           return {
@@ -131,9 +233,10 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
             user: {
               id: sessionData.user.id,
               email: sessionData.user.email || "",
-              name: sessionData.user.user_metadata?.full_name ||
-                sessionData.user.user_metadata?.name,
-              avatarUrl: sessionData.user.user_metadata?.avatar_url ||
+              name:
+                sessionData.user.user_metadata?.full_name || sessionData.user.user_metadata?.name,
+              avatarUrl:
+                sessionData.user.user_metadata?.avatar_url ||
                 sessionData.user.user_metadata?.picture,
             },
           };
@@ -141,7 +244,7 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
       }
     }
 
-    if (result.type === "cancel") {
+    if (browserResult.type === "cancel") {
       return {
         success: false,
         error: "Login cancelado",
@@ -169,6 +272,14 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
  */
 export async function signInWithApple(): Promise<SocialAuthResult> {
   try {
+    // Verificar se estamos na web - OAuth social não funciona bem no simulador web
+    if (Platform.OS === "web") {
+      return {
+        success: false,
+        error: getOAuthNotConfiguredMessage("apple"),
+      };
+    }
+
     const client = checkSupabase();
 
     // iOS: Usar autenticação nativa
@@ -261,10 +372,7 @@ async function signInWithAppleNative(
     };
   } catch (error) {
     // Usuário cancelou
-    if (
-      error instanceof Error &&
-      error.message.includes("ERR_REQUEST_CANCELED")
-    ) {
+    if (error instanceof Error && error.message.includes("ERR_REQUEST_CANCELED")) {
       return {
         success: false,
         error: "Login cancelado",
@@ -285,45 +393,87 @@ async function signInWithAppleOAuth(
     redirectUri: REDIRECT_URI,
   });
 
-  const { data, error } = await client.auth.signInWithOAuth({
-    provider: "apple",
-    options: {
-      redirectTo: REDIRECT_URI,
-      skipBrowserRedirect: true,
-    },
-  });
+  let data: { provider: string; url: string | null } | null = null;
+  let error: unknown = null;
+
+  try {
+    const result = await client.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: REDIRECT_URI,
+        skipBrowserRedirect: true,
+      },
+    });
+
+    data = result.data;
+    error = result.error;
+  } catch (err) {
+    // Captura erros de parsing (ex: .replace() em undefined)
+    error = err;
+    logger.error("Exceção ao chamar signInWithOAuth (Apple)", "SocialAuth", err as Error);
+  }
 
   if (error) {
-    logger.error("Erro no OAuth Apple", "SocialAuth", error);
+    logger.error("Erro no OAuth Apple", "SocialAuth", error as Error);
+
+    // Verificar se é erro de provider não configurado
+    if (isOAuthNotConfiguredError(error)) {
+      return {
+        success: false,
+        error:
+          "Apple OAuth não está configurado no Supabase. Configure no Dashboard: Authentication → Providers → Apple",
+      };
+    }
+
     return {
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 
-  if (!data.url) {
+  if (!data || !data.url) {
     return {
       success: false,
-      error: "URL de autenticação não gerada",
+      error:
+        "URL de autenticação não gerada. Verifique se o provider Apple está habilitado no Supabase Dashboard.",
     };
   }
 
-  const result = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI, {
-    showInRecents: true,
-  });
+  let browserResult;
+  try {
+    browserResult = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI, {
+      showInRecents: true,
+    });
+  } catch (err) {
+    logger.error("Erro ao abrir browser para OAuth (Apple)", "SocialAuth", err as Error);
+    return {
+      success: false,
+      error: "Erro ao abrir navegador para autenticação",
+    };
+  }
 
-  if (result.type === "success" && result.url) {
-    const url = new URL(result.url);
-    const params = new URLSearchParams(url.hash.substring(1));
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
+  if (browserResult.type === "success" && browserResult.url) {
+    let accessToken: string | null = null;
+    let refreshToken: string | null = null;
+
+    try {
+      const url = new URL(browserResult.url);
+      const params = new URLSearchParams(url.hash.substring(1));
+      accessToken = params.get("access_token");
+      refreshToken = params.get("refresh_token");
+    } catch (err) {
+      logger.error("Erro ao parsear URL de callback (Apple)", "SocialAuth", err as Error);
+      return {
+        success: false,
+        error: "Erro ao processar resposta de autenticação",
+      };
+    }
 
     if (accessToken) {
-      const { data: sessionData, error: sessionError } =
-        await client.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || "",
-        });
+      const { data: sessionData, error: sessionError } = await client.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken || "",
+      });
 
       if (sessionError) {
         return {
@@ -350,7 +500,7 @@ async function signInWithAppleOAuth(
     }
   }
 
-  if (result.type === "cancel") {
+  if (browserResult.type === "cancel") {
     return {
       success: false,
       error: "Login cancelado",
@@ -371,56 +521,102 @@ async function signInWithAppleOAuth(
  */
 export async function signInWithFacebook(): Promise<SocialAuthResult> {
   try {
+    // Verificar se estamos na web - OAuth social não funciona bem no simulador web
+    if (Platform.OS === "web") {
+      return {
+        success: false,
+        error: getOAuthNotConfiguredMessage("facebook"),
+      };
+    }
+
     const client = checkSupabase();
 
     logger.info("Iniciando login com Facebook", "SocialAuth", {
       redirectUri: REDIRECT_URI,
     });
 
-    const { data, error } = await client.auth.signInWithOAuth({
-      provider: "facebook",
-      options: {
-        redirectTo: REDIRECT_URI,
-        skipBrowserRedirect: true,
-        scopes: "email,public_profile",
-      },
-    });
+    let data: { provider: string; url: string | null } | null = null;
+    let error: unknown = null;
+
+    try {
+      const result = await client.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          redirectTo: REDIRECT_URI,
+          skipBrowserRedirect: true,
+          scopes: "email,public_profile",
+        },
+      });
+
+      data = result.data;
+      error = result.error;
+    } catch (err) {
+      // Captura erros de parsing (ex: .replace() em undefined)
+      error = err;
+      logger.error("Exceção ao chamar signInWithOAuth (Facebook)", "SocialAuth", err as Error);
+    }
 
     if (error) {
-      logger.error("Erro no OAuth Facebook", "SocialAuth", error);
-      return {
-        success: false,
-        error: error.message,
-      };
-    }
+      logger.error("Erro no OAuth Facebook", "SocialAuth", error as Error);
 
-    if (!data.url) {
-      return {
-        success: false,
-        error: "URL de autenticação não gerada",
-      };
-    }
-
-    const result = await WebBrowser.openAuthSessionAsync(
-      data.url,
-      REDIRECT_URI,
-      {
-        showInRecents: true,
+      // Verificar se é erro de provider não configurado
+      if (isOAuthNotConfiguredError(error)) {
+        return {
+          success: false,
+          error:
+            "Facebook OAuth não está configurado no Supabase. Configure no Dashboard: Authentication → Providers → Facebook",
+        };
       }
-    );
 
-    if (result.type === "success" && result.url) {
-      const url = new URL(result.url);
-      const params = new URLSearchParams(url.hash.substring(1));
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+
+    if (!data || !data.url) {
+      return {
+        success: false,
+        error:
+          "URL de autenticação não gerada. Verifique se o provider Facebook está habilitado no Supabase Dashboard.",
+      };
+    }
+
+    let browserResult;
+    try {
+      browserResult = await WebBrowser.openAuthSessionAsync(data.url, REDIRECT_URI, {
+        showInRecents: true,
+      });
+    } catch (err) {
+      logger.error("Erro ao abrir browser para OAuth (Facebook)", "SocialAuth", err as Error);
+      return {
+        success: false,
+        error: "Erro ao abrir navegador para autenticação",
+      };
+    }
+
+    if (browserResult.type === "success" && browserResult.url) {
+      let accessToken: string | null = null;
+      let refreshToken: string | null = null;
+
+      try {
+        const url = new URL(browserResult.url);
+        const params = new URLSearchParams(url.hash.substring(1));
+        accessToken = params.get("access_token");
+        refreshToken = params.get("refresh_token");
+      } catch (err) {
+        logger.error("Erro ao parsear URL de callback (Facebook)", "SocialAuth", err as Error);
+        return {
+          success: false,
+          error: "Erro ao processar resposta de autenticação",
+        };
+      }
 
       if (accessToken) {
-        const { data: sessionData, error: sessionError } =
-          await client.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken || "",
-          });
+        const { data: sessionData, error: sessionError } = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || "",
+        });
 
         if (sessionError) {
           return {
@@ -439,9 +635,10 @@ export async function signInWithFacebook(): Promise<SocialAuthResult> {
             user: {
               id: sessionData.user.id,
               email: sessionData.user.email || "",
-              name: sessionData.user.user_metadata?.full_name ||
-                sessionData.user.user_metadata?.name,
-              avatarUrl: sessionData.user.user_metadata?.avatar_url ||
+              name:
+                sessionData.user.user_metadata?.full_name || sessionData.user.user_metadata?.name,
+              avatarUrl:
+                sessionData.user.user_metadata?.avatar_url ||
                 sessionData.user.user_metadata?.picture,
             },
           };
@@ -449,7 +646,7 @@ export async function signInWithFacebook(): Promise<SocialAuthResult> {
       }
     }
 
-    if (result.type === "cancel") {
+    if (browserResult.type === "cancel") {
       return {
         success: false,
         error: "Login cancelado",
