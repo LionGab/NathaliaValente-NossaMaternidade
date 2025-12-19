@@ -72,19 +72,19 @@ const LOGO_IMAGE = require("../../assets/logo-01.png");
 // Logo do Google
 const GOOGLE_LOGO = require("../../assets/google-logo.jpg");
 
-// Cores do mockup - Alinhadas com Design System
+// Cores do mockup - Paleta Rosa & Azul
 const MOCKUP_COLORS = {
-  gradientTop: "#E8F4F8",    // Azul bem claro do topo
+  gradientTop: "#FFF0F5",    // Rosa lavanda suave (fundo)
   gradientBottom: "#FFFFFF", // Branco
-  primary: "#5EA3C2",        // Azul primary (BLUE[600]) - contraste WCAG AA ✓
-  primaryDark: "#4586A4",    // Azul escuro (BLUE[700]) - para pressed state
-  primaryLight: "#7DB9D5",   // Azul claro (BLUE[500]) - para elementos secundários
+  primary: "#FF6B9D",        // Rosa primário - botão Entrar
+  primaryDark: "#E85A8A",    // Rosa escuro - pressed state
+  primaryLight: "#FFB6C1",   // Rosa claro - elementos secundários
   text: "#2B3642",           // Texto escuro
   textMuted: "#8694A6",      // Texto secundário
   inputBg: "#FFFFFF",
-  inputBorder: "#DEE7EF",
-  checkmark: "#5EA3C2",      // Atualizado para primary
-  link: "#5EA3C2",           // Azul para links (não rosa - rosa só CTA)
+  inputBorder: "#FFD5E5",    // Rosa pastel - borda dos inputs
+  checkmark: "#FF6B9D",      // Rosa - ícones de validação
+  link: "#4A90D9",           // Azul - link "Esqueceu a senha?"
   ctaAccent: "#F4258C",      // Rosa APENAS para CTA "Cadastre-se"
 };
 
@@ -1021,7 +1021,7 @@ export default function LoginScreen({ navigation }: Props) {
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "center",
-                      backgroundColor: pressed ? "#166FE5" : "#1877F2",
+                      backgroundColor: pressed ? "#3A7BC8" : "#4A90D9",
                       borderRadius: RADIUS.xl,
                       height: 52,
                       gap: SPACING.sm,
