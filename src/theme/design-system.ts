@@ -1,229 +1,195 @@
 /**
  * Design System 2025 - Nossa Maternidade
- * Paleta: "MATERNIDADE AZUL PASTEL"
- *
- * Baseado em:
- * - Apple Human Interface Guidelines (Liquid Glass 2025)
- * - Material Design 3 Expressive
- * - WCAG 2.2 AA Accessibility (4.5:1 texto, 3:1 UI)
- * - Estilo FemTech (Flo, Clue)
+ * Sistema de cores em 2 camadas: Paletas Base + Tokens Semânticos
  *
  * Princípios:
- * - Baixo estímulo visual (reduz sobrecarga/ansiedade)
- * - Azul pastel suave - acolhimento, segurança, calma
- * - Evita azul vibrante ou corporativo
- * - Fundo nunca branco puro
- * - Dark mode: #121212 base (não preto puro)
- * - Tap targets mínimos 44pt (iOS)
+ * - Clean FemTech: poucas cores bem governadas
+ * - Azul = identidade + calma (sempre presente, mas suave)
+ * - Rosa = só CTA (raríssimo)
+ * - Neutros = estrutura do layout
+ * - Semânticas = estados (erro/sucesso) sem improviso
+ *
+ * Regras de Ouro:
+ * 1. Rosa só em brand.accent (CTA primário, link crítico, badge raro)
+ * 2. Fundo unificado: sempre surface.background (sem degradê no corpo)
+ * 3. Cards: sempre surface.card + border.subtle (sombra mínima)
+ * 4. Inputs: borda neutra; erro/sucesso só quando necessário
  */
-
-// ===========================================
-// PALETA "MATERNIDADE AZUL PASTEL"
-// ===========================================
-
-/**
- * Sistema de cores estruturado:
- * - brand: primary (azul pastel), secondary (azul soft), accent (teal)
- * - surface: backgrounds, cards, borders
- * - text: hierarquia de texto
- * - semantic: feedback do sistema
- * - feeling: cores do check-in emocional
- */
-
-// ===========================================
-// SOMBRAS
-// ===========================================
 
 import { Platform } from "react-native";
 
+// ===========================================
+// PALETAS BASE (SCALES)
+// ===========================================
+
+/**
+ * Brand Blue (dominante) - base #7DB9D5
+ * Transmite: acolhimento, segurança, calma, maternidade
+ */
+const BLUE = {
+  50: "#F3FAFD",
+  100: "#E6F3FA",
+  200: "#CFE8F4",
+  300: "#B8DCEC",
+  400: "#9FCFE3",
+  500: "#7DB9D5", // ← PRIMARY
+  600: "#5EA3C2",
+  700: "#4586A4",
+  800: "#2F667F",
+  900: "#1E465A",
+} as const;
+
+/**
+ * Accent Pink (CTA apenas) - base #F4258C
+ * USO RESTRITO: só CTAs primários, links de ação crítica, badges raros
+ */
+const PINK = {
+  50: "#FFF0F7",
+  100: "#FFE0EF",
+  200: "#FFC2DF",
+  300: "#FF94C8",
+  400: "#FF5EAB",
+  500: "#F4258C", // ← ACCENT
+  600: "#D81C78",
+  700: "#B01563",
+  800: "#860F4B",
+  900: "#5C0A33",
+} as const;
+
+/**
+ * Neutral Cool (fundo unificado + UI clean)
+ * Levemente azulados para complementar a paleta
+ */
+const NEUTRAL = {
+  0: "#FFFFFF",
+  50: "#F7FBFD", // ← surface.background
+  100: "#EFF5F9",
+  200: "#DEE7EF", // ← border.subtle
+  300: "#C7D3DE", // ← border.strong
+  400: "#A8B4C2",
+  500: "#8694A6", // ← text.muted
+  600: "#667588",
+  700: "#4C5B6B", // ← text.secondary
+  800: "#2B3642",
+  900: "#121820", // ← text.primary
+} as const;
+
+// ===========================================
+// COLORS EXPORT (Paletas base)
+// ===========================================
+
 export const COLORS = {
-  // =========================================
-  // BRAND COLORS
-  // =========================================
-
-  /**
-   * Primary: Azul Pastel Suave
-   * - Transmite: acolhimento, segurança, calma, maternidade
-   * - Uso: CTAs, navegação ativa, elementos principais
-   * - Contraste em #F7FBFD: ~4.8:1 (WCAG AA)
-   */
-  primary: {
-    50: "#F7FBFD",   // Background principal
-    100: "#E8F3F9",  // Primary Soft - highlights
-    200: "#DCE9F1",  // Border subtle
-    300: "#B4D7E8",  // Hover states
-    400: "#96C7DE",  // Active elements
-    500: "#7DB9D5",  // Principal - CTA/foco
-    600: "#5BA3C7",  // CTA forte - alto contraste
-    700: "#4488AB",  // Links/ícones
-    800: "#376E8C",  // Textos sobre claro
-    900: "#2B576D",  // Textos heading
-  },
-
-  /**
-   * Secondary: Azul Soft Complementar
-   * - Transmite: confiança, serenidade
-   * - Uso: elementos secundários, badges, tags
-   */
-  secondary: {
-    50: "#F0F7FF",
-    100: "#E1EFFF",
-    200: "#C7DFFA",
-    300: "#A3CCF2",
-    400: "#7BB8E8",  // Secundário ativo
-    500: "#5CA3DB",  // Principal secundário
-    600: "#4189C2",
-    700: "#336FA3",
-    800: "#285785",
-    900: "#1F4468",
-  },
-
-  /**
-   * Accent: Teal Suave
-   * - Transmite: saúde, bem-estar, natureza
-   * - USO: destaques pontuais, badges especiais
-   */
-  accent: {
-    50: "#F0FDFA",
-    100: "#CCFBF1",
-    200: "#99F6E4",
-    300: "#5EEAD4",
-    400: "#2DD4BF",
-    500: "#14B8A6",  // Accent principal
-    600: "#0D9488",  // CTA accent
-    700: "#0F766E",
-    800: "#115E59",
-    900: "#134E4A",
-  },
+  // Escalas base (para uso direto quando necessário)
+  primary: BLUE,
+  secondary: BLUE, // Alias para compatibilidade
+  accent: PINK,
+  neutral: NEUTRAL,
 
   // =========================================
-  // NEUTRAL COLORS (Cool Gray - Azul Pastel Theme)
+  // TOKENS SEMÂNTICOS - LIGHT MODE
   // =========================================
 
-  /**
-   * Tons neutros levemente azulados
-   * - Complementa a paleta azul pastel
-   * - Acolhedor e suave para contexto maternal
-   */
-  neutral: {
-    0: "#FFFFFF",
-    50: "#F9FAFB",     // Quase branco
-    100: "#F3F4F6",    // Background alternativo
-    200: "#E5E7EB",    // Borders
-    300: "#D1D5DB",    // Borders mais fortes
-    400: "#9CA3AF",    // Icons desabilitados
-    500: "#6B7280",    // Text secondary
-    600: "#4B5563",    // Text medium
-    700: "#374151",    // Text strong
-    800: "#1F2937",    // Text primary
-    900: "#111827",    // Text heading
-  },
-
-  // =========================================
-  // SURFACE COLORS
-  // =========================================
-
-  /**
-   * Backgrounds e superfícies - Azul Pastel Theme
-   * - Azul muito claro como base (não branco puro)
-   * - Acolhedor e suave para contexto maternal
-   */
+  // Superfícies
   background: {
-    primary: "#F7FBFD",   // Azul clarinho - principal (da paleta)
-    secondary: "#FFFFFF", // Branco - cards
-    tertiary: "#EDF4F8",  // Azul ainda mais claro - separadores
-    warm: "#F5FAFC",      // Tom levemente azulado
-    card: "rgba(255, 255, 255, 0.96)",
+    primary: NEUTRAL[50],    // #F7FBFD - fundo unificado clean
+    secondary: NEUTRAL[0],   // #FFFFFF - cards
+    tertiary: NEUTRAL[100],  // #EFF5F9 - separadores
+    warm: NEUTRAL[50],       // Alias
+    card: NEUTRAL[0],
     glass: "rgba(247, 251, 253, 0.85)",
+    elevated: NEUTRAL[0],
   },
 
-  // =========================================
-  // SURFACE COLORS (Soft backgrounds for cards)
-  // =========================================
-  /**
-   * Superfícies suaves para cards temáticos
-   * - Tons pastéis muito claros
-   */
+  // Superfícies temáticas (uso pontual)
   surface: {
-    roseSoft: "#FDF0F0",    // Rosa muito suave
-    peachSoft: "#FDF6F2",   // Pêssego muito suave
-    lilacBorder: "#E0D4F0", // Borda lilás
-    roseBorder: "#F5E0E0",  // Borda rosa
-    blueBorder: "#D6E6F2",  // Borda azul
+    background: NEUTRAL[50],
+    card: NEUTRAL[0],
+    elevated: NEUTRAL[0],
+    roseSoft: "#FDF0F0",
+    peachSoft: "#FDF6F2",
+    lilacBorder: "#E0D4F0",
+    roseBorder: "#F5E0E0",
+    blueBorder: "#D6E6F2",
   },
 
-  // =========================================
-  // TEXT COLORS
-  // =========================================
+  // Bordas
+  border: {
+    subtle: NEUTRAL[200],    // #DEE7EF
+    strong: NEUTRAL[300],    // #C7D3DE
+    focus: BLUE[400],        // #9FCFE3
+    error: "#EF4444",
+  },
 
-  /**
-   * Hierarquia de texto - Paleta Maternidade
-   * - Todos validados para WCAG 2.2 AA
-   * - Cores neutras da paleta definida
-   */
+  // Texto
   text: {
-    primary: "#1F2937",   // Títulos - da paleta (contraste ~14:1)
-    secondary: "#6B7280", // Corpo - da paleta (contraste ~5.5:1)
-    tertiary: "#9CA3AF",  // Hints - contraste ~3.5:1
-    muted: "#D1D5DB",     // Desabilitado - apenas decorativo
-    inverse: "#F9FAFB",   // Texto em fundo escuro
+    primary: NEUTRAL[900],   // #121820
+    secondary: NEUTRAL[700], // #4C5B6B
+    tertiary: NEUTRAL[500],  // #8694A6
+    muted: NEUTRAL[500],
+    inverse: "#F3F5F7",
+    link: BLUE[600],
+    error: "#EF4444",
+  },
+
+  // Brand
+  brand: {
+    primary: BLUE[500],       // #7DB9D5
+    primaryStrong: BLUE[600], // #5EA3C2
+    primarySoft: BLUE[100],   // #E6F3FA
+    accent: PINK[500],        // #F4258C - SÓ CTA
+    accentSoft: PINK[100],    // #FFE0EF
+  },
+
+  // Overlay
+  overlay: {
+    soft: "rgba(18, 24, 32, 0.06)",
+    medium: "rgba(18, 24, 32, 0.18)",
+    strong: "rgba(18, 24, 32, 0.40)",
+    backdrop: "rgba(0, 0, 0, 0.4)",
   },
 
   // =========================================
-  // SEMANTIC COLORS
+  // SEMÂNTICAS DE ESTADO (mínimas e clean)
   // =========================================
 
-  /**
-   * Feedback do sistema
-   * - Cores padrão com bom contraste
-   */
   semantic: {
-    success: "#10B981", // Verde esmeralda
-    successLight: "#D1FAE5",
-    warning: "#F59E0B", // Âmbar
+    success: "#22C55E",
+    successLight: "#DCFCE7",
+    warning: "#F59E0B",
     warningLight: "#FEF3C7",
-    error: "#EF4444", // Vermelho
+    error: "#EF4444",
     errorLight: "#FEE2E2",
-    info: "#3B82F6", // Azul
-    infoLight: "#DBEAFE",
+    info: BLUE[600], // #5EA3C2
+    infoLight: BLUE[100], // #E6F3FA
   },
 
   // =========================================
   // FEELING COLORS (Check-in Emocional)
   // =========================================
 
-  /**
-   * Cores pastéis para check-in
-   * - Baixa saturação = baixo estímulo
-   */
   feeling: {
-    bem: "#FFE4B5", // Amarelo pastel (sol)
-    cansada: "#BAE6FD", // Azul pastel (nuvem)
+    bem: "#FFE4B5",      // Amarelo pastel (sol)
+    cansada: "#BAE6FD",  // Azul pastel (nuvem)
     indisposta: "#DDD6FE", // Lavanda (chuva)
-    amada: "#FECDD3", // Rosa pastel (coração)
+    amada: "#FECDD3",    // Rosa pastel (coração)
   },
 
   // =========================================
-  // MOOD COLORS (Daily Log - Humores)
+  // MOOD COLORS (Daily Log)
   // =========================================
-  /**
-   * Cores para seleção de humor no registro diário
-   * - Cores vibrantes para identificação rápida
-   */
+
   mood: {
-    happy: "#10B981",     // Verde esmeralda (feliz)
-    calm: "#6366F1",      // Índigo (calma)
-    energetic: "#F59E0B", // Âmbar (energética)
-    anxious: "#EF4444",   // Vermelho (ansiosa)
-    sad: "#3B82F6",       // Azul (triste)
-    irritated: "#F97316", // Laranja (irritada)
-    sensitive: "#EC4899", // Rosa (sensível)
-    tired: "#8B5CF6",     // Violeta (cansada)
+    happy: "#10B981",
+    calm: "#6366F1",
+    energetic: "#F59E0B",
+    anxious: "#EF4444",
+    sad: "#3B82F6",
+    irritated: "#F97316",
+    sensitive: "#EC4899",
+    tired: "#8B5CF6",
   },
 
-  // =========================================
-  // LEGACY ACCENT (backward compatibility)
-  // =========================================
+  // Legacy (compatibilidade)
   legacyAccent: {
     sage: "#86EFAC",
     peach: "#FED7AA",
@@ -234,35 +200,27 @@ export const COLORS = {
 } as const;
 
 // ===========================================
-// DARK MODE (Azul Pastel Dessaturado)
+// DARK MODE
 // ===========================================
 
-/**
- * Dark mode para paleta Maternidade Azul Pastel:
- * - Superfície base: #0F1419 (azul muito escuro, não preto puro)
- * - Azul dessaturado para manter identidade
- * - Elevação com tons mais claros
- * - Reduz fadiga em telas OLED
- */
 export const COLORS_DARK = {
   primary: {
-    ...COLORS.primary,
-    // Azul pastel mais claro para contraste em dark
-    400: "#A8D4E8",  // Mais claro
-    500: "#8BC5DD",  // Principal em dark
-    600: "#7DB9D5",  // CTA em dark
+    ...BLUE,
+    400: "#9FCFE3", // Mais claro para contraste
+    500: "#7DB9D5",
+    600: "#5EA3C2",
   },
 
   secondary: {
-    ...COLORS.secondary,
-    400: "#9DC8E8",  // Mais claro
-    500: "#7BB8E8",  // Principal em dark
+    ...BLUE,
+    400: "#9FCFE3",
+    500: "#7DB9D5",
   },
 
   accent: {
-    ...COLORS.accent,
-    400: "#5EEAD4",  // Mais vibrante em dark
-    500: "#2DD4BF",  // Teal vibrante
+    ...PINK,
+    400: "#FF5EAB", // Mais vibrante em dark
+    500: "#F4258C",
   },
 
   neutral: {
@@ -280,40 +238,77 @@ export const COLORS_DARK = {
   },
 
   background: {
-    primary: "#0F1419",   // Azul muito escuro
-    secondary: "#1A2027", // Cards
-    tertiary: "#242D36",  // Separadores
-    warm: "#151C22",      // Tom levemente azulado
-    card: "rgba(26, 32, 39, 0.95)",
-    glass: "rgba(26, 32, 39, 0.72)",
+    primary: "#0F1419",
+    secondary: "#141B22",
+    tertiary: "#1A2430",
+    warm: "#151C22",
+    card: "#141B22",
+    glass: "rgba(26, 32, 39, 0.85)",
+    elevated: "#1A2430",
+  },
+
+  surface: {
+    background: "#0F1419",
+    card: "#141B22",
+    elevated: "#1A2430",
+    roseSoft: "rgba(253, 240, 240, 0.08)",
+    peachSoft: "rgba(253, 246, 242, 0.08)",
+    lilacBorder: "rgba(224, 212, 240, 0.15)",
+    roseBorder: "rgba(245, 224, 224, 0.15)",
+    blueBorder: "rgba(214, 230, 242, 0.15)",
+  },
+
+  border: {
+    subtle: "rgba(243, 245, 247, 0.10)",
+    strong: "rgba(243, 245, 247, 0.16)",
+    focus: BLUE[400],
+    error: "#F87171",
   },
 
   text: {
-    primary: "#F3F5F7",   // Não branco puro
+    primary: "#F3F5F7",
     secondary: "#9DA8B4",
     tertiary: "#7D8B99",
     muted: "#5C6B7A",
     inverse: "#1F2937",
+    link: "#9FCFE3",
+    error: "#F87171",
+  },
+
+  brand: {
+    primary: BLUE[400],       // #9FCFE3 - mais legível
+    primaryStrong: BLUE[500], // #7DB9D5
+    primarySoft: "rgba(125, 185, 213, 0.15)",
+    accent: PINK[400],        // #FF5EAB - CTA em dark
+    accentSoft: "rgba(244, 37, 140, 0.15)",
+  },
+
+  overlay: {
+    soft: "rgba(255, 255, 255, 0.06)",
+    medium: "rgba(255, 255, 255, 0.14)",
+    strong: "rgba(255, 255, 255, 0.24)",
+    backdrop: "rgba(0, 0, 0, 0.6)",
   },
 
   semantic: {
-    success: "#34D399",  // Mais claro
+    success: "#34D399",
     successLight: "rgba(16, 185, 129, 0.15)",
     warning: "#FBBF24",
     warningLight: "rgba(245, 158, 11, 0.15)",
     error: "#F87171",
     errorLight: "rgba(239, 68, 68, 0.15)",
-    info: "#7DB9D5",     // Azul pastel como info
+    info: BLUE[400],
     infoLight: "rgba(125, 185, 213, 0.15)",
   },
 
   feeling: {
     bem: "rgba(255, 228, 181, 0.2)",
-    cansada: "rgba(125, 185, 213, 0.25)",  // Azul pastel
+    cansada: "rgba(125, 185, 213, 0.25)",
     indisposta: "rgba(167, 139, 250, 0.2)",
     amada: "rgba(254, 205, 211, 0.2)",
   },
 
+  mood: COLORS.mood,
   legacyAccent: COLORS.legacyAccent,
 } as const;
 
@@ -322,7 +317,7 @@ export const COLORS_DARK = {
 // ===========================================
 
 export const TYPOGRAPHY = {
-  // Display - Titulos grandes
+  // Display
   displayLarge: {
     fontSize: 57,
     lineHeight: 64,
@@ -342,7 +337,7 @@ export const TYPOGRAPHY = {
     letterSpacing: 0,
   },
 
-  // Headline - Secoes
+  // Headline
   headlineLarge: {
     fontSize: 32,
     lineHeight: 40,
@@ -362,7 +357,7 @@ export const TYPOGRAPHY = {
     letterSpacing: 0,
   },
 
-  // Title - Titulos de cards
+  // Title
   titleLarge: {
     fontSize: 22,
     lineHeight: 28,
@@ -382,7 +377,7 @@ export const TYPOGRAPHY = {
     letterSpacing: 0.1,
   },
 
-  // Body - Texto corrido
+  // Body
   bodyLarge: {
     fontSize: 17,
     lineHeight: 26,
@@ -402,7 +397,7 @@ export const TYPOGRAPHY = {
     letterSpacing: 0.4,
   },
 
-  // Label - Botoes, tags
+  // Label
   labelLarge: {
     fontSize: 15,
     lineHeight: 20,
@@ -422,26 +417,25 @@ export const TYPOGRAPHY = {
     letterSpacing: 0.5,
   },
 
-  // Tamanhos adicionais comuns (aliases para facilitar migração)
   sizes: {
-    xs: 11,      // → labelSmall
-    sm: 12,      // Tamanho muito comum
-    md: 13,      // → bodySmall
-    base: 14,    // → titleSmall
-    lg: 15,      // → bodyMedium
-    xl: 16,      // Tamanho muito comum
-    "2xl": 17,   // → bodyLarge
-    "3xl": 18,   // → titleMedium
-    "4xl": 20,   // Tamanho comum
-    "5xl": 22,   // → titleLarge
-    "6xl": 24,   // → headlineSmall
-    "7xl": 28,   // → headlineMedium
-    "8xl": 32,   // → headlineLarge
+    xs: 11,
+    sm: 12,
+    md: 13,
+    base: 14,
+    lg: 15,
+    xl: 16,
+    "2xl": 17,
+    "3xl": 18,
+    "4xl": 20,
+    "5xl": 22,
+    "6xl": 24,
+    "7xl": 28,
+    "8xl": 32,
   },
 } as const;
 
 // ===========================================
-// ESPACAMENTO (8pt Grid System)
+// ESPACAMENTO (8pt Grid)
 // ===========================================
 
 export const SPACING = {
@@ -475,18 +469,17 @@ export const RADIUS = {
   full: 9999,
 } as const;
 
-/**
- * Converte shadow props para boxShadow CSS (web)
- */
+// ===========================================
+// SOMBRAS
+// ===========================================
+
 function shadowToBoxShadow(
   shadowColor: string,
   shadowOffset: { width: number; height: number },
   shadowOpacity: number,
   shadowRadius: number
 ): string {
-  if (shadowColor === "transparent") {
-    return "none";
-  }
+  if (shadowColor === "transparent") return "none";
   const r = parseInt(shadowColor.slice(1, 3), 16);
   const g = parseInt(shadowColor.slice(3, 5), 16);
   const b = parseInt(shadowColor.slice(5, 7), 16);
@@ -494,9 +487,6 @@ function shadowToBoxShadow(
   return `${shadowOffset.width}px ${shadowOffset.height}px ${shadowRadius}px ${color}`;
 }
 
-/**
- * Cria shadow compatível com web (boxShadow) e mobile (shadow props)
- */
 function createWebCompatibleShadow(config: {
   shadowColor: string;
   shadowOffset: { width: number; height: number };
@@ -534,38 +524,38 @@ export const SHADOWS = {
   sm: createWebCompatibleShadow({
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
   }),
   md: createWebCompatibleShadow({
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   }),
   lg: createWebCompatibleShadow({
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 24,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   }),
   xl: createWebCompatibleShadow({
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 32,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.10,
+    shadowRadius: 24,
+    elevation: 6,
   }),
   glow: (color: string) =>
     createWebCompatibleShadow({
       shadowColor: color,
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 16,
-      elevation: 6,
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      elevation: 4,
     }),
 } as const;
 
@@ -604,7 +594,6 @@ export const ANIMATION = {
     slower: 800,
   },
   easing: {
-    // Curvas iOS-style
     easeInOut: "cubic-bezier(0.42, 0, 0.58, 1)",
     easeOut: "cubic-bezier(0, 0, 0.58, 1)",
     easeIn: "cubic-bezier(0.42, 0, 1, 1)",
@@ -617,11 +606,8 @@ export const ANIMATION = {
 // ===========================================
 
 export const ACCESSIBILITY = {
-  // Tamanho minimo de tap target (Apple HIG)
   minTapTarget: 44,
-  // Contraste minimo para WCAG AA
   contrastRatio: 4.5,
-  // Espacamento minimo entre elementos tocaveis
   minTouchSpacing: 8,
 } as const;
 
@@ -630,42 +616,34 @@ export const ACCESSIBILITY = {
 // ===========================================
 
 export const COMPONENT_STYLES = {
-  // =========================================
-  // CARDS
-  // =========================================
-
-  // Card padrão (fundo creme)
+  // Cards
   card: {
-    backgroundColor: COLORS.background.card,
+    backgroundColor: COLORS.surface.card,
     borderRadius: RADIUS["2xl"],
+    borderWidth: 1,
+    borderColor: COLORS.border.subtle,
     padding: SPACING["2xl"],
-    ...SHADOWS.md,
+    ...SHADOWS.sm,
   },
 
-  // Card com glass effect
   cardGlass: {
     ...GLASS.light,
     borderRadius: RADIUS["2xl"],
     padding: SPACING["2xl"],
-    ...SHADOWS.md,
+    ...SHADOWS.sm,
   },
 
-  // Card com borda sutil
   cardOutlined: {
-    backgroundColor: COLORS.background.secondary,
+    backgroundColor: COLORS.surface.card,
     borderRadius: RADIUS["2xl"],
     borderWidth: 1,
-    borderColor: COLORS.neutral[200],
+    borderColor: COLORS.border.subtle,
     padding: SPACING["2xl"],
   },
 
-  // =========================================
-  // BUTTONS
-  // =========================================
-
-  // Botão primário (Azul Pastel - ação principal)
+  // Buttons
   buttonPrimary: {
-    backgroundColor: COLORS.primary[500],
+    backgroundColor: COLORS.brand.primary,
     borderRadius: RADIUS.lg,
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING["2xl"],
@@ -674,12 +652,21 @@ export const COMPONENT_STYLES = {
     justifyContent: "center" as const,
   },
 
-  // Botão secundário (outline)
+  buttonAccent: {
+    backgroundColor: COLORS.brand.accent,
+    borderRadius: RADIUS.lg,
+    paddingVertical: SPACING.lg,
+    paddingHorizontal: SPACING["2xl"],
+    minHeight: ACCESSIBILITY.minTapTarget,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+
   buttonSecondary: {
     backgroundColor: "transparent",
     borderRadius: RADIUS.lg,
-    borderWidth: 1.5,
-    borderColor: COLORS.primary[500],
+    borderWidth: 1,
+    borderColor: COLORS.border.strong,
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING["2xl"],
     minHeight: ACCESSIBILITY.minTapTarget,
@@ -687,18 +674,6 @@ export const COMPONENT_STYLES = {
     justifyContent: "center" as const,
   },
 
-  // Botão accent (Teal - CTAs especiais)
-  buttonAccent: {
-    backgroundColor: COLORS.accent[500],
-    borderRadius: RADIUS.lg,
-    paddingVertical: SPACING.lg,
-    paddingHorizontal: SPACING["2xl"],
-    minHeight: ACCESSIBILITY.minTapTarget,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-  },
-
-  // Botão ghost (sem fundo)
   buttonGhost: {
     backgroundColor: "transparent",
     borderRadius: RADIUS.lg,
@@ -709,67 +684,51 @@ export const COMPONENT_STYLES = {
     justifyContent: "center" as const,
   },
 
-  // =========================================
-  // INPUTS
-  // =========================================
-
-  // Input field
+  // Inputs
   input: {
-    backgroundColor: COLORS.neutral[50],
+    backgroundColor: COLORS.surface.card,
     borderRadius: RADIUS.lg,
     borderWidth: 1,
-    borderColor: COLORS.neutral[200],
+    borderColor: COLORS.border.subtle,
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.lg,
     minHeight: ACCESSIBILITY.minTapTarget + 8,
     fontSize: TYPOGRAPHY.bodyLarge.fontSize,
   },
 
-  // Input com foco
   inputFocused: {
-    borderColor: COLORS.primary[500],
-    borderWidth: 2,
+    borderColor: COLORS.border.focus,
+    borderWidth: 1,
   },
 
-  // =========================================
-  // CHIPS & TAGS
-  // =========================================
-
-  // Chip padrão
+  // Chips
   chip: {
-    backgroundColor: COLORS.primary[50],
+    backgroundColor: COLORS.brand.primarySoft,
     borderRadius: RADIUS.full,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.lg,
     minHeight: 32,
   },
 
-  // Chip accent (teal)
   chipAccent: {
-    backgroundColor: COLORS.accent[50],
+    backgroundColor: COLORS.brand.accentSoft,
     borderRadius: RADIUS.full,
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.lg,
     minHeight: 32,
   },
 
-  // =========================================
-  // NAVIGATION
-  // =========================================
-
-  // Tab Bar - Azul Pastel
+  // Navigation
   tabBar: {
-    backgroundColor: "rgba(247, 251, 253, 0.95)",  // Azul pastel com transparência
+    backgroundColor: "rgba(247, 251, 253, 0.95)",
     borderTopWidth: 0.5,
-    borderTopColor: COLORS.primary[200],  // Border azul sutil
+    borderTopColor: COLORS.border.subtle,
     paddingTop: SPACING.sm,
     paddingBottom: SPACING.md,
-    ...SHADOWS.sm,
   },
 
-  // Header
   header: {
-    backgroundColor: COLORS.background.primary,
+    backgroundColor: COLORS.surface.background,
     paddingHorizontal: SPACING["2xl"],
     paddingVertical: SPACING.lg,
   },
@@ -780,77 +739,38 @@ export const COMPONENT_STYLES = {
 // ===========================================
 
 export const GRADIENTS = {
-  // =========================================
-  // BRAND GRADIENTS (Maternidade Azul Pastel)
-  // =========================================
+  // Brand (uso mínimo)
+  primary: [BLUE[500], BLUE[600]],
+  primarySoft: [BLUE[50], BLUE[100]],
+  accent: [PINK[400], PINK[500]],
+  accentSoft: [PINK[50], PINK[100]],
 
-  // Primary: Azul pastel suave (acolhimento, calma)
-  primary: [COLORS.primary[500], COLORS.primary[600]],
-  primarySoft: [COLORS.primary[50], COLORS.primary[100]],
+  // Mood
+  warm: [NEUTRAL[50], "#FFFFFF", NEUTRAL[100]],
+  cool: [BLUE[100], BLUE[50], "#FFFFFF"],
 
-  // Secondary: Azul soft (confiança)
-  secondary: [COLORS.secondary[400], COLORS.secondary[500]],
-  secondarySoft: [COLORS.secondary[100], COLORS.secondary[200]],
+  // Hero (uso pontual)
+  heroLight: [NEUTRAL[50], "#FFFFFF", NEUTRAL[100]],
+  heroSoft: [BLUE[100], BLUE[50], "#FFFFFF"],
 
-  // Accent: Teal suave (saúde, bem-estar)
-  accent: [COLORS.accent[400], COLORS.accent[500]],
-  accentSoft: [COLORS.accent[100], COLORS.accent[200]],
-
-  // =========================================
-  // MOOD GRADIENTS (Check-in Emocional)
-  // =========================================
-
-  warm: ["#F7FBFD", "#EDF4F8", "#FFFFFF"],
-  cool: ["#E8F3F9", "#DCE9F1", "#F7FBFD"],
-  sunset: ["#FED7AA", "#FECDD3", "#FEE2E2"],
-  sage: ["#D1FAE5", "#CCFBF1", "#F0FDFA"],
-
-  // =========================================
-  // HERO GRADIENTS (Backgrounds principais)
-  // =========================================
-
-  // Light: azul pastel → branco (padrão)
-  heroLight: ["#F7FBFD", "#FFFFFF", "#E8F3F9"],
-
-  // Soft blue para seções de destaque
-  heroSoft: ["#E8F3F9", "#DCE9F1", "#FFFFFF"],
-
-  // Teal suave (uso pontual)
-  heroAccent: ["#F0FDFA", "#CCFBF1", "#FFFFFF"],
-
-  // =========================================
-  // OVERLAY GRADIENTS (Cards flutuantes)
-  // =========================================
-
+  // Overlays
   overlayWarm: ["rgba(247, 251, 253, 0.95)", "rgba(255, 255, 255, 0.9)"],
-  overlayCool: ["rgba(232, 243, 249, 0.95)", "rgba(255, 255, 255, 0.9)"],
-  overlayAccent: ["rgba(240, 253, 250, 0.95)", "rgba(255, 255, 255, 0.9)"],
-  // Dark mode overlays
+  overlayCool: ["rgba(230, 243, 250, 0.95)", "rgba(255, 255, 255, 0.9)"],
   overlayDark: ["rgba(26, 32, 39, 0.95)", "rgba(15, 20, 25, 0.9)"],
-  overlayDarkCool: ["rgba(36, 45, 54, 0.95)", "rgba(26, 32, 39, 0.9)"],
 
-  // =========================================
-  // UTILITY GRADIENTS
-  // =========================================
-
+  // Utility
   glass: ["rgba(255,255,255,0.8)", "rgba(247,251,253,0.4)"],
   shimmer: ["rgba(255,255,255,0)", "rgba(255,255,255,0.5)", "rgba(255,255,255,0)"],
 
-  // =========================================
-  // SEMANTIC GRADIENTS (Habits, Progress)
-  // =========================================
+  // Semantic
+  successGradient: ["#10B981", "#5A9D68", "#4A8C58"],
+  streakBg: "#FEF3C7",
+  streakIcon: "#F59E0B",
+  streakText: "#B45309",
+  completionLight: "#D4EDD9",
+  completionMedium: "#A7D4B4",
 
-  successGradient: ["#10B981", "#5A9D68", "#4A8C58"],  // Verde sucesso
-  streakBg: "#FEF3C7",         // Fundo do streak (âmbar claro)
-  streakIcon: "#F59E0B",       // Ícone do streak
-  streakText: "#B45309",       // Texto do streak
-  completionLight: "#D4EDD9",  // Verde claro para progresso
-  completionMedium: "#A7D4B4", // Verde médio para progresso
-
-  // =========================================
-  // BREATHING EXERCISE COLORS
-  // =========================================
-
+  // Feature-specific
   breathing: {
     box: {
       color: "#60A5FA",
@@ -864,22 +784,17 @@ export const GRADIENTS = {
     },
   },
 
-  // NathIA Onboarding gradient
   nathiaOnboarding: ["#FFF5F7", "#FEF3F2"] as const,
-
-  // Paywall pink gradients
   paywallPink: ["#FDF2F8", "#FCE7F3", "#FBCFE8"] as const,
 
-  // Cycle phase colors (menstrual cycle tracking)
   cycle: {
-    fertile: "#F472B6",       // Rosa (fase fértil)
-    menstrual: "#E11D48",     // Vermelho (menstruação)
-    follicular: "#8B5CF6",    // Violeta (folicular)
-    ovulation: "#A855F7",     // Roxo (ovulação)
-    luteal: "#EC4899",        // Pink (lútea)
+    fertile: "#F472B6",
+    menstrual: "#E11D48",
+    follicular: "#8B5CF6",
+    ovulation: "#A855F7",
+    luteal: "#EC4899",
   },
 
-  // Rest/Sleep mode (dark theme)
   rest: {
     bgPrimary: "#1F2937",
     bgSecondary: "#111827",
@@ -887,30 +802,26 @@ export const GRADIENTS = {
     infoIcon: "#C084FC",
   },
 
-  // Notification reminder colors
   notification: {
-    morning: "#F59E0B",     // Sol - manhã
-    checkIn: "#10B981",     // Verde - check-in
-    evening: "#6366F1",     // Índigo - noite
+    morning: "#F59E0B",
+    checkIn: "#10B981",
+    evening: "#6366F1",
   },
 
-  // =========================================
-  // LEGACY (backward compatibility)
-  // =========================================
+  // Sunset (warm tones for special moments)
+  sunset: [PINK[400], "#F97316", "#FBBF24"] as const,
 
-  aurora: ["#7DB9D5", "#5CA3DB", "#14B8A6"],  // Azul pastel aurora
-  heroPrimary: [COLORS.primary[400], COLORS.primary[500], COLORS.primary[600]],
+  // Legacy
+  aurora: [BLUE[500], BLUE[600], "#14B8A6"],
+  heroPrimary: [BLUE[400], BLUE[500], BLUE[600]],
+  secondary: [BLUE[400], BLUE[500]],
+  secondarySoft: [BLUE[100], BLUE[200]],
 } as const;
 
 // ===========================================
-// AFFIRMATION GRADIENTS (Temas de Afirmações)
+// AFFIRMATION GRADIENTS
 // ===========================================
 
-/**
- * Gradientes temáticos para tela de afirmações
- * - Cores profundas para modo imersivo
- * - Cada tema evoca uma emoção específica
- */
 export const AFFIRMATION_GRADIENTS = [
   { colors: ["#1E3A5F", "#2D5A87", "#3B7AB0"] as const, name: "Oceano" },
   { colors: ["#4A1942", "#6B2D5C", "#8B4177"] as const, name: "Ametista" },
@@ -920,7 +831,7 @@ export const AFFIRMATION_GRADIENTS = [
 ] as const;
 
 // ===========================================
-// ELEVATIONS (z-index system)
+// ELEVATION
 // ===========================================
 
 export const ELEVATION = {
@@ -934,82 +845,56 @@ export const ELEVATION = {
 } as const;
 
 // ===========================================
-// OVERLAY (Fundos de modais e backdrops)
+// OVERLAY
 // ===========================================
 
-/**
- * Tokens para overlay/backdrop de modais e popovers
- * - backdrop: fundo escuro semi-transparente
- * - scrim: fundo mais escuro para foco
- * - light: overlay claro para tooltips
- */
 export const OVERLAY = {
-  // Backdrop padrão para modais (40% opacidade)
   backdrop: "rgba(0, 0, 0, 0.4)",
-  // Backdrop mais forte (50% opacidade)
   backdropStrong: "rgba(0, 0, 0, 0.5)",
-  // Backdrop leve (30% opacidade)
   backdropLight: "rgba(0, 0, 0, 0.3)",
-  // Scrim escuro para foco máximo (60% opacidade)
   scrim: "rgba(0, 0, 0, 0.6)",
-  // Overlay claro para tooltips
   light: "rgba(255, 255, 255, 0.9)",
-  // Overlay azulado para theme consistency
   blueLight: "rgba(247, 251, 253, 0.95)",
   blueDark: "rgba(15, 20, 25, 0.95)",
-  // Hover states
   hoverLight: "rgba(0, 0, 0, 0.04)",
   hoverDark: "rgba(255, 255, 255, 0.08)",
-  // Press states
   pressLight: "rgba(0, 0, 0, 0.08)",
   pressDark: "rgba(255, 255, 255, 0.12)",
-  // Disabled states
   disabled: "rgba(0, 0, 0, 0.12)",
   disabledDark: "rgba(255, 255, 255, 0.12)",
-  // White overlays - para elementos em fundos escuros/gradientes
   white: {
-    subtle: "rgba(255, 255, 255, 0.02)",    // Decorações muito sutis
-    faint: "rgba(255, 255, 255, 0.03)",     // Decorações sutis
-    soft: "rgba(255, 255, 255, 0.1)",       // Cards em gradientes
-    medium: "rgba(255, 255, 255, 0.15)",    // Botões em gradientes
-    strong: "rgba(255, 255, 255, 0.2)",     // Botões destacados
-    muted: "rgba(255, 255, 255, 0.3)",      // Indicadores inativos
-    semiTransparent: "rgba(255, 255, 255, 0.5)", // Semi-transparente
-    prominent: "rgba(255, 255, 255, 0.6)",  // Elementos destacados
-    text: "rgba(255, 255, 255, 0.7)",       // Texto secundário em gradientes
-    textStrong: "rgba(255, 255, 255, 0.8)", // Texto primário em gradientes
+    subtle: "rgba(255, 255, 255, 0.02)",
+    faint: "rgba(255, 255, 255, 0.03)",
+    soft: "rgba(255, 255, 255, 0.1)",
+    medium: "rgba(255, 255, 255, 0.15)",
+    strong: "rgba(255, 255, 255, 0.2)",
+    muted: "rgba(255, 255, 255, 0.3)",
+    semiTransparent: "rgba(255, 255, 255, 0.5)",
+    prominent: "rgba(255, 255, 255, 0.6)",
+    text: "rgba(255, 255, 255, 0.7)",
+    textStrong: "rgba(255, 255, 255, 0.8)",
   },
 } as const;
 
 // ===========================================
-// ESTADOS INTERATIVOS
+// INTERACTIVE STATES
 // ===========================================
 
 export const INTERACTIVE = {
-  // Opacidade para estados pressed
   pressedOpacity: 0.7,
-  // Escala para animações de tap
   pressedScale: 0.96,
-  // Duração da animação de feedback
   feedbackDuration: 150,
 } as const;
 
 // ===========================================
-// ESPAÇAMENTOS SEMÂNTICOS
+// LAYOUT
 // ===========================================
 
 export const LAYOUT = {
-  // Padding de telas
   screenPaddingHorizontal: SPACING["2xl"],
   screenPaddingVertical: SPACING["2xl"],
-  
-  // Espaçamento entre seções
   sectionGap: SPACING["4xl"],
-  
-  // Espaçamento entre cards
   cardGap: SPACING.lg,
-  
-  // Hero section heights
   heroHeight: {
     small: 180,
     medium: 240,

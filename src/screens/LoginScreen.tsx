@@ -1,6 +1,9 @@
 /**
  * Nossa Maternidade - LoginScreen
- * Premium authentication with animated inputs and custom alerts
+ * Design baseado no mockup screen.png
+ * - Gradiente azul claro → branco
+ * - Logo circular com ilustração
+ * - Social login: Google, Facebook, Apple
  */
 
 import React, { useState, useEffect } from "react";
@@ -44,60 +47,72 @@ import {
   SPACING,
   RADIUS,
   SHADOWS,
-  TYPOGRAPHY,
 } from "../theme/design-system";
-import { useTheme } from "../hooks/useTheme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // Calcular valores responsivos
 const getResponsiveValue = (baseValue: number, scale: number = 1) => {
-  const scaleFactor = SCREEN_WIDTH / 375; // Baseado em iPhone 12/13 (375px)
+  const scaleFactor = SCREEN_WIDTH / 375;
   return Math.round(baseValue * scaleFactor * scale);
 };
 
 type Props = RootStackScreenProps<"Login">;
 
-// Componente de Hero Illustration (Imagem/Avatar no topo)
-const HeroIllustration = () => {
-  const { isDark } = useTheme();
+// Logo ilustração (mãe com bebê em círculo)
+const LOGO_IMAGE = require("../../assets/logo-01.png");
 
+// Logo do Google
+const GOOGLE_LOGO = require("../../assets/google-logo.jpg");
+
+// Cores do mockup - Alinhadas com Design System
+const MOCKUP_COLORS = {
+  gradientTop: "#E8F4F8",    // Azul bem claro do topo
+  gradientBottom: "#FFFFFF", // Branco
+  primary: "#5EA3C2",        // Azul primary (BLUE[600]) - contraste WCAG AA ✓
+  primaryDark: "#4586A4",    // Azul escuro (BLUE[700]) - para pressed state
+  primaryLight: "#7DB9D5",   // Azul claro (BLUE[500]) - para elementos secundários
+  text: "#2B3642",           // Texto escuro
+  textMuted: "#8694A6",      // Texto secundário
+  inputBg: "#FFFFFF",
+  inputBorder: "#DEE7EF",
+  checkmark: "#5EA3C2",      // Atualizado para primary
+  link: "#5EA3C2",           // Azul para links (não rosa - rosa só CTA)
+  ctaAccent: "#F4258C",      // Rosa APENAS para CTA "Cadastre-se"
+};
+
+// Componente de Logo circular com imagem
+const LogoCircle = () => {
   return (
     <Animated.View
-      entering={FadeInUp.duration(800).springify()}
+      entering={FadeInUp.duration(700).springify()}
       style={{
-        marginBottom: SPACING["4xl"],
+        marginBottom: SPACING.xl,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
+      {/* Container com sombra sutil */}
       <View
         style={{
-          width: getResponsiveValue(180, 1.2),
-          height: getResponsiveValue(180, 1.2),
-          borderRadius: getResponsiveValue(90, 1.2),
-          overflow: "hidden",
-          ...SHADOWS.lg,
+          shadowColor: MOCKUP_COLORS.primary,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.25,
+          shadowRadius: 20,
+          elevation: 10,
+          borderRadius: 85,
         }}
       >
-        <LinearGradient
-          colors={[
-            isDark ? COLORS.primary[600] : COLORS.primary[300],
-            isDark ? COLORS.primary[700] : COLORS.primary[400],
-          ]}
+        <Image
+          source={LOGO_IMAGE}
           style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
+            width: 160,
+            height: 160,
+            borderRadius: 80,
           }}
-        >
-          <Ionicons
-            name="heart-outline"
-            size={getResponsiveValue(80, 1.2)}
-            color={COLORS.neutral[0]}
-            style={{ opacity: 0.9 }}
-          />
-        </LinearGradient>
+          resizeMode="cover"
+          accessibilityLabel="Logo Nossa Maternidade"
+        />
       </View>
     </Animated.View>
   );
@@ -108,12 +123,15 @@ const SocialLoginButton = ({
   platform,
   onPress,
   icon,
+  iconColor,
+  bgColor,
 }: {
-  platform: "apple" | "google";
+  platform: "apple" | "google" | "facebook";
   onPress: () => void;
   icon: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
+  bgColor?: string;
 }) => {
-  const { colors } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -129,36 +147,42 @@ const SocialLoginButton = ({
     onPress();
   };
 
+  const platformLabels = {
+    google: "Google",
+    facebook: "Facebook",
+    apple: "Apple",
+  };
+
   return (
-    <Animated.View style={[animatedStyle, { flex: 1 }]}>
+    <Animated.View style={animatedStyle}>
       <Pressable
         onPress={handlePress}
         style={{
-          borderWidth: 1.5,
-          borderColor: colors.neutral[200],
-          borderRadius: RADIUS.lg,
-          paddingVertical: SPACING.md,
+          width: 56,
+          height: 56,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: MOCKUP_COLORS.inputBorder,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: colors.neutral[0],
-          ...SHADOWS.sm,
+          backgroundColor: bgColor || "#FFFFFF",
         }}
-        accessibilityLabel={`Login com ${platform === "apple" ? "Apple" : "Google"}`}
+        accessibilityLabel={`Login com ${platformLabels[platform]}`}
         accessibilityRole="button"
       >
         <Ionicons
           name={icon}
           size={24}
-          color={colors.neutral[600]}
+          color={iconColor || COLORS.neutral[600]}
         />
       </Pressable>
     </Animated.View>
   );
 };
 
-// Componente de Input personalizado com validação em tempo real
+// Componente de Input personalizado - Production Ready
 const CustomInput = ({
-  icon,
+  label,
   placeholder,
   value,
   onChangeText,
@@ -171,8 +195,9 @@ const CustomInput = ({
   autoCorrect,
   error,
   isValid,
+  textContentType,
 }: {
-  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
   placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -185,84 +210,69 @@ const CustomInput = ({
   autoCorrect?: boolean;
   error?: string;
   isValid?: boolean;
+  textContentType?: "emailAddress" | "password" | "newPassword" | "name" | "none";
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handleFocus = () => {
-    setIsFocused(true);
-    scale.value = withSpring(1.02, { damping: 15 });
-  };
-
-  const handleBlur = () => {
-    setIsFocused(false);
-    scale.value = withSpring(1, { damping: 15 });
-  };
 
   const getBorderColor = () => {
-    if (isValid && value) return COLORS.semantic.success;
     if (error && value) return COLORS.semantic.error;
-    if (isFocused) return COLORS.primary[300];
-    return COLORS.neutral[200];
+    if (isFocused) return MOCKUP_COLORS.primary;
+    return MOCKUP_COLORS.inputBorder;
   };
 
   return (
-    <Animated.View style={[animatedStyle, { marginBottom: SPACING.lg }]}>
+    <View style={{ marginBottom: SPACING.lg }}>
+      {/* Label */}
+      <Text
+        style={{
+          fontSize: 12,
+          fontWeight: "600",
+          color: MOCKUP_COLORS.textMuted,
+          marginBottom: SPACING.sm,
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
+        }}
+        accessibilityElementsHidden={true}
+      >
+        {label}
+      </Text>
+
+      {/* Input Container */}
       <View
         style={{
-          backgroundColor: COLORS.neutral[0],
+          backgroundColor: MOCKUP_COLORS.inputBg,
           borderRadius: RADIUS.xl,
-          borderWidth: 1.5,
+          borderWidth: 1,
           borderColor: getBorderColor(),
           flexDirection: "row",
           alignItems: "center",
-          paddingHorizontal: getResponsiveValue(16),
-          minHeight: getResponsiveValue(52, 1.1),
-          ...SHADOWS.sm,
+          paddingHorizontal: SPACING.lg,
+          minHeight: 56,
         }}
       >
-        <View
-          style={{
-            width: getResponsiveValue(36, 1.1),
-            height: getResponsiveValue(36, 1.1),
-            borderRadius: RADIUS.md,
-            backgroundColor: isFocused ? COLORS.primary[50] : COLORS.neutral[50],
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: SPACING.md,
-          }}
-        >
-          <Ionicons
-            name={icon}
-            size={getResponsiveValue(18, 1.1)}
-            color={isFocused ? COLORS.primary[500] : COLORS.neutral[400]}
-          />
-        </View>
         <TextInput
           style={{
             flex: 1,
-            fontSize: TYPOGRAPHY.bodyLarge.fontSize,
-            color: COLORS.neutral[800],
+            fontSize: 16,
+            color: MOCKUP_COLORS.text,
             paddingVertical: SPACING.md,
           }}
           placeholder={placeholder}
-          placeholderTextColor={COLORS.neutral[400]}
+          placeholderTextColor={MOCKUP_COLORS.textMuted}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           autoCorrect={autoCorrect}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          accessibilityLabel={placeholder}
-          accessibilityHint={secureTextEntry ? "Campo de senha" : error ? error : undefined}
-          accessibilityState={{ disabled: false }}
+          textContentType={textContentType}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          accessibilityLabel={label}
+          accessibilityHint={`Campo para digitar ${label.toLowerCase()}`}
         />
+
+        {/* Password Toggle - 44pt tap target */}
         {showPasswordToggle && (
           <Pressable
             onPress={() => {
@@ -270,47 +280,63 @@ const CustomInput = ({
               onTogglePassword?.();
             }}
             style={{
-              padding: SPACING.sm,
+              width: 44,
+              height: 44,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: -SPACING.sm,
             }}
-            accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             accessibilityRole="button"
+            accessibilityLabel={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            accessibilityHint={showPassword ? "Toque para ocultar a senha" : "Toque para mostrar a senha"}
           >
             <Ionicons
               name={showPassword ? "eye-off-outline" : "eye-outline"}
               size={22}
-              color={COLORS.neutral[400]}
+              color={MOCKUP_COLORS.textMuted}
             />
           </Pressable>
         )}
-        {isValid && value && (
-          <View style={{ paddingRight: SPACING.sm }}>
-            <Ionicons
-              name="checkmark-circle"
-              size={22}
-              color={COLORS.semantic.success}
-            />
+
+        {/* Checkmark para válido */}
+        {isValid && value && !error && (
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              backgroundColor: MOCKUP_COLORS.checkmark,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            accessibilityLabel="Campo válido"
+          >
+            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
           </View>
         )}
       </View>
+
+      {/* Error */}
       {error && value && (
         <Text
           style={{
-            fontSize: TYPOGRAPHY.labelSmall.fontSize,
+            fontSize: 12,
             color: COLORS.semantic.error,
             marginTop: SPACING.xs,
-            marginLeft: SPACING.md,
+            marginLeft: SPACING.sm,
           }}
-          accessible
           accessibilityRole="alert"
+          accessibilityLiveRegion="polite"
         >
           {error}
         </Text>
       )}
-    </Animated.View>
+    </View>
   );
 };
 
-// Componente de Alert customizado (nao usar alert() nativo)
+// Componente de Alert customizado
 const CustomAlert = ({
   visible,
   title,
@@ -335,7 +361,7 @@ const CustomAlert = ({
       >
         <View
           style={{
-            backgroundColor: COLORS.neutral[0],
+            backgroundColor: "#FFFFFF",
             borderRadius: RADIUS["2xl"],
             padding: SPACING["2xl"],
             width: "100%",
@@ -348,7 +374,7 @@ const CustomAlert = ({
               width: 56,
               height: 56,
               borderRadius: 28,
-              backgroundColor: COLORS.primary[50],
+              backgroundColor: MOCKUP_COLORS.gradientTop,
               alignItems: "center",
               justifyContent: "center",
               alignSelf: "center",
@@ -358,14 +384,14 @@ const CustomAlert = ({
             <Ionicons
               name="alert-circle-outline"
               size={32}
-              color={COLORS.primary[500]}
+              color={MOCKUP_COLORS.primary}
             />
           </View>
           <Text
             style={{
-              fontSize: TYPOGRAPHY.titleMedium.fontSize,
+              fontSize: 18,
               fontWeight: "600",
-              color: COLORS.neutral[800],
+              color: MOCKUP_COLORS.text,
               textAlign: "center",
               marginBottom: SPACING.sm,
             }}
@@ -374,8 +400,8 @@ const CustomAlert = ({
           </Text>
           <Text
             style={{
-              fontSize: TYPOGRAPHY.bodyMedium.fontSize,
-              color: COLORS.neutral[500],
+              fontSize: 15,
+              color: MOCKUP_COLORS.textMuted,
               textAlign: "center",
               marginBottom: SPACING.xl,
               lineHeight: 22,
@@ -386,7 +412,7 @@ const CustomAlert = ({
           <Pressable
             onPress={onClose}
             style={{
-              backgroundColor: COLORS.primary[500],
+              backgroundColor: MOCKUP_COLORS.primary,
               borderRadius: RADIUS.lg,
               paddingVertical: SPACING.md,
               alignItems: "center",
@@ -394,8 +420,8 @@ const CustomAlert = ({
           >
             <Text
               style={{
-                color: COLORS.neutral[0],
-                fontSize: TYPOGRAPHY.labelLarge.fontSize,
+                color: "#FFFFFF",
+                fontSize: 16,
                 fontWeight: "600",
               }}
             >
@@ -411,7 +437,6 @@ const CustomAlert = ({
 export default function LoginScreen({ navigation }: Props) {
   void navigation;
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -430,7 +455,7 @@ export default function LoginScreen({ navigation }: Props) {
   const setAuthenticated = useAppStore((s) => s.setAuthenticated);
   const setUser = useAppStore((s) => s.setUser);
 
-  // Verificar disponibilidade de biometric authentication
+  // Verificar disponibilidade de biometric
   useEffect(() => {
     const checkBiometric = async () => {
       try {
@@ -444,18 +469,16 @@ export default function LoginScreen({ navigation }: Props) {
     checkBiometric();
   }, []);
 
-  // Validação de email
+  // Validações
   const validateEmail = (emailValue: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(emailValue);
   };
 
-  // Validação de password
   const validatePassword = (passwordValue: string): boolean => {
     return passwordValue.length >= 6;
   };
 
-  // Atualizar erros em tempo real
   const handleEmailChange = (text: string) => {
     setEmail(text);
     if (text && !validateEmail(text)) {
@@ -492,7 +515,7 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
-  // Handler para Biometric Login - requires existing session
+  // Biometric Login
   const handleBiometricLogin = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -502,8 +525,6 @@ export default function LoginScreen({ navigation }: Props) {
 
       if (result.success) {
         setIsLoading(true);
-
-        // Check for existing Supabase session
         const { session, error } = await getSession();
 
         if (error || !session?.user) {
@@ -515,7 +536,6 @@ export default function LoginScreen({ navigation }: Props) {
           return;
         }
 
-        // Restore user from existing session
         const authUser = session.user;
         const userProfile: UserProfile = {
           id: authUser.id,
@@ -539,12 +559,17 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
-  // Handlers para Social Login - em desenvolvimento
-  const handleSocialLogin = async (provider: "apple" | "google") => {
+  // Social Login
+  const handleSocialLogin = async (provider: "apple" | "google" | "facebook") => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const providerNames = {
+      apple: "Apple",
+      google: "Google",
+      facebook: "Facebook",
+    };
     showAlert(
       "Em breve",
-      `Login com ${provider === "apple" ? "Apple" : "Google"} estará disponível em breve. Por enquanto, use email e senha.`
+      `Login com ${providerNames[provider]} estará disponível em breve. Por enquanto, use email e senha.`
     );
   };
 
@@ -565,7 +590,6 @@ export default function LoginScreen({ navigation }: Props) {
       buttonScale.value = withSpring(1, { damping: 15 });
     }, 100);
 
-    // Validation
     if (!email || !password) {
       showAlert("Campos obrigatórios", "Por favor, preencha todos os campos.");
       return;
@@ -597,12 +621,10 @@ export default function LoginScreen({ navigation }: Props) {
 
     try {
       if (isLogin) {
-        // Real Supabase login
         const { user: authUser, error } = await signIn(email, password);
 
         if (error || !authUser) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          // Map common Supabase errors to PT-BR
           if (errorMessage.includes("Invalid login credentials")) {
             showAlert("Email ou senha incorretos", "Verifique suas credenciais e tente novamente.");
           } else if (errorMessage.includes("Email not confirmed")) {
@@ -614,7 +636,6 @@ export default function LoginScreen({ navigation }: Props) {
           return;
         }
 
-        // Create user profile from auth data
         const userProfile: UserProfile = {
           id: authUser.id,
           name: authUser.user_metadata?.name || name || "Usuária",
@@ -631,12 +652,10 @@ export default function LoginScreen({ navigation }: Props) {
         setAuthenticated(true);
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } else {
-        // Real Supabase signup
         const { user: authUser, error } = await signUp(email, password, name);
 
         if (error || !authUser) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          // Map common Supabase errors to PT-BR
           if (errorMessage.includes("already registered")) {
             showAlert("Email já cadastrado", "Este email já está em uso. Tente fazer login.");
           } else if (errorMessage.includes("Password should be")) {
@@ -648,7 +667,6 @@ export default function LoginScreen({ navigation }: Props) {
           return;
         }
 
-        // Create user profile from auth data
         const userProfile: UserProfile = {
           id: authUser.id,
           name: name,
@@ -680,6 +698,7 @@ export default function LoginScreen({ navigation }: Props) {
     setPassword("");
     setConfirmPassword("");
     setName("");
+    setErrors({ email: "", password: "", name: "", confirmPassword: "" });
   };
 
   return (
@@ -688,189 +707,96 @@ export default function LoginScreen({ navigation }: Props) {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
+        {/* Gradiente de fundo */}
         <LinearGradient
-          colors={[colors.primary[50], colors.secondary[50], colors.background.secondary]}
-          locations={[0, 0.4, 1]}
+          colors={[MOCKUP_COLORS.gradientTop, MOCKUP_COLORS.gradientBottom]}
           style={{ flex: 1 }}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 0.6 }}
         >
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
-              paddingTop: insets.top + getResponsiveValue(32),
+              paddingTop: insets.top + getResponsiveValue(40),
               paddingBottom: insets.bottom + getResponsiveValue(24),
-              paddingHorizontal: getResponsiveValue(20),
+              paddingHorizontal: getResponsiveValue(24),
               maxWidth: 500,
               alignSelf: "center",
-              width: "100%",
-              minHeight: "100%",
-            }}
-            style={{
-              flex: 1,
               width: "100%",
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
-            bounces={true}
-            alwaysBounceVertical={false}
           >
-            {/* Hero Illustration */}
-            {isLogin && <HeroIllustration />}
+            {/* Logo */}
+            <LogoCircle />
 
-            {/* Logo e Header - REDESIGN PREMIUM */}
+            {/* Título */}
             <Animated.View
-              entering={FadeInUp.duration(800).springify()}
-              style={{
-                alignItems: "center",
-                marginBottom: SPACING["5xl"],
-              }}
+              entering={FadeInUp.duration(600).delay(100).springify()}
+              style={{ alignItems: "center", marginBottom: SPACING["3xl"] }}
             >
-              {/* Logo Premium com sombra e destaque - só para signup */}
-              {!isLogin && (
-                <Animated.View
-                  entering={FadeInUp.duration(800).springify()}
-                  style={{
-                    marginBottom: SPACING["2xl"],
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <View
-                    style={{
-                      shadowColor: COLORS.primary[500],
-                      shadowOffset: { width: 0, height: 12 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 28,
-                      elevation: 18,
-                      borderRadius: getResponsiveValue(36),
-                      backgroundColor: colors.background.secondary,
-                      padding: getResponsiveValue(20),
-                      borderWidth: 2,
-                      borderColor: isDark ? colors.primary[900] : colors.primary[100],
-                      overflow: "hidden",
-                    }}
-                  >
-                    <View
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: isDark ? colors.primary[900] + "1A" : colors.primary[50],
-                      }}
-                    />
-                    <Image
-                      source={require("../../assets/logo.png")}
-                      style={{
-                        width: getResponsiveValue(120, 1.4),
-                        height: getResponsiveValue(120, 1.4),
-                        resizeMode: "contain",
-                        zIndex: 1,
-                      }}
-                    />
-                  </View>
-                </Animated.View>
-              )}
-
               <Text
                 style={{
-                  fontSize: getResponsiveValue(32, 1.1),
+                  fontSize: 28,
                   fontWeight: "700",
-                  color: COLORS.neutral[900],
-                  marginBottom: SPACING.xs,
-                  letterSpacing: -0.8,
-                  fontFamily: "DMSerifDisplay_400Regular",
+                  color: MOCKUP_COLORS.text,
+                  marginBottom: SPACING.sm,
+                  fontFamily: "Manrope_700Bold",
                 }}
               >
                 Nossa Maternidade
               </Text>
               <Text
                 style={{
-                  fontSize: getResponsiveValue(16, 1),
-                  color: COLORS.neutral[500],
-                  textAlign: "center",
-                  lineHeight: getResponsiveValue(22),
+                  fontSize: 16,
+                  color: MOCKUP_COLORS.textMuted,
                 }}
               >
-                {isLogin
-                  ? "Feliz em ter você de volta ✨"
-                  : "Sua jornada começa aqui 💜"}
+                {isLogin ? "Feliz em ter você de volta ✨" : "Sua jornada começa aqui 💜"}
               </Text>
             </Animated.View>
 
-            {/* Formulario */}
+            {/* Form */}
             <Animated.View
               entering={FadeInDown.duration(600).delay(200).springify()}
             >
               {/* Nome (apenas cadastro) */}
               {!isLogin && (
-                <Animated.View entering={FadeIn.duration(300)}>
-                  <Text
-                    style={{
-                      fontSize: TYPOGRAPHY.labelMedium.fontSize,
-                      fontWeight: "600",
-                      color: COLORS.neutral[600],
-                      marginBottom: SPACING.sm,
-                      marginLeft: SPACING.xs,
-                    }}
-                  >
-                    Nome
-                  </Text>
-                  <CustomInput
-                    icon="person-outline"
-                    placeholder="Como você se chama?"
-                    value={name}
-                    onChangeText={handleNameChange}
-                    autoCapitalize="words"
-                    error={errors.name || undefined}
-                    isValid={name.length >= 2}
-                  />
-                </Animated.View>
+                <CustomInput
+                  label="NOME"
+                  placeholder="Como você se chama?"
+                  value={name}
+                  onChangeText={handleNameChange}
+                  autoCapitalize="words"
+                  textContentType="name"
+                  error={errors.name || undefined}
+                  isValid={name.length >= 2}
+                />
               )}
 
-              {/* Email */}
-              <Text
-                style={{
-                  fontSize: TYPOGRAPHY.labelMedium.fontSize,
-                  fontWeight: "600",
-                  color: COLORS.neutral[600],
-                  marginBottom: SPACING.sm,
-                  marginLeft: SPACING.xs,
-                }}
-              >
-                E-mail
-              </Text>
+              {/* Email - Production: textContentType para autofill */}
               <CustomInput
-                icon="mail-outline"
+                label="E-MAIL"
                 placeholder="seu@email.com"
                 value={email}
                 onChangeText={handleEmailChange}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                textContentType="emailAddress"
                 error={errors.email || undefined}
                 isValid={email ? validateEmail(email) : false}
               />
 
-              {/* Senha */}
-              <Text
-                style={{
-                  fontSize: TYPOGRAPHY.labelMedium.fontSize,
-                  fontWeight: "600",
-                  color: COLORS.neutral[600],
-                  marginBottom: SPACING.sm,
-                  marginLeft: SPACING.xs,
-                }}
-              >
-                Senha
-              </Text>
+              {/* Senha - Production: textContentType para autofill */}
               <CustomInput
-                icon="lock-closed-outline"
-                placeholder="********"
+                label="SENHA"
+                placeholder="••••••••"
                 value={password}
                 onChangeText={handlePasswordChange}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                textContentType={isLogin ? "password" : "newPassword"}
                 showPasswordToggle
                 showPassword={showPassword}
                 onTogglePassword={() => setShowPassword(!showPassword)}
@@ -880,32 +806,20 @@ export default function LoginScreen({ navigation }: Props) {
 
               {/* Confirmar Senha (apenas cadastro) */}
               {!isLogin && (
-                <Animated.View entering={FadeIn.duration(300)}>
-                  <Text
-                    style={{
-                      fontSize: TYPOGRAPHY.labelMedium.fontSize,
-                      fontWeight: "600",
-                      color: COLORS.neutral[600],
-                      marginBottom: SPACING.sm,
-                      marginLeft: SPACING.xs,
-                    }}
-                  >
-                    Confirmar Senha
-                  </Text>
-                  <CustomInput
-                    icon="lock-closed-outline"
-                    placeholder="********"
-                    value={confirmPassword}
-                    onChangeText={handleConfirmPasswordChange}
-                    secureTextEntry={!showPassword}
-                    autoCapitalize="none"
-                    error={errors.confirmPassword || undefined}
-                    isValid={confirmPassword ? confirmPassword === password : false}
-                  />
-                </Animated.View>
+                <CustomInput
+                  label="CONFIRMAR SENHA"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChangeText={handleConfirmPasswordChange}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  textContentType="newPassword"
+                  error={errors.confirmPassword || undefined}
+                  isValid={confirmPassword ? confirmPassword === password : false}
+                />
               )}
 
-              {/* Esqueceu a senha (apenas login) */}
+              {/* Esqueceu a senha - Link azul (não rosa) */}
               {isLogin && (
                 <Pressable
                   onPress={async () => {
@@ -931,15 +845,22 @@ export default function LoginScreen({ navigation }: Props) {
                   }}
                   style={{
                     alignSelf: "flex-end",
-                    marginBottom: SPACING.xl,
                     marginTop: -SPACING.sm,
+                    marginBottom: SPACING.xl,
+                    minHeight: 44, // ACCESSIBILITY: 44pt tap target
+                    justifyContent: "center",
                   }}
+                  hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+                  accessibilityRole="link"
+                  accessibilityLabel="Esqueceu a senha"
+                  accessibilityHint="Toque para receber email de recuperação de senha"
                 >
                   <Text
                     style={{
-                      fontSize: TYPOGRAPHY.bodySmall.fontSize,
-                      color: COLORS.primary[500],
+                      fontSize: 14,
+                      color: MOCKUP_COLORS.link,
                       fontWeight: "600",
+                      textDecorationLine: "underline",
                     }}
                   >
                     Esqueceu a senha?
@@ -947,231 +868,179 @@ export default function LoginScreen({ navigation }: Props) {
                 </Pressable>
               )}
 
-              {/* Botao de Submit - REDESIGN PREMIUM */}
-              <Animated.View style={[buttonAnimatedStyle, { marginTop: SPACING["2xl"] }]}>
+              {/* Botão Principal - CTA com contraste WCAG AA */}
+              <Animated.View style={[buttonAnimatedStyle, { marginTop: SPACING.lg }]}>
                 <Pressable
                   onPress={handleSubmit}
                   disabled={isLoading}
-                  style={{ opacity: isLoading ? 0.8 : 1 }}
+                  style={({ pressed }) => ({
+                    backgroundColor: pressed ? MOCKUP_COLORS.primaryDark : MOCKUP_COLORS.primary,
+                    borderRadius: RADIUS["2xl"],
+                    height: 56,
+                    minHeight: 56, // ACCESSIBILITY: 44pt+ tap target
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: isLoading ? 0.7 : 1,
+                  })}
                   accessibilityLabel={isLogin ? "Entrar na conta" : "Criar nova conta"}
                   accessibilityRole="button"
+                  accessibilityHint={isLogin ? "Toque para fazer login" : "Toque para criar sua conta"}
                   accessibilityState={{ disabled: isLoading }}
                 >
-                  <LinearGradient
-                    colors={[COLORS.primary[400], COLORS.primary[600]]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={{
-                      borderRadius: RADIUS.xl,
-                      paddingVertical: SPACING.lg + 4,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      shadowColor: COLORS.primary[500],
-                      shadowOffset: { width: 0, height: 6 },
-                      shadowOpacity: 0.35,
-                      shadowRadius: 16,
-                      elevation: 8,
-                    }}
-                  >
-                    {isLoading ? (
-                      <View style={{ flexDirection: "row", alignItems: "center" }}>
-                        <Ionicons
-                          name="sync-outline"
-                          size={22}
-                          color={COLORS.neutral[0]}
-                          style={{ marginRight: SPACING.sm }}
-                        />
-                        <Text
-                          style={{
-                            color: COLORS.neutral[0],
-                            fontSize: TYPOGRAPHY.labelLarge.fontSize,
-                            fontWeight: "700",
-                            letterSpacing: 0.5,
-                          }}
-                        >
-                          Carregando...
-                        </Text>
-                      </View>
-                    ) : (
-                      <Text
-                        style={{
-                          color: COLORS.neutral[0],
-                          fontSize: TYPOGRAPHY.labelLarge.fontSize,
-                          fontWeight: "700",
-                          letterSpacing: 0.5,
-                        }}
-                      >
-                        {isLogin ? "Entrar" : "Criar minha conta"}
+                  {isLoading ? (
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <Ionicons
+                        name="sync-outline"
+                        size={20}
+                        color="#FFFFFF"
+                        style={{ marginRight: SPACING.sm }}
+                      />
+                      <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "600" }}>
+                        {isLogin ? "Entrando..." : "Criando..."}
                       </Text>
-                    )}
-                  </LinearGradient>
+                    </View>
+                  ) : (
+                    <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "600" }}>
+                      {isLogin ? "Entrar" : "Criar minha conta"}
+                    </Text>
+                  )}
                 </Pressable>
               </Animated.View>
 
-              {/* Social Login Buttons - apenas em login */}
-              {isLogin && (
-                <>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginVertical: SPACING["3xl"],
-                    }}
-                  >
-                    <View
-                      style={{
-                        flex: 1,
-                        height: 1,
-                        backgroundColor: COLORS.neutral[200],
-                      }}
-                    />
-                    <Text
-                      style={{
-                        paddingHorizontal: SPACING.lg,
-                        color: COLORS.neutral[400],
-                        fontSize: TYPOGRAPHY.labelSmall.fontSize,
-                        fontWeight: "600",
-                        textTransform: "uppercase",
-                        letterSpacing: 1,
-                      }}
-                    >
-                      ou
-                    </Text>
-                    <View
-                      style={{
-                        flex: 1,
-                        height: 1,
-                        backgroundColor: COLORS.neutral[200],
-                      }}
-                    />
-                  </View>
-
-                  {/* Social Login Buttons */}
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: SPACING.md,
-                      marginBottom: SPACING["3xl"],
-                    }}
-                  >
-                    <SocialLoginButton
-                      platform="apple"
-                      icon="logo-apple"
-                      onPress={() => handleSocialLogin("apple")}
-                    />
-                    <SocialLoginButton
-                      platform="google"
-                      icon="logo-google"
-                      onPress={() => handleSocialLogin("google")}
-                    />
-                  </View>
-
-                  {/* Biometric Login Button */}
-                  {biometricAvailable && (
-                    <Animated.View
-                      entering={FadeInUp.duration(600)}
-                      style={{ marginBottom: SPACING.lg }}
-                    >
-                      <Pressable
-                        onPress={handleBiometricLogin}
-                        disabled={isLoading}
-                        style={{
-                          opacity: isLoading ? 0.7 : 1,
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          paddingVertical: SPACING.md,
-                          backgroundColor: COLORS.neutral[50],
-                          borderRadius: RADIUS.lg,
-                          borderWidth: 1,
-                          borderColor: COLORS.neutral[200],
-                          gap: SPACING.sm,
-                        }}
-                        accessibilityLabel="Login com biometria"
-                        accessibilityRole="button"
-                        accessibilityState={{ disabled: isLoading }}
-                      >
-                        <Ionicons
-                          name="finger-print"
-                          size={20}
-                          color={COLORS.primary[500]}
-                        />
-                        <Text
-                          style={{
-                            fontSize: TYPOGRAPHY.labelMedium.fontSize,
-                            fontWeight: "600",
-                            color: COLORS.primary[500],
-                          }}
-                        >
-                          Login com Biometria
-                        </Text>
-                      </Pressable>
-                    </Animated.View>
-                  )}
-                </>
-              )}
-
-              {/* Divisor - REDESIGN */}
+              {/* Divisor */}
               <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  marginVertical: SPACING["3xl"],
+                  marginVertical: SPACING["2xl"],
                 }}
               >
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: COLORS.neutral[200],
-                  }}
-                />
+                <View style={{ flex: 1, height: 1, backgroundColor: MOCKUP_COLORS.inputBorder }} />
                 <Text
                   style={{
                     paddingHorizontal: SPACING.lg,
-                    color: COLORS.neutral[400],
-                    fontSize: TYPOGRAPHY.labelSmall.fontSize,
-                    fontWeight: "600",
-                    textTransform: "uppercase",
-                    letterSpacing: 1,
+                    color: MOCKUP_COLORS.textMuted,
+                    fontSize: 14,
                   }}
                 >
-                  {isLogin ? "sem conta?" : "com conta?"}
+                  ou
                 </Text>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 1,
-                    backgroundColor: COLORS.neutral[200],
-                  }}
+                <View style={{ flex: 1, height: 1, backgroundColor: MOCKUP_COLORS.inputBorder }} />
+              </View>
+
+              {/* Social Login - Google, Facebook, Apple */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  gap: SPACING.lg,
+                  marginBottom: SPACING.xl,
+                }}
+              >
+                {/* Google - com imagem personalizada */}
+                <Animated.View>
+                  <Pressable
+                    onPress={() => handleSocialLogin("google")}
+                    style={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor: MOCKUP_COLORS.inputBorder,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: "#FFFFFF",
+                      overflow: "hidden",
+                    }}
+                    accessibilityLabel="Login com Google"
+                    accessibilityRole="button"
+                  >
+                    <Image
+                      source={GOOGLE_LOGO}
+                      style={{
+                        width: 28,
+                        height: 28,
+                      }}
+                      resizeMode="contain"
+                    />
+                  </Pressable>
+                </Animated.View>
+
+                <SocialLoginButton
+                  platform="facebook"
+                  icon="logo-facebook"
+                  iconColor="#1877F2"
+                  onPress={() => handleSocialLogin("facebook")}
+                />
+                <SocialLoginButton
+                  platform="apple"
+                  icon="logo-apple"
+                  iconColor="#000000"
+                  onPress={() => handleSocialLogin("apple")}
                 />
               </View>
 
-              {/* Alternar modo */}
+              {/* Biometric Login */}
+              {biometricAvailable && isLogin && (
+                <Animated.View
+                  entering={FadeIn.duration(400)}
+                  style={{ marginBottom: SPACING.xl }}
+                >
+                  <Pressable
+                    onPress={handleBiometricLogin}
+                    disabled={isLoading}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      paddingVertical: SPACING.md,
+                      gap: SPACING.sm,
+                    }}
+                    accessibilityLabel="Login com biometria"
+                    accessibilityRole="button"
+                  >
+                    <Ionicons
+                      name="finger-print"
+                      size={20}
+                      color={MOCKUP_COLORS.primary}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: "600",
+                        color: MOCKUP_COLORS.primary,
+                      }}
+                    >
+                      Usar biometria
+                    </Text>
+                  </Pressable>
+                </Animated.View>
+              )}
+
+              {/* Alternar modo - Rosa APENAS aqui (CTA secundário) */}
               <View
                 style={{
                   flexDirection: "row",
                   justifyContent: "center",
                   alignItems: "center",
+                  marginTop: SPACING.lg,
+                  minHeight: 44, // ACCESSIBILITY: 44pt tap target
                 }}
               >
-                <Text
-                  style={{
-                    color: COLORS.neutral[500],
-                    fontSize: TYPOGRAPHY.bodyMedium.fontSize,
-                  }}
-                >
+                <Text style={{ color: MOCKUP_COLORS.textMuted, fontSize: 14 }}>
                   {isLogin ? "Não tem uma conta? " : "Já tem uma conta? "}
                 </Text>
                 <Pressable
                   onPress={toggleMode}
-                  accessibilityLabel={isLogin ? "Ir para cadastro" : "Ir para login"}
+                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                   accessibilityRole="button"
+                  accessibilityLabel={isLogin ? "Criar nova conta" : "Fazer login"}
+                  accessibilityHint={isLogin ? "Toque para ir ao cadastro" : "Toque para ir ao login"}
                 >
                   <Text
                     style={{
-                      color: COLORS.primary[500],
-                      fontSize: TYPOGRAPHY.bodyMedium.fontSize,
+                      color: MOCKUP_COLORS.ctaAccent, // Rosa para CTA de ação
+                      fontSize: 14,
                       fontWeight: "700",
                     }}
                   >
@@ -1180,44 +1049,16 @@ export default function LoginScreen({ navigation }: Props) {
                 </Pressable>
               </View>
             </Animated.View>
-
-            {/* Footer */}
-            <View
-              style={{
-                marginTop: "auto",
-                paddingTop: SPACING["3xl"],
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{
-                  color: COLORS.neutral[400],
-                  fontSize: TYPOGRAPHY.bodySmall.fontSize,
-                  textAlign: "center",
-                }}
-              >
-                Ao continuar, você concorda com nossos{"\n"}
-                <Text style={{ color: COLORS.primary[500], fontWeight: "600" }}>
-                  Termos de Uso
-                </Text>{" "}
-                e{" "}
-                <Text style={{ color: COLORS.primary[500], fontWeight: "600" }}>
-                  Política de Privacidade
-                </Text>
-              </Text>
-            </View>
           </ScrollView>
-
-          {/* Custom Alert */}
-          <CustomAlert
-            visible={alertConfig.visible}
-            title={alertConfig.title}
-            message={alertConfig.message}
-            onClose={() =>
-              setAlertConfig({ visible: false, title: "", message: "" })
-            }
-          />
         </LinearGradient>
+
+        {/* Custom Alert */}
+        <CustomAlert
+          visible={alertConfig.visible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={() => setAlertConfig({ visible: false, title: "", message: "" })}
+        />
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

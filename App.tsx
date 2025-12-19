@@ -10,6 +10,13 @@ import {
   Manrope_700Bold,
   Manrope_800ExtraBold,
 } from "@expo-google-fonts/manrope";
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from "@expo-google-fonts/dm-sans";
+import { DMSerifDisplay_400Regular } from "@expo-google-fonts/dm-serif-display";
 import RootNavigator from "./src/navigation/RootNavigator";
 import { View, ActivityIndicator, Platform } from "react-native";
 import { useEffect } from "react";
@@ -36,6 +43,11 @@ export default function App() {
     Manrope_600SemiBold,
     Manrope_700Bold,
     Manrope_800ExtraBold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+    DMSerifDisplay_400Regular,
   });
 
   // Monitor network status for offline banner
