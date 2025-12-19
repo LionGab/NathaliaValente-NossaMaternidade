@@ -26,6 +26,29 @@ export interface AIContext {
     base64: string;
     mediaType: string;
   };
+  isCrisis?: boolean; // Força Claude para situações de crise
+}
+
+/**
+ * Palavras-chave de CRISE - força uso de Claude (modelo mais seguro)
+ * Sincronizado com edge function
+ */
+const CRISIS_KEYWORDS = [
+  "suicídio", "suicidio", "me matar", "quero morrer", "não quero viver",
+  "melhor morta", "vou me matar", "penso em morrer", "acabar com tudo",
+  "não aguento mais viver", "queria estar morta",
+  "machucar o bebê", "machucar meu filho", "machucar minha filha",
+  "fazer mal ao bebê", "jogar o bebê", "sufocar o bebê",
+  "me cortar", "me machucar", "me ferir",
+  "não tenho saída", "ninguém se importa", "sou um peso",
+];
+
+/**
+ * Detecta se mensagem indica crise (requer Claude)
+ */
+export function detectCrisis(message: string): boolean {
+  const lower = message.toLowerCase();
+  return CRISIS_KEYWORDS.some((k) => lower.includes(k));
 }
 
 /**
@@ -76,11 +99,24 @@ export async function getNathIAResponse(
       );
     }
 
-    // 2. Decidir provider
-    let provider: EdgeFunctionPayload["provider"] = "claude"; // Default: melhor persona
+    // 2. Decidir provider (NathIA v2.0)
+    // Default: Gemini (rápido, barato)
+    // Crise/Imagem: Claude (mais seguro)
+    let provider: EdgeFunctionPayload["provider"] = "gemini";
     let grounding = false;
 
-    if (context.requiresGrounding) {
+    // Detectar crise na última mensagem do usuário
+    const lastUserMessage = messages.filter((m) => m.role === "user").pop();
+    const isCrisis = context.isCrisis || (lastUserMessage && detectCrisis(lastUserMessage.content));
+
+    if (isCrisis) {
+      // 🚨 CRISE: Força Claude (modelo mais seguro para situações delicadas)
+      provider = "claude";
+      logger.warn("Crisis detected, routing to Claude", "AIService");
+    } else if (context.imageData) {
+      // Imagem → Claude Vision
+      provider = "claude";
+    } else if (context.requiresGrounding) {
       // Pergunta médica → Gemini com Google Search
       provider = "gemini";
       grounding = true;
@@ -88,8 +124,7 @@ export async function getNathIAResponse(
       // Long context (>100K tokens) → Gemini (1M window)
       provider = "gemini";
     }
-    // Se tem imagem, usa Claude vision (mantém persona)
-    // Provider permanece "claude" mas Edge Function detecta imageData
+    // Default: Gemini (NathIA v2.0 - custo-benefício)
 
     // 3. Preparar payload
     const payload: EdgeFunctionPayload = {

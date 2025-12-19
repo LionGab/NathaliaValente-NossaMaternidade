@@ -72,6 +72,72 @@ interface RequestMetrics {
 }
 
 // =======================
+// CRISIS & SAFETY DETECTION (NathIA v2.0)
+// =======================
+
+/**
+ * Palavras-chave de CRISE - força uso de Claude (modelo mais seguro)
+ * Se qualquer uma for detectada, NÃO usa Gemini
+ */
+const CRISIS_KEYWORDS = [
+  // Ideação suicida
+  "suicídio", "suicidio", "me matar", "quero morrer", "não quero viver",
+  "melhor morta", "vou me matar", "penso em morrer", "acabar com tudo",
+  "não aguento mais viver", "queria estar morta",
+  // Risco ao bebê
+  "machucar o bebê", "machucar meu filho", "machucar minha filha",
+  "fazer mal ao bebê", "jogar o bebê", "sufocar o bebê",
+  // Automutilação
+  "me cortar", "me machucar", "me ferir",
+  // Desespero extremo
+  "não tenho saída", "ninguém se importa", "sou um peso",
+];
+
+/**
+ * Frases que NathIA NUNCA deve dizer
+ * Se Gemini retornar qualquer uma, reprocessa com Claude
+ */
+const BLOCKED_PHRASES = [
+  // Diagnósticos proibidos
+  "você tem depressão",
+  "você tem ansiedade",
+  "você está com depressão",
+  "você está com ansiedade",
+  "você sofre de",
+  // Prescrições proibidas
+  "você precisa",
+  "você deve",
+  "você tem que",
+  "é obrigatório",
+  // Dependência emocional
+  "eu fico aqui",
+  "pode contar comigo sempre",
+  "estarei sempre aqui",
+  "nunca vou te abandonar",
+  // Culpa/pressão
+  "seu bebê precisa de você",
+  "pense no seu filho",
+  "você é egoísta",
+  "não pode fazer isso",
+];
+
+/**
+ * Detecta se mensagem indica crise (requer Claude)
+ */
+function isCrisis(message: string): boolean {
+  const lower = message.toLowerCase();
+  return CRISIS_KEYWORDS.some((k) => lower.includes(k));
+}
+
+/**
+ * Detecta se resposta contém frase bloqueada (requer reprocessamento)
+ */
+function hasBlockedPhrase(response: string): boolean {
+  const lower = response.toLowerCase();
+  return BLOCKED_PHRASES.some((p) => lower.includes(p));
+}
+
+// =======================
 // MESSAGE TYPES
 // =======================
 
@@ -650,14 +716,32 @@ Deno.serve(async (req) => {
       features: { hasImage, hasGrounding },
     });
 
-    // 5. Call AI provider with fallback chain
-    // ORDEM: Gemini 2.5 Flash (default) → Claude (fallback) → OpenAI (último recurso)
-    let response;
+    // 5. Call AI provider with CRISIS DETECTION + GUARDRAIL
+    // ORDEM: Crise → Claude | Normal → Gemini | Fallback → Claude → OpenAI
+    let response: ApiResponse & { fallback?: boolean };
     const aiStartTime = Date.now();
-    const requestedProvider = provider || "gemini"; // ← Gemini é o default
+    const requestedProvider = provider || "gemini";
+
+    // Detectar última mensagem do usuário para análise de crise
+    const lastUserMessage = messages.filter((m: AIMessage) => m.role === "user").pop();
+    const messageText = lastUserMessage?.content || "";
+    const isCrisisMessage = isCrisis(messageText);
+
+    if (isCrisisMessage) {
+      logger.warn("crisis_detected", {
+        requestId,
+        userId: hashUserId(userId),
+        keywords: CRISIS_KEYWORDS.filter((k) => messageText.toLowerCase().includes(k)),
+      });
+    }
 
     try {
-      if (grounding) {
+      if (isCrisisMessage) {
+        // 🚨 CRISE: Usa Claude SEMPRE (modelo mais seguro para situações delicadas)
+        logger.info("crisis_routing", { requestId, to: "claude" });
+        response = await callClaude(messages, systemPrompt || CRISIS_SYSTEM_PROMPT);
+        providerUsed = "claude-crisis";
+      } else if (grounding) {
         // Grounding sempre usa Gemini + Google Search
         response = await callGeminiWithGrounding(messages, systemPrompt);
         providerUsed = "gemini-grounding";
@@ -673,6 +757,18 @@ Deno.serve(async (req) => {
         // DEFAULT: Gemini 2.5 Flash - rápido, direto, persona estável
         response = await callGemini(messages, systemPrompt);
         providerUsed = "gemini";
+
+        // 🛡️ GUARDRAIL PÓS-RESPOSTA: Se Gemini disse algo proibido, reprocessa com Claude
+        if (hasBlockedPhrase(response.content)) {
+          logger.warn("guardrail_triggered", {
+            requestId,
+            blockedPhrases: BLOCKED_PHRASES.filter((p) => response.content.toLowerCase().includes(p)),
+          });
+          logger.info("guardrail_reprocessing", { requestId, from: "gemini", to: "claude" });
+          response = await callClaude(messages, systemPrompt);
+          providerUsed = "claude-guardrail";
+          wasFallback = true;
+        }
       }
     } catch (primaryError) {
       const errorMessage = primaryError instanceof Error ? primaryError.message : "Unknown error";
@@ -1075,36 +1171,92 @@ function jsonResponse(
   });
 }
 
-const DEFAULT_SYSTEM_PROMPT = `Você é a NathIA, assistente virtual criada pela Nathalia Valente.
+/**
+ * CRISIS_SYSTEM_PROMPT - Usado APENAS em situações de crise
+ * Resposta estruturada, sem variação
+ */
+const CRISIS_SYSTEM_PROMPT = `Você é NathIA, assistente do app Nossa Maternidade.
+Inspirada no estilo da Nathália Valente. Você NÃO é ela.
 
-# PERSONA DA NATHALIA VALENTE
-- Influenciadora brasileira especializada em maternidade
-- Tom: caloroso, materno, descontraído (usa "mãe", "amor", "querida")
-- Valores: acolhimento, empoderamento feminino, saúde mental
-- Estilo: conversa como amiga íntima, não profissional distante
-- Expressões típicas BR: "tá tudo bem", "se cuida, viu?", "conta pra mim"
+## REGRAS ABSOLUTAS
 
-# ANÁLISE SENTIMENTAL
-Detecte SEMPRE sinais de:
-- Depressão pós-parto (tristeza persistente, desinteresse, "não consigo")
-- Ansiedade (preocupação excessiva, catastrofização)
-- Ideação suicida (mencionar morte, "melhor se eu não estivesse aqui")
+1. NUNCA diagnostique ("você tem depressão/ansiedade/mastite")
+2. NUNCA prescreva ("você precisa/deve/tem que")
+3. NUNCA crie dependência ("eu fico aqui", "pode contar comigo sempre")
+4. NUNCA use culpa ("seu bebê precisa de você")
+5. NUNCA julgue escolhas (parto, amamentação, criação)
 
-Se detectar risco: seja empática MAS encoraje busca de ajuda profissional.
+Se quebraria uma regra → não responda aquilo. Redirecione.
 
-# ANÁLISE COMPORTAMENTAL
-Correlacione humor com:
-- Fase do ciclo menstrual (TPM, ovulação)
-- Trimestre da gravidez (hormônios, desconfortos físicos)
-- Qualidade do sono (insônia = piora humor)
-- Suporte social (menções a parceiro, família)
+## CRISE (Prioridade máxima)
 
-Identifique padrões e sugira mudanças concretas.
+Se detectar risco (suicídio, automutilação, desespero extremo), responda APENAS:
 
-# NUNCA:
-- Dar diagnósticos médicos ("você tem depressão")
-- Minimizar ("é normal", "toda grávida passa por isso")
-- Ser condescendente ou infantilizar
-- Usar jargão técnico sem explicar em português simples
+---
+Sinto muito que você esteja passando por isso. 💙
 
-Responda em português brasileiro natural, como a Nathalia Valente responderia.`;
+Eu não consigo te manter segura sozinha.
+
+Risco imediato: SAMU 192
+Sofrimento emocional: CVV 188 (24h)
+
+Se puder, chame alguém de confiança agora.
+---
+
+Nada mais. Não adicione. Não personalize.`;
+
+/**
+ * DEFAULT_SYSTEM_PROMPT - NathIA v2.0
+ * Versão otimizada: direta, segura, eficiente
+ */
+const DEFAULT_SYSTEM_PROMPT = `Você é NathIA, assistente do app Nossa Maternidade.
+Inspirada no estilo da Nathália Valente. Você NÃO é ela.
+
+## REGRAS ABSOLUTAS
+
+1. NUNCA diagnostique ("você tem depressão/ansiedade/mastite")
+2. NUNCA prescreva ("você precisa/deve/tem que")
+3. NUNCA crie dependência ("eu fico aqui", "pode contar comigo sempre")
+4. NUNCA use culpa ("seu bebê precisa de você")
+5. NUNCA julgue escolhas (parto, amamentação, criação)
+
+Se quebraria uma regra → não responda aquilo. Redirecione.
+
+## CRISE
+
+Se detectar risco (suicídio, automutilação, desespero extremo), responda APENAS:
+
+---
+Sinto muito que você esteja passando por isso. 💙
+
+Eu não consigo te manter segura sozinha.
+
+Risco imediato: SAMU 192
+Sofrimento emocional: CVV 188 (24h)
+
+Se puder, chame alguém de confiança agora.
+---
+
+## TOM
+
+- Direta, prática, calorosa
+- Português brasileiro natural
+- 3-7 linhas por resposta
+- Termine com 1 pergunta OU 1 sugestão de ação
+
+## EXEMPLO
+
+Usuária: "Tô exausta, meu marido não ajuda em nada"
+
+NathIA: "Que pesado carregar isso sozinha. Faz sentido você tá exausta. 💙
+
+Puerpério sem apoio é brutal. Você conseguiu falar pra ele como tá se sentindo?"
+
+## ÁREAS DE CONHECIMENTO
+
+- Gravidez (trimestres, sintomas, exames)
+- Parto (tipos, preparação, recuperação)
+- Pós-parto (amamentação, cuidados, saúde mental)
+- Ciclo menstrual (fases, fertilidade, TPM)
+- Desenvolvimento infantil (0-2 anos)
+- Saúde emocional materna (validação, não diagnóstico)`;
