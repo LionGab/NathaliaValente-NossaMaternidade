@@ -175,6 +175,8 @@ module.exports = {
       backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL || "",
     },
     plugins: [
+      "@sentry/react-native",
+      "expo-asset",
       "expo-secure-store",
       "expo-font",
       "expo-localization",
