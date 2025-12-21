@@ -51,7 +51,7 @@ import { useVoicePremiumGate } from "../hooks/useVoice";
 import { useVoiceRecording } from "../hooks/useVoiceRecording";
 import { useIsPremium } from "../state/premium-store";
 import { Conversation, useAppStore, useChatStore } from "../state/store";
-import { COLORS_DARK, COLORS as DS_COLORS, SHADOWS, SPACING } from "../theme/design-system";
+import { COLORS_DARK, COLORS as DS_COLORS, RADIUS, SHADOWS, SPACING } from "../theme/design-system";
 import { ChatMessage, MainTabScreenProps } from "../types/navigation";
 import { wp } from "../utils/dimensions";
 import { logger } from "../utils/logger";
@@ -858,7 +858,7 @@ const styles = StyleSheet.create({
   headerButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl, // 24px (ultra-arredondado 2025)
     alignItems: "center",
     justifyContent: "center",
   },
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   messageBubble: {
-    borderRadius: 20,
+    borderRadius: RADIUS.xl, // 24px (ultra-arredondado 2025)
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
   },
   loadingBubble: {
     backgroundColor: THEME_LIGHT.aiBubble,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl, // 24px (ultra-arredondado 2025)
     borderBottomLeftRadius: 4,
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -970,7 +970,7 @@ const styles = StyleSheet.create({
   },
   chip: {
     backgroundColor: THEME_LIGHT.bgSecondary,
-    borderRadius: 20,
+    borderRadius: RADIUS.xl, // 24px (ultra-arredondado 2025)
     paddingHorizontal: 14,
     paddingVertical: 8,
     marginRight: 8,
@@ -985,7 +985,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     backgroundColor: THEME_LIGHT.bgSecondary,
-    borderRadius: 24,
+    borderRadius: RADIUS["2xl"], // 32px (input pill ultra-suave)
     borderWidth: 1,
     borderColor: THEME_LIGHT.border,
     minHeight: 48,
@@ -1005,7 +1005,7 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: RADIUS.lg, // 20px (botão arredondado)
     backgroundColor: THEME_LIGHT.primary,
     alignItems: "center",
     justifyContent: "center",

@@ -3,9 +3,13 @@
  *
  * Gerencia gravação de áudio para mensagens de voz no chat.
  * Usa expo-av para gravação e Supabase Edge Function para transcrição.
+ *
+ * ⚠️ NOTA: expo-av está deprecated e será removido no SDK 54.
+ * Migração para expo-audio planejada para versão futura.
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+// expo-av deprecated, será migrado para expo-audio em versão futura
 import { Audio } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import * as Haptics from "expo-haptics";

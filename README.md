@@ -1,6 +1,8 @@
 # Nossa Maternidade
 
-Um aplicativo acolhedor para gravidas e maes no pos-parto, criado por **Nathalia Valente**.
+Um aplicativo acolhedor para grávidas e mães no pós-parto, criado por **Nathalia Valente**.
+
+> **🚀 Começar agora?** Veja [QUICKSTART.md](QUICKSTART.md) (10min para rodar) | Setup completo: [docs/SETUP_WINDOWS.md](docs/SETUP_WINDOWS.md) ou `docs/SETUP_MAC.md`
 
 ## Sobre o App
 
@@ -16,13 +18,18 @@ Nossa Maternidade e uma comunidade completa para mulheres, oferecendo:
 
 O app foi cuidadosamente desenhado seguindo as diretrizes da Apple Human Interface Guidelines, inspirado em apps como Flo, Clue e Calm:
 
-### Paleta de Cores
-- **Rose** (#E11D48): Cor principal
-- **Violet** (#8B5CF6): Ovulacao e fertilidade
-- **Purple** (#A78BFA): Janela fertil e afirmacoes
-- **Pink** (#F472B6): Fases do ciclo
-- **Blush** (#BC8B7B): Tons suaves e naturais
-- **Cream** (#FFFCF9): Backgrounds acolhedores
+### Design System: "Calm FemTech"
+
+Tema híbrido Azul + Rosa focado em calma e acolhimento:
+- **Azul Pastel** (primary): Estrutura, navegação, baixo estímulo visual
+- **Rosa Vibrante** (accent): CTAs, destaques, momentos de alegria (uso pontual 10-15%)
+- **Lilás Suave** (secondary): Elementos de apoio, meditação
+- **Teal** (health): Indicadores de saúde e bem-estar
+
+**Fonte única de verdade**: `src/theme/tokens.ts` (Calm FemTech preset)
+- WCAG AAA por padrão (contraste 7:1)
+- 8pt grid system para espaçamento
+- Tokens semânticos: error, warning, info, success
 
 ### Micro-interacoes
 - Animacoes suaves com react-native-reanimated
@@ -176,13 +183,13 @@ src/
 
 ## Tecnologias
 
-- **Expo SDK 53** com React Native 0.76.7
+- **Expo SDK 54** com React Native 0.81
 - **TypeScript** para type safety
-- **Supabase** para backend
-- **NativeWind** (TailwindCSS para React Native)
-- **Zustand** para gerenciamento de estado (com persistencia AsyncStorage)
-- **React Navigation** (Native Stack, Bottom Tabs)
-- **React Native Reanimated v3** para animacoes
+- **Supabase** para backend (auth, database, edge functions)
+- **NativeWind v4** (TailwindCSS para React Native)
+- **Zustand** para gerenciamento de estado (com persistência AsyncStorage)
+- **React Navigation 7** (Native Stack, Bottom Tabs)
+- **React Native Reanimated v3** para animações
 - **Expo Linear Gradient** para gradientes visuais
 
 ## Stores de Estado

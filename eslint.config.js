@@ -1,9 +1,8 @@
 // https://docs.expo.dev/guides/using-eslint/
-const { defineConfig } = require("eslint/config");
 const expoConfig = require("eslint-config-expo/flat");
 
-module.exports = defineConfig([
-  expoConfig,
+module.exports = [
+  ...expoConfig,
   {
     ignores: [
       "dist/*",
@@ -13,7 +12,11 @@ module.exports = defineConfig([
       "patches/*",
       "bun.lock",
       "eslint.config.js",
+      "scripts/**/*", // Scripts Node.js podem usar console.log
+      "supabase/**/*", // Edge Functions usam Deno, não Node
     ],
+  },
+  {
     settings: {
       "import/resolver": {
         typescript: {
@@ -58,4 +61,4 @@ module.exports = defineConfig([
       // @typescript-eslint rules removed (plugin conflict with expo flat config)
     },
   },
-]);
+];

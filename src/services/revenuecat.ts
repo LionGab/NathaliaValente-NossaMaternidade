@@ -58,6 +58,13 @@ function getErrorMessage(error: unknown): string {
  * @returns Promise<void>
  */
 export async function initializePurchases(userId?: string): Promise<void> {
+  // RevenueCat não funciona no web
+  if (Platform.OS === "web") {
+    logger.debug("RevenueCat skipped on web platform", "RevenueCat");
+    isConfigured = false;
+    return;
+  }
+
   const apiKey = Platform.OS === "ios" ? REVENUECAT_IOS_KEY : REVENUECAT_ANDROID_KEY;
 
   if (!apiKey) {

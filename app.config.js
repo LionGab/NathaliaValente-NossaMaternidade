@@ -164,6 +164,12 @@ module.exports = {
       // RevenueCat API keys (Premium/IAP)
       revenueCatIosKey: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || "",
       revenueCatAndroidKey: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || "",
+      // URLs públicas das páginas legais (para submissão nas lojas)
+      legal: {
+        privacyUrl: "https://nossamaternidade.com.br/privacidade",
+        termsUrl: "https://nossamaternidade.com.br/termos",
+        aiDisclaimerUrl: "https://nossamaternidade.com.br/ai-disclaimer",
+      },
       // Feature flags
       enableAIFeatures: process.env.EXPO_PUBLIC_ENABLE_AI_FEATURES === "true" || false,
       enableGamification: process.env.EXPO_PUBLIC_ENABLE_GAMIFICATION === "true" || false,

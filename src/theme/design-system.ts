@@ -442,9 +442,9 @@ export const SPACING = {
   xs: 4,
   sm: 8,
   md: 12,
-  lg: 16,
-  xl: 20,
-  "2xl": 24,
+  lg: 20,    // +4px (tendência 2025: ultra-arredondado)
+  xl: 24,    // +4px
+  "2xl": 32, // +8px (cards principais)
   "3xl": 32,
   "4xl": 40,
   "5xl": 48,
@@ -462,10 +462,10 @@ export const RADIUS = {
   xs: 4,
   sm: 8,
   md: 12,
-  lg: 16,
-  xl: 20,
-  "2xl": 24,
-  "3xl": 28,
+  lg: 20,    // +4px (tendência 2025: ultra-arredondado)
+  xl: 24,    // +4px
+  "2xl": 32, // +8px (cards principais)
+  "3xl": 40, // +12px (modais, overlays)
   full: 9999,
 } as const;
 
@@ -579,6 +579,22 @@ export const GLASS = {
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
   },
+  // Emotional Design 2025: Variantes ultra-suaves
+  ultraLight: {
+    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.6)",
+  },
+  tinted: {
+    backgroundColor: "rgba(247, 251, 253, 0.75)", // Levemente azulado
+    borderWidth: 1,
+    borderColor: "rgba(125, 185, 213, 0.2)",
+  },
+  warm: {
+    backgroundColor: "rgba(255, 250, 245, 0.7)", // Levemente pêssego
+    borderWidth: 1,
+    borderColor: "rgba(255, 228, 181, 0.3)",
+  },
 } as const;
 
 // ===========================================
@@ -599,6 +615,26 @@ export const ANIMATION = {
     easeIn: "cubic-bezier(0.42, 0, 1, 1)",
     spring: { damping: 15, stiffness: 150 },
   },
+} as const;
+
+// ===========================================
+// HAPTIC FEEDBACK (Animações Tácteis 2025)
+// ===========================================
+
+export const HAPTICS = {
+  light: { duration: 50 },   // Feedback leve (hover, focus)
+  medium: { duration: 100 },  // Feedback médio (tap, select)
+  heavy: { duration: 150 },   // Feedback forte (sucesso, erro)
+} as const;
+
+// ===========================================
+// SPRING ANIMATIONS (Movimentos Orgânicos)
+// ===========================================
+
+export const SPRING = {
+  soft: { damping: 20, stiffness: 120 },    // Animação suave (modais, overlays)
+  bouncy: { damping: 15, stiffness: 150 },  // Animação "orgânica" (botões, cards)
+  snappy: { damping: 25, stiffness: 200 },  // Animação rápida (transições)
 } as const;
 
 // ===========================================
@@ -748,6 +784,11 @@ export const GRADIENTS = {
   // Mood
   warm: [NEUTRAL[50], "#FFFFFF", NEUTRAL[100]],
   cool: [BLUE[100], BLUE[50], "#FFFFFF"],
+
+  // Emotional Design 2025: Tons quentes pastéis
+  warmSunset: ["#FFE4B5", "#FED7AA", "#FECDD3"] as const,  // Amarelo→pêssego→rosa
+  morningGlow: ["#F7FBFD", "#FFE4EC", "#FFF1F5"] as const, // Azul→rosa suave
+  eveningCalm: ["#E8F3F9", "#EDE9FE", "#F3E8FF"] as const, // Azul→lilás
 
   // Hero (uso pontual)
   heroLight: [NEUTRAL[50], "#FFFFFF", NEUTRAL[100]],

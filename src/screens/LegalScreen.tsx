@@ -20,8 +20,8 @@ const legalConfig = Constants.expoConfig?.extra?.legal as {
 } | undefined;
 
 const LEGAL_URLS = {
-  privacy: legalConfig?.privacyUrl ?? "https://nossamaternidade.com.br/privacy",
-  terms: legalConfig?.termsUrl ?? "https://nossamaternidade.com.br/terms",
+  privacy: legalConfig?.privacyUrl ?? "https://nossamaternidade.com.br/privacidade",
+  terms: legalConfig?.termsUrl ?? "https://nossamaternidade.com.br/termos",
   aiDisclaimer: legalConfig?.aiDisclaimerUrl ?? "https://nossamaternidade.com.br/ai-disclaimer",
 };
 

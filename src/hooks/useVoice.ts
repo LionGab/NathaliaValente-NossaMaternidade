@@ -4,16 +4,15 @@
  * Gerencia playback de voz da NathIA com ElevenLabs TTS.
  * Verifica status premium antes de permitir reproducao.
  * Cacheia audio gerado para replay sem custo adicional.
+ *
+ * ⚠️ NOTA: expo-av está deprecated e será removido no SDK 54.
+ * Migração para expo-audio/expo-video planejada para versão futura.
  */
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+// expo-av deprecated, será migrado para expo-audio em versão futura
 import { Audio, AVPlaybackStatus } from "expo-av";
-import {
-  generateSpeech,
-  playAudio,
-  stopAudio,
-  isElevenLabsConfigured,
-} from "../api/elevenlabs";
+import { generateSpeech, isElevenLabsConfigured, playAudio, stopAudio } from "../api/elevenlabs";
 import { useHasVoiceAccess, usePremiumStore } from "../state/premium-store";
 import { logger } from "../utils/logger";
 
@@ -276,8 +275,7 @@ export function useVoice(): UseVoiceReturn {
 
         logger.info("Voice playback started", "useVoice", { messageId });
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Erro ao reproduzir voz";
+        const errorMessage = error instanceof Error ? error.message : "Erro ao reproduzir voz";
 
         logger.error(
           "Voice playback failed",

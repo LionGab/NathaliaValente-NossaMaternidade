@@ -1,0 +1,34 @@
+﻿{
+  "mcpServers": {
+    "expo-mcp": {
+      "description": "Expo MCP Server para builds iOS/Android",
+      "transport": "http",
+      "url": "https://mcp.expo.dev/mcp",
+      "requires": ["Expo account autenticado", "SDK 54+"]
+    },
+    "context7": {
+      "description": "Documentacao atualizada de libraries",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "memory-keeper": {
+      "description": "Persistencia de contexto entre sessoes",
+      "command": "npx",
+      "args": ["-y", "mcp-memory-keeper"],
+      "env": {
+        "MCP_MEMORY_DB_PATH": ".claude/context.db"
+      }
+    },
+    "playwright": {
+      "description": "Testes visuais automatizados",
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-playwright"]
+    },
+    "figma-devmode": {
+      "description": "Figma Dev Mode MCP Server (local)",
+      "transport": "sse",
+      "url": "http://127.0.0.1:3845/sse",
+      "requires": ["Figma Desktop App com Dev Mode MCP habilitado"]
+    }
+  }
+}

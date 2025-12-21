@@ -6,15 +6,36 @@ Este documento descreve como configurar os MCPs (Model Context Protocol) recomen
 
 ## Instalação Rápida
 
+### Windows (PowerShell)
+
+```powershell
+# Executar script de setup
+.\scripts\setup-mcps.ps1
+
+# Ou manualmente:
+# 1. Supabase CLI
+supabase login
+supabase link --project-ref <SEU_PROJECT_REF>
+
+# 2. Expo MCP (via Cursor Settings ou editar settings.json)
+# Abrir Cursor Settings (Ctrl+,) > Buscar "MCP" > Adicionar servidor HTTP
+# URL: https://mcp.expo.dev/mcp
+
+# 3. Playwright (se necessário)
+npx playwright install chromium
+```
+
+### macOS/Linux
+
 ```bash
-# Supabase CLI (v2.67.1 instalado)
+# Supabase CLI
 supabase login
 supabase link --project-ref <SEU_PROJECT_REF>
 
 # Context7 (documentação atualizada)
 npx -y @smithery/cli@latest install @upstash/context7-mcp --client claude
 
-# Expo MCP
+# Expo MCP (via Claude Desktop CLI)
 claude mcp add --transport http expo-mcp https://mcp.expo.dev/mcp
 
 # Memory (persistência de contexto)
@@ -23,6 +44,36 @@ claude mcp add memory-keeper -- npx -y mcp-memory-keeper
 # Playwright (testes visuais)
 claude mcp add playwright -- npx -y @anthropic/mcp-server-playwright
 npx playwright install chromium
+```
+
+### Configuração Manual (Windows)
+
+No Windows, os MCPs são configurados via arquivo de configuração do Cursor:
+
+1. **Localização do arquivo**: `%APPDATA%\Cursor\User\settings.json`
+2. **Arquivo de exemplo**: `.claude/mcp-settings-example.json`
+3. **Adicionar ao `settings.json`**:
+
+```json
+{
+  "mcpServers": {
+    "expo-mcp": {
+      "transport": "http",
+      "url": "https://mcp.expo.dev/mcp"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    },
+    "memory-keeper": {
+      "command": "npx",
+      "args": ["-y", "mcp-memory-keeper"],
+      "env": {
+        "MCP_MEMORY_DB_PATH": ".claude/context.db"
+      }
+    }
+  }
+}
 ```
 
 ## Slash Commands Disponíveis
@@ -301,6 +352,13 @@ Para verificar quais MCPs estão disponíveis, use:
 
 ### Expo MCP não funciona
 
+**Windows:**
+- Verifique se o servidor está configurado em `%APPDATA%\Cursor\User\settings.json`
+- Abra Cursor Settings (Ctrl+,) e busque por "MCP" para verificar configuração
+- Certifique-se de estar autenticado no Expo: `npx expo login` ou `eas login`
+- Reinicie o Cursor após adicionar o MCP
+
+**macOS/Linux:**
 - Verifique se o comando foi executado corretamente: `claude mcp add --transport http expo-mcp https://mcp.expo.dev/mcp`
 - Certifique-se de estar autenticado no Expo: `npx expo login` ou `eas login`
 - Se necessário, autentique via OAuth 2.0 usando `/mcp` no Claude Desktop

@@ -40,7 +40,8 @@ if (supabaseUrl && supabaseAnonKey) {
       storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      // No web, detectar sessão na URL para OAuth callbacks
+      detectSessionInUrl: typeof window !== "undefined",
     },
   });
 }

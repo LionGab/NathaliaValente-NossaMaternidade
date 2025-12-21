@@ -10,6 +10,9 @@
  * - Renovação automática de token (30 dias)
  * - Remoção de token ao fazer logout
  *
+ * ⚠️ IMPORTANTE: Push notifications não funcionam no Expo Go SDK 53+.
+ * Use Development Build para funcionalidade completa.
+ *
  * Usage:
  * ```tsx
  * const notifications = useNotifications();
@@ -19,16 +22,16 @@
  * ```
  */
 
-import { useEffect, useRef, useState } from "react";
-import * as Notifications from "expo-notifications";
-import * as Device from "expo-device";
-import { Platform } from "react-native";
-import Constants from "expo-constants";
-import { useAppStore } from "@/state/store";
 import { supabase } from "@/api/supabase";
-import { logger } from "@/utils/logger";
 import { navigationRef } from "@/navigation/navigationRef";
+import { useAppStore } from "@/state/store";
 import { COLORS } from "@/theme/design-system";
+import { logger } from "@/utils/logger";
+import Constants from "expo-constants";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import { useEffect, useRef, useState } from "react";
+import { Platform } from "react-native";
 
 // =======================
 // TYPES
@@ -292,6 +295,12 @@ export function useNotifications(): UseNotificationsReturn {
       return;
     }
 
+    // Notifications não são totalmente suportadas no web
+    if (Platform.OS === "web") {
+      logger.debug("Push token registration skipped on web platform", "notifications");
+      return;
+    }
+
     if (!Device.isDevice) {
       logger.warn("Push notifications only work on physical devices", "notifications");
       return;
@@ -362,8 +371,15 @@ export function useNotifications(): UseNotificationsReturn {
 
   /**
    * Setup notification listeners on mount
+   * Skip on web platform (notifications not fully supported)
    */
   useEffect(() => {
+    // Notifications não são totalmente suportadas no web
+    if (Platform.OS === "web") {
+      logger.debug("Notifications listeners skipped on web platform", "notifications");
+      return;
+    }
+
     // Listener for notifications received while app is foregrounded
     notificationListener.current = Notifications.addNotificationReceivedListener(
       handleNotificationReceived

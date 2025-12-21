@@ -1,26 +1,23 @@
 /**
  * Nossa Maternidade - RestSoundsScreen
  * Relaxation sounds categorized by nature, meditation, and sleep
+ *
+ * ⚠️ NOTA: expo-av está deprecated e será removido no SDK 54.
+ * Migração para expo-audio planejada para versão futura.
  */
 
-import React, { useState, useMemo } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
-import { Audio } from "expo-av";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import {
-  COLORS,
-  GRADIENTS,
-  SPACING,
-  RADIUS,
-  TYPOGRAPHY,
-  OVERLAY,
-} from "../theme/design-system";
+// expo-av deprecated, será migrado para expo-audio em versão futura
+import { Audio } from "expo-av";
 import { useTheme } from "../hooks/useTheme";
+import { COLORS, GRADIENTS, OVERLAY, RADIUS, SPACING, TYPOGRAPHY } from "../theme/design-system";
 
 type SoundCategory = "nature" | "meditation" | "sleep";
 
@@ -165,8 +162,16 @@ const getRestColors = (_isDark: boolean) => ({
 });
 
 const CATEGORIES = [
-  { id: "nature" as SoundCategory, name: "Natureza", icon: "leaf" as keyof typeof Ionicons.glyphMap },
-  { id: "meditation" as SoundCategory, name: "Meditacao", icon: "heart" as keyof typeof Ionicons.glyphMap },
+  {
+    id: "nature" as SoundCategory,
+    name: "Natureza",
+    icon: "leaf" as keyof typeof Ionicons.glyphMap,
+  },
+  {
+    id: "meditation" as SoundCategory,
+    name: "Meditacao",
+    icon: "heart" as keyof typeof Ionicons.glyphMap,
+  },
   { id: "sleep" as SoundCategory, name: "Sono", icon: "moon" as keyof typeof Ionicons.glyphMap },
 ];
 
@@ -316,22 +321,25 @@ export default function RestSoundsScreen() {
                   alignItems: "center",
                   justifyContent: "center",
                   backgroundColor:
-                    selectedCategory === cat.id
-                      ? restColors.tabActive
-                      : "transparent",
+                    selectedCategory === cat.id ? restColors.tabActive : "transparent",
                 }}
               >
                 <Ionicons
                   name={cat.icon}
                   size={16}
-                  color={selectedCategory === cat.id ? restColors.textPrimary : restColors.textSecondary}
+                  color={
+                    selectedCategory === cat.id ? restColors.textPrimary : restColors.textSecondary
+                  }
                 />
                 <Text
                   style={{
                     marginLeft: SPACING.sm,
                     fontSize: TYPOGRAPHY.bodySmall.fontSize,
                     fontWeight: "600",
-                    color: selectedCategory === cat.id ? restColors.textPrimary : restColors.textSecondary,
+                    color:
+                      selectedCategory === cat.id
+                        ? restColors.textPrimary
+                        : restColors.textSecondary,
                   }}
                 >
                   {cat.name}
@@ -352,7 +360,9 @@ export default function RestSoundsScreen() {
           {filteredSounds.map((item, index) => (
             <Animated.View
               key={item.id}
-              entering={FadeInUp.delay(index * 80).duration(500).springify()}
+              entering={FadeInUp.delay(index * 80)
+                .duration(500)
+                .springify()}
               style={{ marginBottom: SPACING.lg }}
             >
               <Pressable onPress={() => handlePlaySound(item.id)}>
@@ -379,7 +389,9 @@ export default function RestSoundsScreen() {
                         height: 56,
                         borderRadius: 28,
                         backgroundColor:
-                          playingSound === item.id ? restColors.iconBgActive(item.color) : restColors.iconBg,
+                          playingSound === item.id
+                            ? restColors.iconBgActive(item.color)
+                            : restColors.iconBg,
                         alignItems: "center",
                         justifyContent: "center",
                         marginRight: SPACING.lg,
@@ -438,7 +450,9 @@ export default function RestSoundsScreen() {
                         height: 44,
                         borderRadius: 22,
                         backgroundColor:
-                          playingSound === item.id ? restColors.iconBgActive(item.color) : restColors.iconBg,
+                          playingSound === item.id
+                            ? restColors.iconBgActive(item.color)
+                            : restColors.iconBg,
                         alignItems: "center",
                         justifyContent: "center",
                       }}
@@ -529,8 +543,8 @@ export default function RestSoundsScreen() {
                     lineHeight: 20,
                   }}
                 >
-                  Use fones de ouvido para uma experiencia mais imersiva. Sons da
-                  natureza podem ajudar seu bebe a dormir melhor tambem.
+                  Use fones de ouvido para uma experiencia mais imersiva. Sons da natureza podem
+                  ajudar seu bebe a dormir melhor tambem.
                 </Text>
               </View>
             </View>

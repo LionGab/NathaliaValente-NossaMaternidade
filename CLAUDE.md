@@ -4,35 +4,70 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Nossa Maternidade** - A maternal health companion app for pregnant women and new mothers in Brazil, created by Nathalia Valente. iOS-first Expo React Native app.
+**Nossa Maternidade** - A maternal health companion app for pregnant women and new mothers in Brazil, created by Nathalia Valente. iOS-first Expo React Native app with AI-powered health companion.
 
-## Development Guidelines
+## Critical Non-Negotiables
 
-- **DO NOT** share, display, or expose API keys in any manner
-- **Always use** double quotes for strings containing apostrophes: `"How's it going?"` (NOT single quotes)
-- **Never use** `console.log()` for user communication - display messages on screen instead
-- **Never use** alerts - implement custom modals instead
+### TypeScript
+- **Strict mode enforced** - Zero `any` types (use `unknown` + type guards)
+- **NO `@ts-ignore`** or `@ts-expect-error` without explicit justification
+
+### Logging
+- **NEVER use `console.log/warn/error`** - Use `logger.*` from `src/utils/logger.ts`
+- Pattern: `logger.info('message', 'context', metadata?)`
+- Quality gate will fail if `console.log` is found
+
+### Colors & Design System
+- **NEVER hardcode colors** - Use `useThemeColors()` hook or `Tokens.*` from `src/theme/tokens.ts`
+- Forbidden: `#xxx`, `rgba()`, `'white'`, `'black'` (except documented cases)
+- **SINGLE SOURCE OF TRUTH**: `src/theme/tokens.ts` (Calm FemTech preset)
+- Overlays: Use `Tokens.overlay.light/medium/dark/heavy/backdrop`
+- Shadows: Use `Tokens.neutral[900]` as `shadowColor`
+
+### Security
+- **DO NOT** expose API keys in any manner
+- **DO NOT** modify `.env*` files
+- **ALWAYS** enable RLS (Row Level Security) on Supabase tables
 
 ## Commands
 
-You can use either `npm` or `bun` (bun is faster but optional):
+Use `npm` or `bun` (bun is faster):
 
 ```bash
-# Install dependencies
-npm install          # or: bun install
-
 # Development
-npm start            # or: bun start (starts Expo dev server)
-npm run ios          # or: bun run ios
-npm run android      # or: bun run android
+npm start            # Start Expo dev server
+npm start:clear      # Start with cleared cache
+npm run ios          # Run on iOS simulator
+npm run android      # Run on Android emulator
+npm run web          # Run in web browser
 
-# Quality checks
-npx tsc --noEmit     # Check TypeScript errors
-npm run lint         # Run ESLint
-npm run typecheck    # Same as tsc --noEmit
+# Quality Checks (ALWAYS run before PR)
+npm run quality-gate      # Complete quality gate (typecheck + lint + build check + console.log check)
+npm run typecheck         # TypeScript type checking (tsc --noEmit)
+npm run lint              # ESLint
+npm run lint:fix          # Auto-fix ESLint issues
+npm run format            # Format with Prettier
+npm run check-build-ready # Verify build readiness
 
-# Build preparation
-npm run check-build-ready  # Verify app is ready for build
+# Testing
+npm test              # Run Jest tests
+npm test:watch        # Run tests in watch mode
+npm test:coverage     # Generate coverage report
+
+# Environment & Setup
+npm run check-env     # Verify environment variables
+npm run test:oauth    # Test OAuth providers
+npm run create:admin  # Create admin user (Supabase)
+npm run setup-secrets # Setup Supabase secrets
+
+# Utilities
+npm run clean         # Clean cache (Metro, Expo, temp files)
+npm run clean:all     # Nuclear clean (includes node_modules)
+
+# EAS Build (Production)
+npm run eas:build:ios     # Build for iOS
+npm run eas:build:android # Build for Android
+npm run eas:build:list    # List builds
 ```
 
 ## Architecture
@@ -75,12 +110,17 @@ All stores centralized in `src/state/store.ts`:
 **Zustand selector pattern** (avoid infinite loops):
 
 ```typescript
-// GOOD: Individual selectors
+// ✅ GOOD: Individual selectors
 const user = useAppStore((s) => s.user);
 const setUser = useAppStore((s) => s.setUser);
 
-// BAD: Object selector creates new ref each render
+// ❌ BAD: Object selector creates new ref each render
 const { user, setUser } = useAppStore((s) => ({ user: s.user, setUser: s.setUser }));
+```
+
+**Unused imports**: Prefix with underscore to avoid lint errors:
+```typescript
+import { AgentContext as _AgentContext } from '@/types'; // Not used but needed for type declarations
 ```
 
 ### Pre-built API Functions
@@ -111,54 +151,87 @@ generateImage(prompt)      // Uses gpt-image-1
 - **Use Ionicons** from `@expo/vector-icons` for icons
 - **Use zeego** for context/dropdown menus
 
+### Performance & Accessibility
+- **Lists**: Use `FlatList` or `FlashList` - NEVER `ScrollView + map()`
+- **Memoization**: Use `React.memo()` for components with repetitive renders
+- **Lazy loading**: Use `React.lazy()` for large components
+- **Tap targets**: Minimum 44pt (iOS HIG) - `ACCESSIBILITY.minTapTarget` from tokens
+- **Contrast**: WCAG AAA by default (7:1 ratio)
+- **Always** add `accessibilityLabel` and `accessibilityRole`
+
 ### Design Tokens
 
-**Current system** (Design System 2025 - Apple HIG + Material Design 3):
+**SINGLE SOURCE OF TRUTH**: `src/theme/tokens.ts` (Calm FemTech Preset)
 
+Theme: **"Calm FemTech"** - Azul (primary) + Rosa (accent) hybrid
+- Blue dominates surfaces (calm, trust, health)
+- Pink for CTAs and highlights (warmth, care)
+- Low visual stimulation, WCAG AAA by default
+
+```typescript
+import { Tokens } from '@/theme/tokens';  // ⭐ USE THIS
+import { useThemeColors } from '@/hooks/useTheme';  // For light/dark mode
+
+// Brand colors
+Tokens.brand.primary   // Blue pastel (main structure)
+Tokens.brand.accent    // Pink vibrant (CTAs only, max 10-15% of screen)
+Tokens.brand.secondary // Lilac (secondary elements)
+Tokens.brand.teal      // Health indicators
+
+// Neutral grays
+Tokens.neutral[50]  // Lightest background
+Tokens.neutral[900] // Darkest text/shadows
+
+// Semantic colors
+Tokens.semantic.error/errorLight
+Tokens.semantic.warning/warningLight
+Tokens.semantic.info/infoLight
+Tokens.semantic.success/successLight
+
+// Typography
+Tokens.typography.h1/h2/h3/body/caption
+Tokens.font.sans/serif/mono
+
+// Spacing (8pt grid)
+Tokens.spacing.xs/sm/md/lg/xl/2xl
+
+// Overlays (for modals, sheets)
+Tokens.overlay.light/medium/dark/heavy/backdrop
 ```
-Primary: #f4258c (vibrant pink)
-Secondary: #A855F7 (lilac/purple)
-Background: #f8f5f7 (soft pink-white)
-Text Dark: #1C1917 (warm gray 900)
-Fonts: DMSans (body), DMSerifDisplay (headers)
+
+**Theme hook for light/dark mode**:
+```typescript
+const theme = useTheme();
+const colors = useThemeColors();  // Automatically switches based on theme
+
+<View style={{ backgroundColor: colors.background }}>
 ```
 
-**Official color system**: `src/theme/design-system.ts` ⭐
+**Feeling colors** (daily check-ins):
+- Bem (sunny): `#FFD89B` (yellow pastel)
+- Cansada (cloud): `#BAE6FD` (blue pastel)
+- Enjoada (rainy): `#DDD6FE` (lavender)
+- Amada (heart): `#FB7185` (pink)
 
-- **USE THIS**: Import `COLORS`, `GRADIENTS`, `TYPOGRAPHY`, `SPACING`, etc.
-- Complete design system with colors, typography, spacing, shadows, glassmorphism
-- Follows Apple HIG and Material Design 3 best practices
-- Includes accessibility guidelines (44pt min tap target, WCAG AA contrast)
-
-**Legacy compatibility**: `src/utils/colors.ts`
-
-- Re-exports from design-system.ts for backward compatibility
-- **DEPRECATED**: Migrate imports to design-system.ts when editing files
-- Helper functions: `getFeelingColor()`, `getGradient()`
-- Constants: `PRIMARY_COLOR`, `SECONDARY_COLOR`, `TEXT_DARK`
-
-**Feeling colors** (for daily check-ins):
-
-- Bem (sunny): #FFD89B (yellow pastel)
-- Cansada (cloud): #BAE6FD (blue pastel)
-- Enjoada (rainy): #DDD6FE (lavender)
-- Amada (heart): #FB7185 (pink)
-
-See [docs/COLOR_SYSTEM.md](docs/COLOR_SYSTEM.md) for complete documentation.
+**DEPRECATED**: `src/utils/colors.ts` (kept for backward compatibility only)
 
 ## Animation & Gestures
 
-- **Use react-native-reanimated v3** - NOT Animated from react-native
+- **Use react-native-reanimated v3** - NOT `Animated` from react-native
 - **Use react-native-gesture-handler** for gestures
 - **Always WebSearch docs** before implementing - training data may be outdated
 
-## Layout Rules
+## Layout & Safe Areas
 
-- **Use SafeAreaProvider** with `useSafeAreaInsets` (not SafeAreaView from react-native)
-- Tab navigator → no bottom insets needed
+- **Use `SafeAreaView`** from `react-native-safe-area-context` - NEVER from `react-native`
+- `SafeAreaProvider` is already configured in `App.tsx`
+- Use `useSafeAreaInsets()` hook for manual inset calculations
+- Tab navigator → no bottom insets needed (handled automatically)
 - Native header → no safe area insets needed
 - Custom header → top inset required
-- **Use Pressable** over TouchableOpacity
+- **Use `Pressable`** over `TouchableOpacity`
+
+See [docs/SAFE_AREA_MIGRATION.md](docs/SAFE_AREA_MIGRATION.md) for details.
 
 ## Camera Implementation
 
@@ -214,57 +287,107 @@ scripts/           # Build and setup scripts
 | `app.config.js`                    | Dynamic Expo config with env vars               |
 | `scripts/fix-lightningcss.js`      | Windows compatibility fix (runs on postinstall) |
 
-## Important Notes
+## Code Quality & Process
+
+### Quality Gate (Pre-PR Checklist)
+
+**ALWAYS run before creating PR or building**:
+```bash
+npm run quality-gate  # Runs all 4 checks below
+```
+
+This executes:
+1. **TypeScript** type check (`tsc --noEmit`)
+2. **ESLint** (blocks: `console.log`, `alert`, `any` types)
+3. **Build readiness** check
+4. **`console.log` detection** (must use `logger.*` instead)
+
+### File Size & Refactoring
+
+- **Files > 250 LOC**: Refactor (extract hooks/components/services)
+- **Smallest diff possible**: Don't modify files outside necessary scope
+
+### Breaking Changes
+
+- If risk of breaking change: propose incremental plan
+- Strategy: compatibility → migration → legacy removal (same PR when possible)
+
+### Dependencies
+
+- **DO NOT** add new dependencies without exhausting existing options
+- Check `package.json` before suggesting new libraries
+
+### API & Services Pattern
+
+- **Return pattern**: `{ data, error }` (no scattered try/catch)
+- **Error handling**: Centralized, logged with `logger.*`
+
+### Environment Variables
+
+- **NEVER modify** `.env*` files directly
+- If new variable needed: inform name + usage location + ask confirmation
+- Public vars: `EXPO_PUBLIC_*` (exposed to client)
+- Private vars: Backend only (Supabase Edge Functions)
+
+## Platform-Specific Notes
 
 ### Windows Development
 
-- The project includes a `postinstall` script that automatically fixes LightningCSS binary issues on Windows x64
-- This runs automatically after `bun install` - no manual intervention needed
-- For `.sh` scripts, use Git Bash or WSL: `git bash scripts/quality-gate.sh`
+- **Auto-fix included**: `postinstall` script fixes LightningCSS binary issues on Windows x64
+- Runs automatically after `npm install` / `bun install`
+- For `.sh` scripts: Use Git Bash or WSL
+  ```bash
+  # Windows (Git Bash required)
+  bash scripts/quality-gate.sh
 
-### Color System Migration
+  # Alternative with npm script
+  npm run quality-gate
+  ```
 
-- **IMPORTANT**: Migrating from `src/utils/colors.ts` to `src/theme/design-system.ts`
-- New code should use `COLORS`, `TYPOGRAPHY`, `SPACING` from `design-system.ts`
-- `colors.ts` is deprecated and kept only for backward compatibility
-- See [docs/DESIGN_SYSTEM_MIGRATION.md](docs/DESIGN_SYSTEM_MIGRATION.md) for migration guide
+### iOS Development
 
-### Safe Area Handling
+- **Pods fix script**: `npm run fix:ios` (if CocoaPods issues)
+- **Privacy Manifest**: iOS 17+ compliance built-in (see `app.config.js`)
+- **Target**: iOS 15+ (Expo SDK 54)
 
-- Always use `SafeAreaView` from `react-native-safe-area-context`, NEVER from `react-native`
-- `SafeAreaProvider` is already configured in `App.tsx`
-- See [docs/SAFE_AREA_MIGRATION.md](docs/SAFE_AREA_MIGRATION.md) for details
+### Android Development
 
-### Quality Gates
+- **Target SDK**: 35 (Android 15)
+- **Min SDK**: 24 (Android 7.0 - 95%+ market)
+- **Edge-to-edge**: Enabled by default
+- **Predictive back gesture**: Android 14+ enabled
 
-- Always run `bun run quality-gate` before creating PRs
-- This checks: TypeScript, ESLint, build readiness, and console.log usage
-- ESLint now blocks `console.log` (use `logger.*` instead), `alert`, and `any` types
+## AI & Backend Services
 
-### Session Notes (2025-12-18)
+### Supabase Edge Functions
 
-**Completed:**
-- Fixed `console.warn` → `logger.warn` in `src/services/notifications.ts`
-- Created admin verification system: `src/config/admin.ts` + `src/hooks/useAdmin.ts`
-- Implemented voice recording: `src/hooks/useVoiceRecording.ts`
-- Created transcription edge function: `supabase/functions/transcribe/index.ts` (deployed)
-- Implemented image attachments in NathIA chat (uses Claude Vision)
-- Updated `supabase/config.toml` to new format `[functions.name]`
+Deployed functions (see `supabase/functions/`):
+- `ai` - NathIA chat (Claude/Gemini/GPT integration)
+- `transcribe` - Audio transcription (Whisper)
+- `upload-image` - Image upload & optimization
+- `notifications` - Push notification handling
+- `delete-account` - LGPD-compliant account deletion
+- `analytics` - Privacy-preserving analytics
 
-**Pending:**
-- Post comments feature (currently goes to ComingSoon screen)
-- Changes not committed to Git yet
+**Deploy**: `npx supabase functions deploy <function-name>`
+**Secrets**: Managed via `npm run setup-secrets`
 
-**Environment:**
-- All API keys configured in `.env.local`
-- Edge functions deployed: ai, notifications, delete-account, upload-image, analytics, transcribe
-- Supabase secrets configured: ANTHROPIC_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY
+### AI Providers
 
-### MCPs and Agents
+Priority order (configured in `.env.local`):
+1. **Gemini 2.5 Flash** (primary) - Fast, cost-effective
+2. **GPT-4o** (fallback) - High quality
+3. **Claude 3.5 Sonnet** (specialized) - Vision tasks, complex reasoning
 
-- See [docs/MCP_SETUP.md](docs/MCP_SETUP.md) for MCP configuration
-- See [docs/AGENTS_GUIDE.md](docs/AGENTS_GUIDE.md) for agent usage
-- Available MCPs: Supabase, Context7, Playwright (Figma and Linear require setup)
+See `src/api/chat-service.ts` for usage patterns.
+
+## Documentation
+
+- [docs/](docs/) - Complete technical documentation
+- [docs/DESIGN_SYSTEM_CALM_FEMTECH.md](docs/DESIGN_SYSTEM_CALM_FEMTECH.md) - Design system details
+- [docs/SAFE_AREA_MIGRATION.md](docs/SAFE_AREA_MIGRATION.md) - Safe area handling
+- [docs/MCP_SETUP.md](docs/MCP_SETUP.md) - MCP server configuration
+- [docs/OAUTH_VERIFICATION.md](docs/OAUTH_VERIFICATION.md) - OAuth testing guide
 
 ### Community Feature Architecture
 
@@ -291,17 +414,22 @@ const community = useCommunity(navigation);
 
 ### Design Quality Standards
 
-Run `/design-quality` to check:
-- **Cores**: Use `COLORS` from design-system.ts (not hardcoded hex)
-- **Tap targets**: Minimum 44pt (iOS HIG) - use `ACCESSIBILITY.minTapTarget`
-- **Spacing**: Use `SPACING` tokens (8pt grid system)
-- **Dark mode**: All screens should use `useTheme()` hook
+**CRITICAL**: Design system migration in progress
+- **Old**: `src/utils/colors.ts` + `src/theme/design-system.ts` (DEPRECATED)
+- **New**: `src/theme/tokens.ts` (Calm FemTech preset) ⭐
 
-**Semantic colors available**:
-- `COLORS.semantic.error/errorLight` - Medical warnings, errors
-- `COLORS.semantic.warning/warningLight` - Caution states
-- `COLORS.semantic.info/infoLight` - Informational
-- `COLORS.semantic.success/successLight` - Confirmations
+**When editing files**:
+1. Migrate color imports to `Tokens.*` from `src/theme/tokens.ts`
+2. Use `useThemeColors()` hook for light/dark mode
+3. Never hardcode colors (`#xxx`, `rgba()`, `'white'`, `'black'`)
 
-**Special gradients**:
-- `AFFIRMATION_GRADIENTS` - Immersive affirmation themes (Oceano, Ametista, etc.)
+**Semantic colors** (from `Tokens.semantic.*`):
+- `error/errorLight` - Medical warnings, validation errors
+- `warning/warningLight` - Caution states, important notices
+- `info/infoLight` - Informational messages, tips
+- `success/successLight` - Confirmations, achievements
+
+**Special features**:
+- Affirmation gradients: Immersive themes (Oceano, Ametista, Lavanda, etc.)
+- Feeling colors: Daily mood check-ins (Bem, Cansada, Enjoada, Amada)
+- 8pt grid system: Use `Tokens.spacing.*` tokens

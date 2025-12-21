@@ -30,6 +30,7 @@ import { useNotifications } from "./src/hooks/useNotifications";
 import { navigationRef } from "./src/navigation/navigationRef";
 import { usePremiumStore } from "./src/state/premium-store";
 import { logger } from "./src/utils/logger";
+import { supabase } from "./src/api/supabase";
 
 /*
 Environment variables are accessed via process.env.EXPO_PUBLIC_*
@@ -66,14 +67,6 @@ export default function App() {
   const syncWithRevenueCat = usePremiumStore((s) => s.syncWithRevenueCat);
 
   useEffect(() => {
-    // Initialize Sentry for production monitoring
-    const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
-    if (sentryDsn && sentryDsn.trim().length > 0) {
-      logger.initSentry(sentryDsn);
-    } else {
-      logger.debug("Sentry DSN não configurado. Monitoramento desabilitado.", "App");
-    }
-
     // Initialize RevenueCat on app startup (with Expo Go fallback)
     const initPremium = async () => {
       try {
@@ -94,6 +87,31 @@ export default function App() {
       }
     };
     initPremium();
+
+    // Web: Detectar sessão OAuth na URL após redirect
+    if (Platform.OS === "web" && supabase) {
+      const handleOAuthCallback = async () => {
+        try {
+          // Supabase detecta automaticamente a sessão na URL quando detectSessionInUrl: true
+          // Mas precisamos verificar se há hash na URL
+          if (typeof window !== "undefined" && window.location.hash) {
+            const hash = window.location.hash;
+            // Se há tokens na URL, o Supabase já processou via detectSessionInUrl
+            // Limpar hash da URL após processamento
+            if (hash.includes("access_token") || hash.includes("error")) {
+              // Aguardar um pouco para o Supabase processar
+              setTimeout(() => {
+                window.history.replaceState(null, "", window.location.pathname);
+              }, 1000);
+            }
+          }
+        } catch (error) {
+          logger.error("Erro ao processar OAuth callback", "App", error as Error);
+        }
+      };
+
+      handleOAuthCallback();
+    }
   }, [syncWithRevenueCat]);
 
   if (!fontsLoaded) {

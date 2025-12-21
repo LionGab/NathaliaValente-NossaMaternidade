@@ -4,16 +4,16 @@
  * Servico para converter texto em fala usando Supabase Edge Function.
  * API key mantida segura no servidor - NUNCA exposta no client.
  * Audio playback gerenciado pelo expo-av.
+ *
+ * ⚠️ NOTA: expo-av está deprecated e será removido no SDK 54.
+ * Migração para expo-audio planejada para versão futura.
  */
 
 import * as FileSystem from "expo-file-system/legacy";
+// expo-av deprecated, será migrado para expo-audio em versão futura
 import { Audio } from "expo-av";
+import { AppError, ErrorCode, wrapError } from "../utils/error-handler";
 import { logger } from "../utils/logger";
-import {
-  AppError,
-  ErrorCode,
-  wrapError,
-} from "../utils/error-handler";
 import { supabase } from "./supabase";
 
 // ============================================
@@ -22,9 +22,7 @@ import { supabase } from "./supabase";
 
 // Voice ID da NathIA (clone da Nathalia Valente)
 // Fallback para voz feminina padrao se nao configurado
-const NATHIA_VOICE_ID =
-  process.env.EXPO_PUBLIC_NATHIA_VOICE_ID ||
-  "EXAVITQu4vr4xnSDxMaL"; // Bella - voz feminina padrao
+const NATHIA_VOICE_ID = process.env.EXPO_PUBLIC_NATHIA_VOICE_ID || "EXAVITQu4vr4xnSDxMaL"; // Bella - voz feminina padrao
 
 // URL da Edge Function (Supabase Functions)
 const FUNCTIONS_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTIONS_URL;
@@ -32,17 +30,17 @@ const FUNCTIONS_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTIONS_URL;
 // Configuracoes de voz otimizadas para NathIA
 // Tom: Caloroso, maternal, brasileiro
 const NATHIA_VOICE_SETTINGS = {
-  stability: 0.5,           // Equilibrio entre consistencia e expressividade
-  similarity_boost: 0.75,   // Proximidade com voz original
-  style: 0.4,               // Expressividade moderada
-  use_speaker_boost: true,  // Clareza aprimorada
+  stability: 0.5, // Equilibrio entre consistencia e expressividade
+  similarity_boost: 0.75, // Proximidade com voz original
+  style: 0.4, // Expressividade moderada
+  use_speaker_boost: true, // Clareza aprimorada
 };
 
 // Modelos disponiveis
 const MODELS = {
-  MULTILINGUAL_V2: "eleven_multilingual_v2",  // Melhor para PT-BR
-  FLASH_V2: "eleven_flash_v2_5",              // Mais rapido, menor qualidade
-  TURBO_V2: "eleven_turbo_v2_5",              // Baixa latencia
+  MULTILINGUAL_V2: "eleven_multilingual_v2", // Melhor para PT-BR
+  FLASH_V2: "eleven_flash_v2_5", // Mais rapido, menor qualidade
+  TURBO_V2: "eleven_turbo_v2_5", // Baixa latencia
 } as const;
 
 // ============================================
@@ -79,13 +77,8 @@ export function isElevenLabsConfigured(): boolean {
  * @returns URI do arquivo de audio local
  * @throws AppError se configuração inválida ou geração falhar
  */
-export async function generateSpeech(
-  options: GenerateSpeechOptions
-): Promise<string> {
-  const {
-    text,
-    voiceId = NATHIA_VOICE_ID,
-  } = options;
+export async function generateSpeech(options: GenerateSpeechOptions): Promise<string> {
+  const { text, voiceId = NATHIA_VOICE_ID } = options;
 
   // Validacoes
   if (!isElevenLabsConfigured()) {
@@ -241,9 +234,9 @@ export async function playAudio(fileUri: string): Promise<Audio.Sound> {
   try {
     // Configurar sessao de audio
     await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,       // Tocar mesmo no silencioso
-      staysActiveInBackground: false,   // Nao continuar em background
-      shouldDuckAndroid: true,          // Reduzir volume de outros apps
+      playsInSilentModeIOS: true, // Tocar mesmo no silencioso
+      staysActiveInBackground: false, // Nao continuar em background
+      shouldDuckAndroid: true, // Reduzir volume de outros apps
     });
 
     // Criar e reproduzir som
@@ -333,8 +326,4 @@ export async function cleanupAudioCache(): Promise<number> {
 // EXPORTS
 // ============================================
 
-export {
-  NATHIA_VOICE_ID,
-  NATHIA_VOICE_SETTINGS,
-  MODELS,
-};
+export { MODELS, NATHIA_VOICE_ID, NATHIA_VOICE_SETTINGS };

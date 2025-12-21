@@ -47,6 +47,19 @@ expo.log
 
 # Backups
 *.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Temp files
+*.log
+*.tmp
+*.bak
+Thumbs.db
+Untitled*
+
+# Archive
+docs/archive/
 
 # Claude/Cursor local
 .cursor/

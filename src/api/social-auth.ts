@@ -64,23 +64,6 @@ function checkSupabase() {
 }
 
 /**
- * Mensagem de erro amigável para OAuth não configurado
- */
-function getOAuthNotConfiguredMessage(provider: SocialProvider): string {
-  const providerNames = {
-    google: "Google",
-    apple: "Apple",
-    facebook: "Facebook",
-  };
-
-  if (Platform.OS === "web") {
-    return `Login com ${providerNames[provider]} não está disponível no navegador. Por favor, use email/senha ou baixe o app.`;
-  }
-
-  return `Login com ${providerNames[provider]} não está configurado. Configure o provider no Supabase Dashboard ou use email/senha.`;
-}
-
-/**
  * Detecta se o erro é causado por provider OAuth não configurado
  */
 function isOAuthNotConfiguredError(error: unknown): boolean {
@@ -113,20 +96,50 @@ function isOAuthNotConfiguredError(error: unknown): boolean {
  */
 export async function signInWithGoogle(): Promise<SocialAuthResult> {
   try {
-    // Verificar se estamos na web - OAuth social não funciona bem no simulador web
-    if (Platform.OS === "web") {
-      return {
-        success: false,
-        error: getOAuthNotConfiguredMessage("google"),
-      };
-    }
-
     const client = checkSupabase();
 
     logger.info("Iniciando login com Google", "SocialAuth", {
       redirectUri: REDIRECT_URI,
+      platform: Platform.OS,
     });
 
+    // Web: usar redirect direto (não skipBrowserRedirect)
+    if (Platform.OS === "web") {
+      const { error } = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: typeof window !== "undefined" ? window.location.origin : REDIRECT_URI,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (error) {
+        logger.error("Erro no OAuth Google (web)", "SocialAuth", error);
+        if (isOAuthNotConfiguredError(error) || error.message?.includes("not enabled")) {
+          return {
+            success: false,
+            error:
+              "Google OAuth não está habilitado no Supabase. Configure em: Dashboard → Authentication → Providers → Google. Veja docs/SUPABASE_OAUTH_SETUP.md",
+          };
+        }
+        return {
+          success: false,
+          error: error.message || "Erro ao iniciar login com Google",
+        };
+      }
+
+      // No web, o redirect acontece automaticamente
+      // O callback será tratado pelo Supabase automaticamente via detectSessionInUrl
+      return {
+        success: true,
+        // O usuário será redirecionado, então não retornamos user aqui
+      };
+    }
+
+    // Native: usar WebBrowser
     let data: { provider: string; url: string | null } | null = null;
     let error: unknown = null;
 
@@ -155,11 +168,11 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
       logger.error("Erro no OAuth Google", "SocialAuth", error as Error);
 
       // Verificar se é erro de provider não configurado
-      if (isOAuthNotConfiguredError(error)) {
+      if (isOAuthNotConfiguredError(error) || String(error).includes("not enabled")) {
         return {
           success: false,
           error:
-            "Google OAuth não está configurado no Supabase. Configure no Dashboard: Authentication → Providers → Google",
+            "Google OAuth não está habilitado no Supabase. Configure em: Dashboard → Authentication → Providers → Google. Veja docs/SUPABASE_OAUTH_SETUP.md",
         };
       }
 
@@ -272,14 +285,6 @@ export async function signInWithGoogle(): Promise<SocialAuthResult> {
  */
 export async function signInWithApple(): Promise<SocialAuthResult> {
   try {
-    // Verificar se estamos na web - OAuth social não funciona bem no simulador web
-    if (Platform.OS === "web") {
-      return {
-        success: false,
-        error: getOAuthNotConfiguredMessage("apple"),
-      };
-    }
-
     const client = checkSupabase();
 
     // iOS: Usar autenticação nativa
@@ -391,8 +396,39 @@ async function signInWithAppleOAuth(
 ): Promise<SocialAuthResult> {
   logger.info("Iniciando Apple Sign In via OAuth", "SocialAuth", {
     redirectUri: REDIRECT_URI,
+    platform: Platform.OS,
   });
 
+  // Web: usar redirect direto
+  if (Platform.OS === "web") {
+    const { error } = await client.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: typeof window !== "undefined" ? window.location.origin : REDIRECT_URI,
+      },
+    });
+
+    if (error) {
+      logger.error("Erro no OAuth Apple (web)", "SocialAuth", error);
+      if (isOAuthNotConfiguredError(error) || error.message?.includes("not enabled")) {
+        return {
+          success: false,
+          error:
+            "Apple OAuth não está habilitado no Supabase. Configure em: Dashboard → Authentication → Providers → Apple. Veja docs/SUPABASE_OAUTH_SETUP.md",
+        };
+      }
+      return {
+        success: false,
+        error: error.message || "Erro ao iniciar login com Apple",
+      };
+    }
+
+    return {
+      success: true,
+    };
+  }
+
+  // Native: usar WebBrowser
   let data: { provider: string; url: string | null } | null = null;
   let error: unknown = null;
 
@@ -417,11 +453,11 @@ async function signInWithAppleOAuth(
     logger.error("Erro no OAuth Apple", "SocialAuth", error as Error);
 
     // Verificar se é erro de provider não configurado
-    if (isOAuthNotConfiguredError(error)) {
+    if (isOAuthNotConfiguredError(error) || String(error).includes("not enabled")) {
       return {
         success: false,
         error:
-          "Apple OAuth não está configurado no Supabase. Configure no Dashboard: Authentication → Providers → Apple",
+          "Apple OAuth não está habilitado no Supabase. Configure em: Dashboard → Authentication → Providers → Apple. Veja docs/SUPABASE_OAUTH_SETUP.md",
       };
     }
 
@@ -521,20 +557,44 @@ async function signInWithAppleOAuth(
  */
 export async function signInWithFacebook(): Promise<SocialAuthResult> {
   try {
-    // Verificar se estamos na web - OAuth social não funciona bem no simulador web
-    if (Platform.OS === "web") {
-      return {
-        success: false,
-        error: getOAuthNotConfiguredMessage("facebook"),
-      };
-    }
-
     const client = checkSupabase();
 
     logger.info("Iniciando login com Facebook", "SocialAuth", {
       redirectUri: REDIRECT_URI,
+      platform: Platform.OS,
     });
 
+    // Web: usar redirect direto
+    if (Platform.OS === "web") {
+      const { error } = await client.auth.signInWithOAuth({
+        provider: "facebook",
+        options: {
+          redirectTo: typeof window !== "undefined" ? window.location.origin : REDIRECT_URI,
+          scopes: "email,public_profile",
+        },
+      });
+
+      if (error) {
+        logger.error("Erro no OAuth Facebook (web)", "SocialAuth", error);
+        if (isOAuthNotConfiguredError(error) || error.message?.includes("not enabled")) {
+          return {
+            success: false,
+            error:
+              "Facebook OAuth não está habilitado no Supabase. Configure em: Dashboard → Authentication → Providers → Facebook. Veja docs/SUPABASE_OAUTH_SETUP.md",
+          };
+        }
+        return {
+          success: false,
+          error: error.message || "Erro ao iniciar login com Facebook",
+        };
+      }
+
+      return {
+        success: true,
+      };
+    }
+
+    // Native: usar WebBrowser
     let data: { provider: string; url: string | null } | null = null;
     let error: unknown = null;
 
@@ -560,11 +620,11 @@ export async function signInWithFacebook(): Promise<SocialAuthResult> {
       logger.error("Erro no OAuth Facebook", "SocialAuth", error as Error);
 
       // Verificar se é erro de provider não configurado
-      if (isOAuthNotConfiguredError(error)) {
+      if (isOAuthNotConfiguredError(error) || String(error).includes("not enabled")) {
         return {
           success: false,
           error:
-            "Facebook OAuth não está configurado no Supabase. Configure no Dashboard: Authentication → Providers → Facebook",
+            "Facebook OAuth não está habilitado no Supabase. Configure em: Dashboard → Authentication → Providers → Facebook. Veja docs/SUPABASE_OAUTH_SETUP.md",
         };
       }
 
