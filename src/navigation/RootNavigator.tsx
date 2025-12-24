@@ -10,18 +10,30 @@
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
+import { isDevBypassActive } from "../config/dev-bypass";
 import { hasAskedNotificationPermission } from "../services/notifications";
 import { useNathIAOnboardingStore } from "../state/nathia-onboarding-store";
 import { useAppStore } from "../state/store";
 import { COLORS } from "../theme/design-system";
 import { RootStackParamList } from "../types/navigation";
-import { isDevBypassActive } from "../config/dev-bypass";
 
 // Auth & Onboarding Screens
 import LoginScreen from "../screens/LoginScreen";
-import OnboardingScreen from "../screens/OnboardingScreen";
 import NathIAOnboardingScreen from "../screens/NathIAOnboardingScreen";
 import NotificationPermissionScreen from "../screens/NotificationPermissionScreen";
+import OnboardingScreen from "../screens/OnboardingScreen";
+
+// Nath Journey Onboarding (new)
+import OnboardingWelcome from "../screens/onboarding/OnboardingWelcome";
+import OnboardingStage from "../screens/onboarding/OnboardingStage";
+import OnboardingDate from "../screens/onboarding/OnboardingDate";
+import OnboardingConcerns from "../screens/onboarding/OnboardingConcerns";
+import OnboardingEmotionalState from "../screens/onboarding/OnboardingEmotionalState";
+import OnboardingCheckIn from "../screens/onboarding/OnboardingCheckIn";
+import OnboardingSeason from "../screens/onboarding/OnboardingSeason";
+import OnboardingSummary from "../screens/onboarding/OnboardingSummary";
+import OnboardingPaywall from "../screens/onboarding/OnboardingPaywall";
+import { useNathJourneyOnboardingStore } from "../state/nath-journey-onboarding-store";
 
 // Main Navigator
 import MainTabNavigator from "./MainTabNavigator";
@@ -55,6 +67,11 @@ export default function RootNavigator() {
   // NathIA onboarding state
   const isNathIAOnboardingComplete = useNathIAOnboardingStore((s) => s.isComplete);
 
+  // Nath Journey onboarding state (new)
+  const isNathJourneyOnboardingComplete = useNathJourneyOnboardingStore(
+    (s: { isComplete: boolean }) => s.isComplete
+  );
+
   // Notification permission state
   const [notificationSetupDone, setNotificationSetupDone] = useState<boolean | null>(null);
 
@@ -80,24 +97,40 @@ export default function RootNavigator() {
   }
 
   // Determine which screen to show based on auth state
-  // Flow: Login → NotificationPermission → Onboarding → NathIAOnboarding → MainApp
+  // Flow: Login → NotificationPermission → NathJourneyOnboarding → Onboarding → NathIAOnboarding → MainApp
   const shouldShowLogin = isDevBypassActive() ? false : !isAuthenticated;
 
   const shouldShowNotificationPermission = isDevBypassActive()
     ? false
-    : (isAuthenticated && !notificationSetupDone);
+    : isAuthenticated && !notificationSetupDone;
+
+  // NEW: Nath Journey Onboarding (prioritário sobre onboarding antigo)
+  const shouldShowNathJourneyOnboarding = isDevBypassActive()
+    ? false
+    : isAuthenticated && notificationSetupDone && !isNathJourneyOnboardingComplete;
 
   const shouldShowOnboarding = isDevBypassActive()
     ? false
-    : (isAuthenticated && notificationSetupDone && !isOnboardingComplete);
+    : isAuthenticated &&
+      notificationSetupDone &&
+      isNathJourneyOnboardingComplete &&
+      !isOnboardingComplete;
 
   const shouldShowNathIAOnboarding = isDevBypassActive()
     ? false
-    : (isAuthenticated && notificationSetupDone && isOnboardingComplete && !isNathIAOnboardingComplete);
+    : isAuthenticated &&
+      notificationSetupDone &&
+      isNathJourneyOnboardingComplete &&
+      isOnboardingComplete &&
+      !isNathIAOnboardingComplete;
 
   const shouldShowMainApp = isDevBypassActive()
     ? true
-    : (isAuthenticated && notificationSetupDone && isOnboardingComplete && isNathIAOnboardingComplete);
+    : isAuthenticated &&
+      notificationSetupDone &&
+      isNathJourneyOnboardingComplete &&
+      isOnboardingComplete &&
+      isNathIAOnboardingComplete;
 
   return (
     <Stack.Navigator
@@ -121,7 +154,58 @@ export default function RootNavigator() {
         />
       )}
 
-      {/* Stage 3: Main Onboarding (name, stage, interests) */}
+      {/* Stage 2.5: Nath Journey Onboarding (NEW - 8 telas) */}
+      {shouldShowNathJourneyOnboarding && (
+        <>
+          <Stack.Screen
+            name="OnboardingWelcome"
+            component={OnboardingWelcome}
+            options={{ animation: "fade" }}
+          />
+          <Stack.Screen
+            name="OnboardingStage"
+            component={OnboardingStage}
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="OnboardingDate"
+            component={OnboardingDate}
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="OnboardingConcerns"
+            component={OnboardingConcerns}
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="OnboardingEmotionalState"
+            component={OnboardingEmotionalState}
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="OnboardingCheckIn"
+            component={OnboardingCheckIn}
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="OnboardingSeason"
+            component={OnboardingSeason}
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="OnboardingSummary"
+            component={OnboardingSummary}
+            options={{ animation: "slide_from_right" }}
+          />
+          <Stack.Screen
+            name="OnboardingPaywall"
+            component={OnboardingPaywall}
+            options={{ animation: "slide_from_right" }}
+          />
+        </>
+      )}
+
+      {/* Stage 3: Main Onboarding (name, stage, interests) - LEGACY */}
       {shouldShowOnboarding && (
         <Stack.Screen
           name="Onboarding"

@@ -11,6 +11,53 @@ export type RootStackParamList = {
 
   // Main App
   Onboarding: undefined;
+  
+  // Nath Journey Onboarding (new)
+  OnboardingWelcome: undefined;
+  OnboardingStage: undefined;
+  OnboardingDate: { stage: string };
+  OnboardingConcerns: { stage: string; date: string };
+  OnboardingEmotionalState: { 
+    stage: string; 
+    date: string; 
+    concerns: string[] 
+  };
+  OnboardingCheckIn: {
+    stage: string;
+    date: string;
+    concerns: string[];
+    emotionalState: string;
+  };
+  OnboardingSeason: { 
+    stage: string;
+    date: string;
+    concerns: string[];
+    emotionalState: string;
+    dailyCheckIn: boolean;
+    checkInTime?: string;
+  };
+  OnboardingSummary: { 
+    stage: string;
+    date: string;
+    concerns: string[];
+    emotionalState: string;
+    dailyCheckIn: boolean;
+    checkInTime?: string;
+    seasonName: string;
+  };
+  OnboardingPaywall: {
+    onboardingData: {
+      stage: string;
+      date?: string;
+      concerns: string[];
+      emotionalState?: string;
+      dailyCheckIn?: boolean;
+      checkInTime?: string;
+      seasonName?: string;
+      needsExtraCare?: boolean;
+    };
+  };
+  
   MainTabs: NavigatorScreenParams<MainTabParamList>;
 
   // Community

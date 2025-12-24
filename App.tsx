@@ -31,6 +31,7 @@ import { useNotifications } from "./src/hooks/useNotifications";
 import { navigationRef } from "./src/navigation/navigationRef";
 import { usePremiumStore } from "./src/state/premium-store";
 import { logger } from "./src/utils/logger";
+import { isExpoGo } from "./src/utils/expo";
 import { supabase } from "./src/api/supabase";
 import Constants from "expo-constants";
 
@@ -94,7 +95,7 @@ function App() {
     const initPremium = async () => {
       try {
         // Expo Go não suporta IAP real. Evita inicialização para não gerar erro/ruído em runtime.
-        if (Constants.appOwnership === "expo") {
+        if (isExpoGo()) {
           logger.info(
             "Expo Go detectado: RevenueCat desabilitado (use Dev Client para IAP).",
             "App"

@@ -22,7 +22,8 @@ import { supabase } from "./supabase";
 
 // Voice ID da NathIA (clone da Nathalia Valente)
 // Fallback para voz feminina padrao se nao configurado
-const NATHIA_VOICE_ID = process.env.EXPO_PUBLIC_NATHIA_VOICE_ID || "EXAVITQu4vr4xnSDxMaL"; // Bella - voz feminina padrao
+const NATHIA_VOICE_ID =
+  process.env.EXPO_PUBLIC_ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL"; // Bella - voz feminina padrao
 
 // URL da Edge Function (Supabase Functions)
 const FUNCTIONS_URL = process.env.EXPO_PUBLIC_SUPABASE_FUNCTIONS_URL;

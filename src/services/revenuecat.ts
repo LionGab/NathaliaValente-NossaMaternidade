@@ -15,6 +15,7 @@ import Purchases, {
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { logger } from "../utils/logger";
+import { isExpoGo } from "../utils/expo";
 
 // RevenueCat API Keys (from environment)
 const REVENUECAT_IOS_KEY = Constants.expoConfig?.extra?.revenueCatIosKey || "";
@@ -66,7 +67,7 @@ export async function initializePurchases(userId?: string): Promise<void> {
   }
 
   // Expo Go não suporta IAP real (módulo nativo). Use Dev Client.
-  if (Constants.appOwnership === "expo") {
+  if (isExpoGo()) {
     logger.info(
       "Expo Go detectado: RevenueCat desabilitado (use Dev Client para IAP).",
       "RevenueCat"

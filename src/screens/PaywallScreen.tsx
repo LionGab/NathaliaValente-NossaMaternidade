@@ -8,7 +8,6 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import Constants from "expo-constants";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Linking, Pressable, ScrollView, Text, View } from "react-native";
@@ -31,6 +30,7 @@ import { RootStackParamList } from "../types/navigation";
 import { DEFAULT_PRICING, PREMIUM_FEATURES, type PricingConfig } from "../types/premium";
 import { cn } from "../utils/cn";
 import { logger } from "../utils/logger";
+import { isExpoGo } from "../utils/expo";
 
 const PRIMARY_COLOR = COLORS.primary[500];
 
@@ -212,7 +212,7 @@ const PlanButton = ({
 
 export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route }) => {
   // Detectar Expo Go
-  const isExpoGo = Constants.appOwnership === "expo";
+  const runningInExpoGo = isExpoGo();
 
   // Toast
   const { showInfo, showError } = useToast();
@@ -240,7 +240,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
    * Carrega precos do RevenueCat
    */
   const loadPrices = useCallback(async () => {
-    if (isExpoGo) {
+    if (runningInExpoGo) {
       setIsLoadingPrices(false);
       return;
     }
@@ -287,7 +287,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
     } finally {
       setIsLoadingPrices(false);
     }
-  }, [isExpoGo]);
+  }, [runningInExpoGo]);
 
   useEffect(() => {
     void loadPrices();
@@ -301,7 +301,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
    * Realiza compra
    */
   const handlePurchase = useCallback(async () => {
-    if (isExpoGo) {
+    if (runningInExpoGo) {
       showInfo("Compras disponíveis apenas em build nativo (Dev Client/EAS)");
       return;
     }
@@ -365,7 +365,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
     setError,
     navigation,
     source,
-    isExpoGo,
+    runningInExpoGo,
     showInfo,
     showError,
   ]);
@@ -374,7 +374,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
    * Restaura compras
    */
   const handleRestore = useCallback(async () => {
-    if (isExpoGo) {
+    if (runningInExpoGo) {
       showInfo("Restaurar compras disponível apenas em build nativo (Dev Client/EAS)");
       return;
     }
@@ -410,7 +410,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
     } finally {
       setIsRestoring(false);
     }
-  }, [syncWithRevenueCat, navigation, isExpoGo, showInfo, showError]);
+  }, [syncWithRevenueCat, navigation, runningInExpoGo, showInfo, showError]);
 
   /**
    * Abre termos de uso
@@ -448,7 +448,7 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
   ];
 
   // Placeholder para Expo Go
-  if (isExpoGo) {
+  if (runningInExpoGo) {
     return (
       <LinearGradient colors={GRADIENTS.paywallPink} style={{ flex: 1 }}>
         <SafeAreaView style={{ flex: 1 }} edges={["top"]}>

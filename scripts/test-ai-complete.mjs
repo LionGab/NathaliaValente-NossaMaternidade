@@ -26,14 +26,25 @@ const envPath = resolve(__dirname, '../.env.local');
 config({ path: envPath });
 
 // Config
-const SUPABASE_URL = "https://lqahkqfpynypbmhtffyi.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxYWhrcWZweW55cGJtaHRmZnlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1NzcyMTQsImV4cCI6MjA4MTE1MzIxNH0.NBDr1-eUGnOeQIYnWOwxTBZwCzA7E7M_V88iRndajYc";
-const FUNCTION_URL = `${SUPABASE_URL}/functions/v1/ai`;
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+const FUNCTION_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/ai` : null;
 
 const TEST_EMAIL = process.env.TEST_EMAIL;
 const TEST_PASSWORD = process.env.TEST_PASSWORD;
 
 // Validation
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error("❌ Erro: Defina EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY em .env.local");
+  console.error("   Veja: .env.example\n");
+  process.exit(1);
+}
+
+if (!FUNCTION_URL) {
+  console.error("❌ Erro: EXPO_PUBLIC_SUPABASE_URL inválida em .env.local\n");
+  process.exit(1);
+}
+
 if (!TEST_EMAIL || !TEST_PASSWORD) {
   console.error("❌ Erro: Defina TEST_EMAIL e TEST_PASSWORD em .env.local");
   console.error("   Veja: scripts/create-test-user.md\n");

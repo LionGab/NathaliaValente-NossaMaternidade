@@ -15,7 +15,7 @@
 
 export const DEV_CONFIG = {
   // Set to true to bypass login/onboarding
-  ENABLE_DEV_BYPASS: true,
+  ENABLE_DEV_BYPASS: false,
 
   // Mock user data when bypass is enabled
   MOCK_USER: {

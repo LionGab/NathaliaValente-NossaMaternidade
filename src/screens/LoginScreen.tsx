@@ -1,14 +1,13 @@
 /**
- * Nossa Maternidade - LoginScreen v2 (Polished)
- * Design premium iOS/Android com compliance Apple/Google
+ * Nossa Maternidade - LoginScreen v3 (Premium Design)
+ * Design moderno e atraente com gradientes e visual impactante
  *
- * Estados: DEFAULT | LOADING | ERROR | SUCCESS
- * Dark mode: Sim
- * Responsivo: 320px compact, 375px base, tablet 400px max
+ * @version 3.0.0
  */
 
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -23,9 +22,15 @@ import {
   TextInput,
   View,
 } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../hooks/useTheme";
+import { Tokens } from "../theme/tokens";
 import { RootStackScreenProps } from "../types/navigation";
 
 type Props = RootStackScreenProps<"Login">;
@@ -33,10 +38,86 @@ type Props = RootStackScreenProps<"Login">;
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const LOGO_IMAGE = require("../../assets/logo-01.png");
 
+// Design Tokens
+const COLORS = {
+  // Backgrounds
+  bgGradientStart: "#FDF8F9",
+  bgGradientEnd: "#F0F4FF",
+
+  // Primary brand
+  primary: Tokens.brand.primary[500],
+  accent: Tokens.brand.accent[500],
+
+  // Buttons
+  appleBg: "#000000",
+  appleText: "#FFFFFF",
+  googleBg: "#FFFFFF",
+  googleText: "#1F1F1F",
+  googleBorder: "#DADCE0",
+  ctaBg: Tokens.brand.accent[500],
+  ctaText: "#FFFFFF",
+
+  // Text
+  textPrimary: Tokens.neutral[900],
+  textSecondary: Tokens.neutral[600],
+  textMuted: Tokens.neutral[400],
+  textLink: Tokens.brand.primary[500],
+
+  // Input
+  inputBg: "#FFFFFF",
+  inputBorder: Tokens.neutral[200],
+  inputBorderFocus: Tokens.brand.primary[500],
+
+  // Divider
+  divider: Tokens.neutral[200],
+
+  // Error
+  error: Tokens.semantic.light.error,
+};
+
 // ===========================================
-// COMPONENTE: SocialAuthButton (POLISHED)
-// Apple/Google com specs de brand guidelines
-// Altura 52, radius 12, shadow sutil
+// COMPONENTE: AnimatedPressable
+// ===========================================
+interface AnimatedPressableProps {
+  onPress: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+  style?: object;
+}
+
+function AnimatedPressable({ onPress, disabled, children, style }: AnimatedPressableProps) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Pressable
+        onPress={() => {
+          if (!disabled) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onPress();
+          }
+        }}
+        onPressIn={() => {
+          scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+        }}
+        disabled={disabled}
+        style={style}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+// ===========================================
+// COMPONENTE: SocialAuthButton (Premium)
 // ===========================================
 interface SocialAuthButtonProps {
   provider: "apple" | "google";
@@ -46,200 +127,139 @@ interface SocialAuthButtonProps {
 }
 
 function SocialAuthButton({ provider, onPress, disabled = false, loading = false }: SocialAuthButtonProps) {
-  const { isDark } = useTheme();
-
   const isApple = provider === "apple";
-  const isGoogle = provider === "google";
-
-  const getStyles = () => {
-    if (isApple) {
-      return {
-        bg: "#000000",
-        bgPressed: "#000000",
-        text: "#FFFFFF",
-        iconColor: "#FFFFFF",
-        borderColor: "transparent",
-        pressedOpacity: 0.85,
-      };
-    }
-
-    // Google (spec exato)
-    if (isDark) {
-      return {
-        bg: "#131314",
-        bgPressed: "#1f1f1f",
-        text: "#E3E3E3",
-        iconColor: "#E3E3E3",
-        borderColor: "#8E918F",
-        pressedOpacity: 1,
-      };
-    }
-
-    return {
-      bg: "#FFFFFF",
-      bgPressed: "#F8F8F8",
-      text: "#1F1F1F",
-      iconColor: "#1F1F1F",
-      borderColor: "#747775",
-      pressedOpacity: 1,
-    };
-  };
-
-  const styles = getStyles();
 
   return (
-    <Pressable
-      onPress={() => {
-        if (!disabled && !loading) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          onPress();
-        }
-      }}
-      disabled={disabled || loading}
-      style={({ pressed }) => ({
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: pressed ? styles.bgPressed : styles.bg,
-        borderRadius: 12, // POLISH: 8 → 12
-        height: 52, // POLISH: 48 → 52
-        minHeight: 44,
-        borderWidth: isGoogle ? 1 : 0,
-        borderColor: styles.borderColor,
-        gap: 8,
-        opacity: disabled ? 0.5 : pressed ? styles.pressedOpacity : 1,
-        // POLISH: Shadow sutil
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 2,
-      })}
-      accessibilityRole="button"
-      accessibilityLabel={`Continuar com ${isApple ? "Apple" : "Google"}`}
-      accessibilityState={{ disabled: disabled || loading }}
-    >
-      {loading ? (
-        <ActivityIndicator size="small" color={styles.iconColor} />
-      ) : (
-        <>
-          {isApple && <Ionicons name="logo-apple" size={24} color={styles.iconColor} />}
-          {isGoogle && (
-            <Image
-              source={require("../../assets/google-logo.jpg")}
-              style={{ width: 20, height: 20 }}
-              resizeMode="contain"
-            />
-          )}
-          <Text
-            style={{
-              color: styles.text,
-              fontSize: 16,
-              fontWeight: "600",
-              fontFamily: Platform.OS === "ios" ? "SF Pro Text" : "Roboto",
-            }}
-          >
-            Continuar com {isApple ? "Apple" : "Google"}
-          </Text>
-        </>
-      )}
-    </Pressable>
+    <AnimatedPressable onPress={onPress} disabled={disabled || loading}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: isApple ? COLORS.appleBg : COLORS.googleBg,
+          borderRadius: 16,
+          height: 56,
+          borderWidth: isApple ? 0 : 1,
+          borderColor: COLORS.googleBorder,
+          gap: 12,
+          opacity: disabled ? 0.5 : 1,
+          // Shadow
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: isApple ? 0.15 : 0.08,
+          shadowRadius: 12,
+          elevation: isApple ? 6 : 3,
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={isApple ? COLORS.appleText : COLORS.googleText} />
+        ) : (
+          <>
+            {isApple ? (
+              <Ionicons name="logo-apple" size={22} color={COLORS.appleText} />
+            ) : (
+              <Image
+                source={require("../../assets/google-logo.jpg")}
+                style={{ width: 22, height: 22, borderRadius: 4 }}
+                resizeMode="contain"
+              />
+            )}
+            <Text
+              style={{
+                color: isApple ? COLORS.appleText : COLORS.googleText,
+                fontSize: 17,
+                fontWeight: "600",
+                fontFamily: "Manrope_600SemiBold",
+                letterSpacing: -0.2,
+              }}
+            >
+              Continuar com {isApple ? "Apple" : "Google"}
+            </Text>
+          </>
+        )}
+      </View>
+    </AnimatedPressable>
   );
 }
 
 // ===========================================
-// COMPONENTE: Divider (POLISHED)
-// Linha mais sutil + padding horizontal 8
+// COMPONENTE: Divider
 // ===========================================
 function Divider() {
-  const { text: textColors, neutral } = useTheme();
-
   return (
     <View
       style={{
         flexDirection: "row",
         alignItems: "center",
-        marginVertical: 24,
+        marginVertical: 28,
       }}
     >
-      <View style={{ flex: 1, height: 1, backgroundColor: neutral[200] }} />
+      <View style={{ flex: 1, height: 1, backgroundColor: COLORS.divider }} />
       <Text
         style={{
-          paddingHorizontal: 8, // POLISH: 16 → 8
-          color: textColors.muted, // POLISH: tertiary → muted
-          fontSize: 12,
-          fontWeight: "400",
+          paddingHorizontal: 16,
+          color: COLORS.textMuted,
+          fontSize: 13,
+          fontWeight: "500",
+          fontFamily: "Manrope_500Medium",
         }}
       >
-        Ou continue com email
+        ou continue com email
       </Text>
-      <View style={{ flex: 1, height: 1, backgroundColor: neutral[200] }} />
+      <View style={{ flex: 1, height: 1, backgroundColor: COLORS.divider }} />
     </View>
   );
 }
 
 // ===========================================
-// COMPONENTE: EmailInput (POLISHED)
-// Altura 52, label SEM uppercase, focus halo
+// COMPONENTE: EmailInput (Premium)
 // ===========================================
 interface EmailInputProps {
-  label: string;
   value: string;
   onChangeText: (text: string) => void;
   error?: string;
   disabled?: boolean;
 }
 
-function EmailInput({ label, value, onChangeText, error, disabled }: EmailInputProps) {
-  const { brand, text: textColors, neutral, semantic } = useTheme();
+function EmailInput({ value, onChangeText, error, disabled }: EmailInputProps) {
   const [isFocused, setIsFocused] = useState(false);
-
-  const getBorderColor = () => {
-    if (error) return semantic.error;
-    if (isFocused) return brand.primary[500];
-    return neutral[300];
-  };
 
   return (
     <View>
-      {/* Label SEM uppercase */}
       <Text
         style={{
-          fontSize: 13, // POLISH: 12/13
-          fontWeight: "500",
-          color: textColors.secondary, // POLISH: secondary (não muted)
-          marginBottom: 8,
+          fontSize: 14,
+          fontWeight: "600",
+          color: COLORS.textPrimary,
+          marginBottom: 10,
+          fontFamily: "Manrope_600SemiBold",
         }}
       >
-        {label}
+        Email
       </Text>
 
-      {/* Input Container */}
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: neutral[50],
-          borderWidth: 1.5,
-          borderColor: getBorderColor(),
-          borderRadius: 12,
+          backgroundColor: COLORS.inputBg,
+          borderWidth: 2,
+          borderColor: error ? COLORS.error : isFocused ? COLORS.inputBorderFocus : COLORS.inputBorder,
+          borderRadius: 14,
           paddingHorizontal: 16,
-          height: 52, // POLISH: altura consistente com botões
-          // POLISH: Focus halo
-          ...(isFocused && {
-            shadowColor: brand.primary[500],
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.12,
-            shadowRadius: 3,
-            elevation: 0,
-          }),
+          height: 56,
+          // Shadow when focused
+          shadowColor: isFocused ? COLORS.inputBorderFocus : "transparent",
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          elevation: isFocused ? 2 : 0,
         }}
       >
-        {/* Ícone envelope 18px */}
         <Ionicons
           name="mail-outline"
-          size={18} // POLISH: 18px
-          color={textColors.muted}
+          size={20}
+          color={isFocused ? COLORS.inputBorderFocus : COLORS.textMuted}
           style={{ marginRight: 12 }}
         />
 
@@ -247,7 +267,7 @@ function EmailInput({ label, value, onChangeText, error, disabled }: EmailInputP
           value={value}
           onChangeText={onChangeText}
           placeholder="seu@email.com"
-          placeholderTextColor={textColors.muted} // POLISH: muted
+          placeholderTextColor={COLORS.textMuted}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
@@ -258,33 +278,34 @@ function EmailInput({ label, value, onChangeText, error, disabled }: EmailInputP
           style={{
             flex: 1,
             fontSize: 16,
-            color: textColors.primary,
-            fontWeight: "400",
+            color: COLORS.textPrimary,
+            fontWeight: "500",
+            fontFamily: "Manrope_500Medium",
             paddingVertical: 0,
           }}
         />
       </View>
 
-      {/* Error */}
       {error && (
-        <Text
-          style={{
-            fontSize: 12,
-            color: semantic.error,
-            marginTop: 6,
-            marginLeft: 4,
-          }}
-        >
-          {error}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, marginLeft: 4 }}>
+          <Ionicons name="alert-circle" size={14} color={COLORS.error} style={{ marginRight: 6 }} />
+          <Text
+            style={{
+              fontSize: 13,
+              color: COLORS.error,
+              fontFamily: "Manrope_500Medium",
+            }}
+          >
+            {error}
+          </Text>
+        </View>
       )}
     </View>
   );
 }
 
 // ===========================================
-// COMPONENTE: CTAButton (POLISHED)
-// Rosa + texto escuro, height 52, radius 12
+// COMPONENTE: CTAButton (Premium com Gradiente)
 // ===========================================
 interface CTAButtonProps {
   onPress: () => void;
@@ -294,49 +315,43 @@ interface CTAButtonProps {
 }
 
 function CTAButton({ onPress, loading, disabled, children }: CTAButtonProps) {
-  const { brand, text: textColors } = useTheme();
-
   return (
-    <Pressable
-      onPress={() => {
-        if (!disabled && !loading) {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          onPress();
-        }
-      }}
-      disabled={disabled || loading}
-      style={({ pressed }) => ({
-        backgroundColor: brand.accent[500],
-        borderRadius: 12, // POLISH: radius 12
-        height: 52, // POLISH: altura 52
-        alignItems: "center",
-        justifyContent: "center",
-        opacity: disabled ? 0.6 : pressed ? 0.95 : 1,
-        // POLISH: Shadow sutil
-        shadowColor: brand.accent[500],
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 4,
-      })}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: disabled || loading }}
-    >
-      {loading ? (
-        <ActivityIndicator size="small" color={textColors.primary} />
-      ) : (
-        <Text
-          style={{
-            color: textColors.primary, // POLISH: texto escuro (melhor contraste em pastel)
-            fontSize: 16,
-            fontWeight: "700",
-            fontFamily: "Manrope_700Bold",
-          }}
-        >
-          {children}
-        </Text>
-      )}
-    </Pressable>
+    <AnimatedPressable onPress={onPress} disabled={disabled || loading}>
+      <LinearGradient
+        colors={[Tokens.brand.accent[500], "#E91E8C"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          borderRadius: 16,
+          height: 56,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: disabled ? 0.6 : 1,
+          // Shadow
+          shadowColor: Tokens.brand.accent[500],
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.35,
+          shadowRadius: 16,
+          elevation: 8,
+        }}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color={COLORS.ctaText} />
+        ) : (
+          <Text
+            style={{
+              color: COLORS.ctaText,
+              fontSize: 17,
+              fontWeight: "700",
+              fontFamily: "Manrope_700Bold",
+              letterSpacing: -0.2,
+            }}
+          >
+            {children}
+          </Text>
+        )}
+      </LinearGradient>
+    </AnimatedPressable>
   );
 }
 
@@ -346,7 +361,6 @@ function CTAButton({ onPress, loading, disabled, children }: CTAButtonProps) {
 export default function LoginScreen({ navigation }: Props) {
   void navigation;
   const insets = useSafeAreaInsets();
-  const { surface, text: textColors } = useTheme();
 
   // Estados
   const [email, setEmail] = useState("");
@@ -355,33 +369,23 @@ export default function LoginScreen({ navigation }: Props) {
   const [appleLoading, setAppleLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Validação simples de email
+  // Validação
   const validateEmail = (value: string): boolean => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(value);
   };
 
-  // Handlers (sem auth real - apenas UI states)
+  // Handlers
   const handleApplePress = () => {
     setAppleLoading(true);
     setError(null);
-    // Simulação: callback para auth real seria chamado aqui
-    // onPressApple?.();
-    setTimeout(() => {
-      setAppleLoading(false);
-      // Simular sucesso ou erro
-    }, 2000);
+    setTimeout(() => setAppleLoading(false), 2000);
   };
 
   const handleGooglePress = () => {
     setGoogleLoading(true);
     setError(null);
-    // Simulação: callback para auth real seria chamado aqui
-    // onPressGoogle?.();
-    setTimeout(() => {
-      setGoogleLoading(false);
-      // Simular sucesso ou erro
-    }, 2000);
+    setTimeout(() => setGoogleLoading(false), 2000);
   };
 
   const handleContinueEmail = () => {
@@ -393,97 +397,103 @@ export default function LoginScreen({ navigation }: Props) {
     }
 
     if (!validateEmail(email)) {
-      setError("Email inválido");
+      setError("Por favor, insira um email válido");
       return;
     }
 
     setIsLoading(true);
     setError(null);
-
-    // Simulação: callback para auth real seria chamado aqui
-    // onContinueEmail?.(email);
-    setTimeout(() => {
-      setIsLoading(false);
-      // Simular sucesso
-      // onLoginSuccess?.();
-    }, 2000);
+    setTimeout(() => setIsLoading(false), 2000);
   };
 
-  // Responsividade: padding reduzido para telas < 360px
-  const horizontalPadding = SCREEN_WIDTH < 360 ? 16 : 24;
-  // Logo: 60x60 base, 52x52 para compact (< 340px)
-  const logoSize = SCREEN_WIDTH < 340 ? 52 : 60;
+  // Responsividade
+  const horizontalPadding = SCREEN_WIDTH < 360 ? 20 : 28;
+  const logoSize = SCREEN_WIDTH < 340 ? 80 : 100;
 
   return (
     <Pressable onPress={Keyboard.dismiss} style={{ flex: 1 }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <LinearGradient
+        colors={[COLORS.bgGradientStart, COLORS.bgGradientEnd]}
         style={{ flex: 1 }}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: surface.base,
-          }}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
         >
           <ScrollView
             contentContainerStyle={{
-              flexGrow: 1, // POLISH: permite centralização
-              justifyContent: "center", // POLISH: centraliza verticalmente
-              paddingTop: Math.max(insets.top, 24),
-              paddingBottom: Math.max(insets.bottom, 24),
+              flexGrow: 1,
+              justifyContent: "center",
+              paddingTop: Math.max(insets.top + 20, 40),
+              paddingBottom: Math.max(insets.bottom + 20, 40),
               paddingHorizontal: horizontalPadding,
-              maxWidth: 400, // Tablet: centralizado
+              maxWidth: 420,
               alignSelf: "center",
               width: "100%",
             }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Logo */}
+            {/* Logo com glow effect */}
             <Animated.View
-              entering={FadeInDown.duration(500).delay(100)}
+              entering={FadeInUp.duration(600).delay(100)}
               style={{
                 alignItems: "center",
-                marginBottom: 16,
+                marginBottom: 24,
               }}
             >
-              <Image
-                source={LOGO_IMAGE}
+              <View
                 style={{
-                  width: logoSize,
-                  height: logoSize,
-                  borderRadius: logoSize / 2,
+                  shadowColor: Tokens.brand.accent[500],
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 24,
+                  elevation: 10,
                 }}
-                resizeMode="cover"
-                accessibilityLabel="Logo Nossa Maternidade"
-              />
+              >
+                <Image
+                  source={LOGO_IMAGE}
+                  style={{
+                    width: logoSize,
+                    height: logoSize,
+                    borderRadius: logoSize / 2,
+                    borderWidth: 3,
+                    borderColor: "#FFFFFF",
+                  }}
+                  resizeMode="cover"
+                  accessibilityLabel="Logo Nossa Maternidade"
+                />
+              </View>
             </Animated.View>
 
             {/* Header */}
             <Animated.View
-              entering={FadeInDown.duration(500).delay(200)}
-              style={{ alignItems: "center", marginBottom: 32 }} // POLISH: 40 → 32
+              entering={FadeInUp.duration(600).delay(200)}
+              style={{ alignItems: "center", marginBottom: 36 }}
             >
               <Text
                 style={{
-                  fontSize: 26, // POLISH: 24 → 26
-                  fontWeight: "700",
-                  color: textColors.primary,
+                  fontSize: 32,
+                  fontWeight: "800",
+                  color: COLORS.textPrimary,
                   marginBottom: 8,
-                  fontFamily: "Manrope_700Bold",
+                  fontFamily: "Manrope_800ExtraBold",
+                  letterSpacing: -1,
                 }}
               >
-                Bem-vindo
+                Bem-vinda
               </Text>
               <Text
                 style={{
-                  fontSize: 14,
-                  color: textColors.secondary, // POLISH: já correto
+                  fontSize: 16,
+                  color: COLORS.textSecondary,
                   textAlign: "center",
+                  fontFamily: "Manrope_500Medium",
                 }}
               >
-                Faça login ou crie sua conta
+                Sua jornada de maternidade começa aqui
               </Text>
             </Animated.View>
 
@@ -511,7 +521,6 @@ export default function LoginScreen({ navigation }: Props) {
             {/* Campo Email */}
             <Animated.View entering={FadeInDown.duration(500).delay(500)}>
               <EmailInput
-                label="Email"
                 value={email}
                 onChangeText={(value) => {
                   setEmail(value);
@@ -523,7 +532,7 @@ export default function LoginScreen({ navigation }: Props) {
             </Animated.View>
 
             {/* Botão Continue */}
-            <Animated.View entering={FadeInDown.duration(500).delay(600)} style={{ marginTop: 16 }}>
+            <Animated.View entering={FadeInDown.duration(500).delay(600)} style={{ marginTop: 20 }}>
               <CTAButton
                 onPress={handleContinueEmail}
                 loading={isLoading}
@@ -534,38 +543,37 @@ export default function LoginScreen({ navigation }: Props) {
             </Animated.View>
 
             {/* Footer */}
-            <Animated.View entering={FadeInDown.duration(500).delay(700)} style={{ marginTop: 24 }}>
+            <Animated.View entering={FadeInDown.duration(500).delay(700)} style={{ marginTop: 28 }}>
               <Text
                 style={{
-                  fontSize: 11,
-                  color: textColors.tertiary,
+                  fontSize: 12,
+                  color: COLORS.textMuted,
                   textAlign: "center",
-                  lineHeight: 16,
+                  lineHeight: 18,
+                  fontFamily: "Manrope_400Regular",
                 }}
               >
-                Ao fazer login, você concorda com nossos{" "}
+                Ao continuar, você concorda com nossos{"\n"}
                 <Text
-                  style={{ color: textColors.link, textDecorationLine: "underline" }}
-                  onPress={() => {
-                    // Navigate to terms
-                  }}
+                  style={{ color: COLORS.textLink, fontWeight: "600" }}
+                  onPress={() => {}}
                 >
                   Termos de Serviço
                 </Text>
-                {" | "}
+                {"  "}
+                <Text style={{ color: COLORS.textMuted }}>e</Text>
+                {"  "}
                 <Text
-                  style={{ color: textColors.link, textDecorationLine: "underline" }}
-                  onPress={() => {
-                    // Navigate to privacy
-                  }}
+                  style={{ color: COLORS.textLink, fontWeight: "600" }}
+                  onPress={() => {}}
                 >
                   Política de Privacidade
                 </Text>
               </Text>
             </Animated.View>
           </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </LinearGradient>
     </Pressable>
   );
 }

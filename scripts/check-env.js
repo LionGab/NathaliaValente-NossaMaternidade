@@ -47,15 +47,7 @@ const REQUIRED_VARS = [
 ];
 
 // Variáveis recomendadas (para features principais)
-const RECOMMENDED_VARS = [
-  {
-    name: 'EXPO_PUBLIC_OPENAI_API_KEY',
-    description: 'API Key da OpenAI (NathIA)',
-    example: 'sk-...',
-    link: 'https://platform.openai.com/api-keys',
-    feature: 'Assistente NathIA',
-  },
-];
+const RECOMMENDED_VARS = [];
 
 // Variáveis opcionais
 const OPTIONAL_VARS = [
@@ -70,8 +62,8 @@ const OPTIONAL_VARS = [
     feature: 'Upload de imagens',
   },
   {
-    name: 'EXPO_PUBLIC_ELEVENLABS_API_KEY',
-    description: 'API Key do ElevenLabs',
+    name: 'EXPO_PUBLIC_ELEVENLABS_VOICE_ID',
+    description: 'Voice ID do ElevenLabs',
     feature: 'Voz da NathIA',
   },
 ];

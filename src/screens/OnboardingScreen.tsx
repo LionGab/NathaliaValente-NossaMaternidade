@@ -50,9 +50,12 @@ const FONTS = {
 };
 
 // Steps do onboarding
-type OnboardingStep = "welcome" | "name" | "stage" | "date" | "interests" | "complete";
+type OnboardingStep = "welcome" | "theme" | "name" | "stage" | "date" | "interests" | "complete";
 
-const STEPS_ORDER: OnboardingStep[] = ["welcome", "name", "stage", "date", "interests", "complete"];
+const STEPS_ORDER: OnboardingStep[] = ["welcome", "theme", "name", "stage", "date", "interests", "complete"];
+
+// Tipo para seleção de tema
+type ThemeOption = "light" | "dark" | "system";
 
 // Opções de fase
 const STAGE_OPTIONS: { id: PregnancyStage; emoji: string; label: string; description: string }[] = [
@@ -229,9 +232,12 @@ export default function OnboardingScreen() {
   const updateOnboardingDraft = useAppStore((s) => s.updateOnboardingDraft);
   const updateUser = useAppStore((s) => s.updateUser);
   const onboardingDraft = useAppStore((s) => s.onboardingDraft);
+  const setTheme = useAppStore((s) => s.setTheme);
+  const currentTheme = useAppStore((s) => s.theme);
 
   // Local state
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("welcome");
+  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>(currentTheme || "light");
   const [name, setName] = useState(onboardingDraft.name || "");
   const [stage, setStage] = useState<PregnancyStage | null>(onboardingDraft.stage);
   const [dueDate, setDueDate] = useState<Date | null>(
@@ -330,11 +336,20 @@ export default function OnboardingScreen() {
     }
   };
 
+  // Handle theme selection (apply immediately like Instagram/WhatsApp)
+  const handleThemeSelect = (theme: ThemeOption) => {
+    setSelectedTheme(theme);
+    setTheme(theme); // Apply immediately for visual feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   // Can proceed?
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case "welcome":
         return true;
+      case "theme":
+        return selectedTheme !== null;
       case "name":
         return name.trim().length >= 2;
       case "stage":
@@ -348,7 +363,7 @@ export default function OnboardingScreen() {
       default:
         return false;
     }
-  }, [currentStep, name, stage, dueDate, babyBirthDate, interests]);
+  }, [currentStep, name, stage, dueDate, babyBirthDate, interests, selectedTheme]);
 
   // Render step content
   const renderStepContent = () => {
@@ -402,6 +417,140 @@ export default function OnboardingScreen() {
                 </Text>
               </View>
             </Animated.View>
+          </Animated.View>
+        );
+
+      case "theme":
+        return (
+          <Animated.View entering={SlideInRight.duration(400)} exiting={SlideOutLeft.duration(300)}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontFamily: FONTS.serif,
+                color: COLORS.primary[700],
+                textAlign: "center",
+                marginBottom: SPACING.sm,
+              }}
+            >
+              Escolha sua aparência
+            </Text>
+            <Text
+              style={{
+                fontSize: TYPOGRAPHY.sizes.md,
+                color: COLORS.neutral[500],
+                textAlign: "center",
+                marginBottom: SPACING.xl,
+                fontFamily: FONTS.regular,
+              }}
+            >
+              Você pode alterar depois nas configurações
+            </Text>
+
+            {/* Theme Preview Cards - Inspired by Instagram/WhatsApp */}
+            <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: SPACING.lg }}>
+              {/* Light Theme Preview */}
+              <Pressable
+                onPress={() => handleThemeSelect("light")}
+                style={{
+                  flex: 1,
+                  marginRight: SPACING.sm,
+                  borderRadius: RADIUS.lg,
+                  borderWidth: selectedTheme === "light" ? 3 : 1,
+                  borderColor: selectedTheme === "light" ? COLORS.primary[500] : COLORS.neutral[200],
+                  overflow: "hidden",
+                }}
+              >
+                {/* Mini Preview */}
+                <View style={{ backgroundColor: "#F8FAFC", padding: SPACING.md, height: 120 }}>
+                  <View style={{ backgroundColor: "#FFFFFF", borderRadius: 8, padding: 8, marginBottom: 6 }}>
+                    <View style={{ backgroundColor: "#E2E8F0", height: 8, width: "70%", borderRadius: 4 }} />
+                  </View>
+                  <View style={{ backgroundColor: "#FFFFFF", borderRadius: 8, padding: 8 }}>
+                    <View style={{ backgroundColor: "#E2E8F0", height: 8, width: "50%", borderRadius: 4 }} />
+                  </View>
+                </View>
+                <View style={{ backgroundColor: COLORS.neutral[0], padding: SPACING.md, alignItems: "center" }}>
+                  <Text style={{ fontSize: 24, marginBottom: 4 }}>☀️</Text>
+                  <Text style={{ fontFamily: FONTS.semiBold, color: COLORS.neutral[800] }}>Claro</Text>
+                </View>
+                {selectedTheme === "light" && (
+                  <View style={{ position: "absolute", top: 8, right: 8 }}>
+                    <Ionicons name="checkmark-circle" size={24} color={COLORS.primary[500]} />
+                  </View>
+                )}
+              </Pressable>
+
+              {/* Dark Theme Preview */}
+              <Pressable
+                onPress={() => handleThemeSelect("dark")}
+                style={{
+                  flex: 1,
+                  marginLeft: SPACING.sm,
+                  borderRadius: RADIUS.lg,
+                  borderWidth: selectedTheme === "dark" ? 3 : 1,
+                  borderColor: selectedTheme === "dark" ? COLORS.primary[500] : COLORS.neutral[200],
+                  overflow: "hidden",
+                }}
+              >
+                {/* Mini Preview */}
+                <View style={{ backgroundColor: "#1E293B", padding: SPACING.md, height: 120 }}>
+                  <View style={{ backgroundColor: "#334155", borderRadius: 8, padding: 8, marginBottom: 6 }}>
+                    <View style={{ backgroundColor: "#475569", height: 8, width: "70%", borderRadius: 4 }} />
+                  </View>
+                  <View style={{ backgroundColor: "#334155", borderRadius: 8, padding: 8 }}>
+                    <View style={{ backgroundColor: "#475569", height: 8, width: "50%", borderRadius: 4 }} />
+                  </View>
+                </View>
+                <View style={{ backgroundColor: "#0F172A", padding: SPACING.md, alignItems: "center" }}>
+                  <Text style={{ fontSize: 24, marginBottom: 4 }}>🌙</Text>
+                  <Text style={{ fontFamily: FONTS.semiBold, color: "#F1F5F9" }}>Escuro</Text>
+                </View>
+                {selectedTheme === "dark" && (
+                  <View style={{ position: "absolute", top: 8, right: 8 }}>
+                    <Ionicons name="checkmark-circle" size={24} color={COLORS.primary[500]} />
+                  </View>
+                )}
+              </Pressable>
+            </View>
+
+            {/* System Option */}
+            <Pressable
+              onPress={() => handleThemeSelect("system")}
+              style={{
+                backgroundColor: selectedTheme === "system" ? COLORS.primary[50] : COLORS.neutral[0],
+                borderRadius: RADIUS.lg,
+                padding: SPACING.lg,
+                borderWidth: selectedTheme === "system" ? 2 : 1,
+                borderColor: selectedTheme === "system" ? COLORS.primary[500] : COLORS.neutral[200],
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ fontSize: 28, marginRight: SPACING.md }}>📱</Text>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontSize: TYPOGRAPHY.sizes.lg,
+                    fontFamily: FONTS.semiBold,
+                    color: selectedTheme === "system" ? COLORS.primary[700] : COLORS.neutral[800],
+                  }}
+                >
+                  Automático
+                </Text>
+                <Text
+                  style={{
+                    fontSize: TYPOGRAPHY.sizes.sm,
+                    color: COLORS.neutral[500],
+                    marginTop: 2,
+                  }}
+                >
+                  Segue as configurações do seu dispositivo
+                </Text>
+              </View>
+              {selectedTheme === "system" && (
+                <Ionicons name="checkmark-circle" size={24} color={COLORS.primary[500]} />
+              )}
+            </Pressable>
           </Animated.View>
         );
 
