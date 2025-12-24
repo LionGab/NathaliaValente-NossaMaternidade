@@ -15,6 +15,7 @@ import { useNathIAOnboardingStore } from "../state/nathia-onboarding-store";
 import { useAppStore } from "../state/store";
 import { COLORS } from "../theme/design-system";
 import { RootStackParamList } from "../types/navigation";
+import { isDevBypassActive } from "../config/dev-bypass";
 
 // Auth & Onboarding Screens
 import LoginScreen from "../screens/LoginScreen";
@@ -80,14 +81,23 @@ export default function RootNavigator() {
 
   // Determine which screen to show based on auth state
   // Flow: Login → NotificationPermission → Onboarding → NathIAOnboarding → MainApp
-  const shouldShowLogin = !isAuthenticated;
-  const shouldShowNotificationPermission = isAuthenticated && !notificationSetupDone;
-  const shouldShowOnboarding =
-    isAuthenticated && notificationSetupDone && !isOnboardingComplete;
-  const shouldShowNathIAOnboarding =
-    isAuthenticated && notificationSetupDone && isOnboardingComplete && !isNathIAOnboardingComplete;
-  const shouldShowMainApp =
-    isAuthenticated && notificationSetupDone && isOnboardingComplete && isNathIAOnboardingComplete;
+  const shouldShowLogin = isDevBypassActive() ? false : !isAuthenticated;
+
+  const shouldShowNotificationPermission = isDevBypassActive()
+    ? false
+    : (isAuthenticated && !notificationSetupDone);
+
+  const shouldShowOnboarding = isDevBypassActive()
+    ? false
+    : (isAuthenticated && notificationSetupDone && !isOnboardingComplete);
+
+  const shouldShowNathIAOnboarding = isDevBypassActive()
+    ? false
+    : (isAuthenticated && notificationSetupDone && isOnboardingComplete && !isNathIAOnboardingComplete);
+
+  const shouldShowMainApp = isDevBypassActive()
+    ? true
+    : (isAuthenticated && notificationSetupDone && isOnboardingComplete && isNathIAOnboardingComplete);
 
   return (
     <Stack.Navigator
