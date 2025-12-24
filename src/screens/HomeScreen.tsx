@@ -35,6 +35,12 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+  withSequence,
+  withDelay,
+  withTiming,
+  Easing,
+  interpolate,
+  useAnimatedScrollHandler,
 } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from "react-native-svg";
@@ -199,9 +205,66 @@ const FeatureCard: React.FC<{
 
 FeatureCard.displayName = "FeatureCard";
 
+// Animated ScrollView for parallax
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+
 export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): React.JSX.Element {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
+
+  // Parallax scroll value
+  const scrollY = useSharedValue(0);
+  const ctaGlow = useSharedValue(0);
+
+  // Scroll handler for parallax effect
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  // Hero parallax animation
+  const heroParallaxStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollY.value,
+      [-100, 0, 200],
+      [-30, 0, 50],
+      "clamp"
+    );
+    const scale = interpolate(
+      scrollY.value,
+      [-100, 0, 100],
+      [1.1, 1, 0.95],
+      "clamp"
+    );
+    return {
+      transform: [{ translateY }, { scale }],
+    };
+  });
+
+  // CTA glow animation
+  React.useEffect(() => {
+    ctaGlow.value = withDelay(
+      500,
+      withSequence(
+        withTiming(1, { duration: 1500, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
+        withTiming(0.3, { duration: 1500, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+      )
+    );
+    // Loop the glow
+    const interval = setInterval(() => {
+      ctaGlow.value = withSequence(
+        withTiming(1, { duration: 1500, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
+        withTiming(0.3, { duration: 1500, easing: Easing.bezier(0.4, 0, 0.2, 1) })
+      );
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [ctaGlow]);
+
+  const ctaGlowStyle = useAnimatedStyle(() => ({
+    shadowOpacity: interpolate(ctaGlow.value, [0, 1], [0.3, 0.8]),
+    shadowRadius: interpolate(ctaGlow.value, [0, 1], [8, 20]),
+  }));
 
   // User data
   const userName = useAppStore((s) => s.user?.name);
@@ -308,9 +371,11 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bg }]}>
-      <ScrollView
+      <AnimatedScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + insets.bottom }]}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -375,14 +440,16 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
             accessibilityLabel="Conversar com NathIA"
             accessibilityRole="button"
           >
-            {/* Background image - foto real da Nath */}
-            <Image
-              source={NATHALIA_HERO_IMAGE}
-              style={styles.heroImage}
-              contentFit="cover"
-              contentPosition="top"
-              transition={300}
-            />
+            {/* Background image - foto real da Nath com parallax */}
+            <Animated.View style={[StyleSheet.absoluteFill, heroParallaxStyle]}>
+              <Image
+                source={NATHALIA_HERO_IMAGE}
+                style={styles.heroImage}
+                contentFit="cover"
+                contentPosition="top"
+                transition={300}
+              />
+            </Animated.View>
 
             {/* Gradient overlay */}
             <LinearGradient
@@ -399,18 +466,27 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
                 <Text style={styles.heroSubtitle}>{motivationalMessage}</Text>
               </View>
 
-              {/* CTA Button */}
-              <View style={[styles.heroCTA, shadows.accentGlow]}>
+              {/* CTA Button com glow animado */}
+              <Animated.View
+                style={[
+                  styles.heroCTA,
+                  {
+                    shadowColor: brand.accent[400],
+                    shadowOffset: { width: 0, height: 4 },
+                  },
+                  ctaGlowStyle,
+                ]}
+              >
                 <LinearGradient
-                  colors={[brand.accent[400], brand.accent[500]]}
+                  colors={[brand.accent[400], brand.accent[500], brand.accent[600]]}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                  end={{ x: 1, y: 1 }}
                   style={styles.heroCTAGradient}
                 >
                   <Ionicons name="sparkles" size={18} color={neutral[0]} />
                   <Text style={styles.heroCTAText}>Falar com a NathIA</Text>
                 </LinearGradient>
-              </View>
+              </Animated.View>
             </View>
           </Pressable>
         </Animated.View>
@@ -521,7 +597,7 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
             delay={250}
           />
         </View>
-      </ScrollView>
+      </AnimatedScrollView>
     </SafeAreaView>
   );
 }

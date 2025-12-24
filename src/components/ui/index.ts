@@ -24,6 +24,10 @@ export { RowCard } from "./RowCard";
 export { ScreenHeader } from "./ScreenHeader";
 export { Text } from "./Text";
 
+// Premium Effects (Design System 2025)
+export { GlowEffect, PulseGlow, ShimmerEffect } from "./GlowEffect";
+export { PremiumCard, GlassCard, AccentCard } from "./PremiumCard";
+
 // ===========================================
 // AVATAR SIZES (Padronized sizes)
 // ===========================================
