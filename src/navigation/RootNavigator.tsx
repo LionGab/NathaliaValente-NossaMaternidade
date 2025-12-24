@@ -19,7 +19,7 @@ import { RootStackParamList } from "../types/navigation";
 
 // Auth & Onboarding Screens
 import { AuthLandingScreen, EmailAuthScreen } from "../screens/auth";
-import LoginScreen from "../screens/LoginScreen"; // Legacy fallback
+import LoginScreen from "../screens/LoginScreenRedesign";
 import NathIAOnboardingScreen from "../screens/NathIAOnboardingScreen";
 import NotificationPermissionScreen from "../screens/NotificationPermissionScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
