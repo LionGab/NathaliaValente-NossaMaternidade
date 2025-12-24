@@ -1,9 +1,9 @@
-import React from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeIn, FadeOut, SlideInUp, SlideOutUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import React from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import Animated, { FadeIn, FadeOut, SlideInUp, SlideOutUp } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../hooks/useTheme";
 import { Tokens } from "../theme/tokens";
 
