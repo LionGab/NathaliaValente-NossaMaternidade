@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as Sentry from "@sentry/react-native";
 import {
   useFonts,
   Manrope_400Regular,
@@ -31,13 +32,35 @@ import { navigationRef } from "./src/navigation/navigationRef";
 import { usePremiumStore } from "./src/state/premium-store";
 import { logger } from "./src/utils/logger";
 import { supabase } from "./src/api/supabase";
+import Constants from "expo-constants";
+
+// Initialize Sentry for error tracking (production only)
+const sentryDsn = Constants.expoConfig?.extra?.sentryDsn || process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (sentryDsn && !__DEV__) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: process.env.APP_ENV || "production",
+    enableAutoSessionTracking: true,
+    sessionTrackingIntervalMillis: 30000,
+    tracesSampleRate: 0.2, // 20% of transactions for performance monitoring
+    debug: false,
+    beforeSend(event) {
+      // Filter out non-critical errors in production
+      if (event.exception?.values?.[0]?.type === "NetworkError") {
+        return null; // Don't send network errors
+      }
+      return event;
+    },
+  });
+  logger.info("Sentry initialized", "App");
+}
 
 /*
 Environment variables are accessed via process.env.EXPO_PUBLIC_*
 Example: process.env.EXPO_PUBLIC_SUPABASE_URL
 */
 
-export default function App() {
+function App() {
   const [fontsLoaded] = useFonts({
     Manrope_400Regular,
     Manrope_500Medium,
@@ -139,3 +162,6 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
+// Wrap with Sentry for error boundary (only in production)
+export default Sentry.wrap(App);

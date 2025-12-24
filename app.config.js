@@ -181,9 +181,51 @@ module.exports = {
       backendUrl: process.env.EXPO_PUBLIC_BACKEND_URL || "",
     },
     plugins: [
+      // Core Expo plugins
       "expo-secure-store",
       "expo-font",
       "expo-localization",
+      "expo-asset",
+
+      // Build properties (Android/iOS native config)
+      [
+        "expo-build-properties",
+        {
+          ios: {
+            deploymentTarget: "15.0",
+            useFrameworks: "static",
+          },
+          android: {
+            compileSdkVersion: 35,
+            targetSdkVersion: 35,
+            minSdkVersion: 24,
+            kotlinVersion: "2.0.20",
+          },
+        },
+      ],
+
+      // Camera
+      [
+        "expo-camera",
+        {
+          cameraPermission:
+            "O app precisa acessar a câmera para você tirar fotos e gravar vídeos.",
+          microphonePermission:
+            "O app precisa do microfone para gravar áudio em vídeos.",
+          recordAudioAndroid: true,
+        },
+      ],
+
+      // Audio/Video
+      [
+        "expo-av",
+        {
+          microphonePermission:
+            "O app precisa do microfone para você gravar mensagens de áudio.",
+        },
+      ],
+
+      // Splash screen
       [
         "expo-splash-screen",
         {
@@ -196,6 +238,8 @@ module.exports = {
           imageWidth: 200,
         },
       ],
+
+      // Image picker
       [
         "expo-image-picker",
         {
@@ -204,12 +248,101 @@ module.exports = {
           cameraPermission: "O app precisa da câmera para você tirar fotos.",
         },
       ],
+
+      // Push notifications
       [
         "expo-notifications",
         {
           icon: "./assets/notification-icon.png",
           color: COLORS.primary,
           sounds: [],
+        },
+      ],
+
+      // Apple authentication (iOS only)
+      "expo-apple-authentication",
+
+      // Local authentication (biometrics)
+      [
+        "expo-local-authentication",
+        {
+          faceIDPermission:
+            "Permitir $(PRODUCT_NAME) usar Face ID para autenticação rápida.",
+        },
+      ],
+
+      // Location
+      [
+        "expo-location",
+        {
+          locationAlwaysAndWhenInUsePermission:
+            "Permitir $(PRODUCT_NAME) acessar sua localização para conectar você com mães próximas.",
+          locationAlwaysPermission:
+            "Permitir $(PRODUCT_NAME) acessar sua localização em segundo plano.",
+          locationWhenInUsePermission:
+            "Permitir $(PRODUCT_NAME) acessar sua localização.",
+          isAndroidBackgroundLocationEnabled: false,
+          isIosBackgroundLocationEnabled: false,
+        },
+      ],
+
+      // Media library
+      [
+        "expo-media-library",
+        {
+          photosPermission:
+            "Permitir $(PRODUCT_NAME) acessar suas fotos para salvar e compartilhar.",
+          savePhotosPermission:
+            "Permitir $(PRODUCT_NAME) salvar fotos na sua galeria.",
+          isAccessMediaLocationEnabled: true,
+        },
+      ],
+
+      // Calendar (for pregnancy milestones)
+      [
+        "expo-calendar",
+        {
+          calendarPermission:
+            "Permitir $(PRODUCT_NAME) acessar seu calendário para adicionar lembretes de consultas e marcos da gravidez.",
+        },
+      ],
+
+      // Contacts (for inviting friends)
+      [
+        "expo-contacts",
+        {
+          contactsPermission:
+            "Permitir $(PRODUCT_NAME) acessar seus contatos para convidar amigas.",
+        },
+      ],
+
+      // RevenueCat (In-App Purchases)
+      [
+        "react-native-purchases",
+        {
+          ios: {
+            usesIAP: true,
+          },
+          android: {
+            usesIAP: true,
+          },
+        },
+      ],
+
+      // Sentry (Error tracking)
+      [
+        "@sentry/react-native",
+        {
+          organization: process.env.SENTRY_ORG || "nossa-maternidade",
+          project: process.env.SENTRY_PROJECT || "mobile",
+        },
+      ],
+
+      // Updates (OTA)
+      [
+        "expo-updates",
+        {
+          checkAutomatically: "ON_LOAD",
         },
       ],
     ],

@@ -456,8 +456,8 @@ export const PaywallScreen: React.FC<PaywallScreenProps> = ({ navigation, route 
       type: "yearly",
       price: pricing.yearly.priceString,
       period: "ano",
-      monthlyEquivalent: `R$ ${pricing.yearly.monthlyEquivalent}`,
-      savings: "-50%",
+      monthlyEquivalent: `R$ ${pricing.yearly.monthlyEquivalent?.toFixed(2).replace(".", ",")}`,
+      savings: `-${pricing.yearly.savingsPercent}%`,
       isPopular: true,
     },
   ];

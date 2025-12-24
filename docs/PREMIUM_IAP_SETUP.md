@@ -77,16 +77,16 @@ Feature desbloqueada ✅
 **Produto 1 - Mensal**:
 - Product ID: `nossa_maternidade_monthly`
 - Duration: 1 month
-- Price: R$ 19,99/mês
+- Price: R$ 19,90/mês
 - Display Name: Plano Mensal
 - Description: Acesso completo mensal
 
 **Produto 2 - Anual**:
 - Product ID: `nossa_maternidade_yearly`
 - Duration: 1 year
-- Price: R$ 119,90/ano
+- Price: R$ 99,00/ano
 - Display Name: Plano Anual
-- Description: Acesso completo anual (economize 50%)
+- Description: Acesso completo anual (economize 58%)
 
 5. Configure **Free Trial**: 7 dias (opcional)
 6. Salve e aguarde aprovação (até 24h)
@@ -101,16 +101,16 @@ Feature desbloqueada ✅
 **Produto 1 - Mensal**:
 - Product ID: `nossa_maternidade_monthly`
 - Billing period: Monthly
-- Price: R$ 19,99
+- Price: R$ 19,90
 - Title: Plano Mensal
 - Description: Acesso completo mensal
 
 **Produto 2 - Anual**:
 - Product ID: `nossa_maternidade_yearly`
 - Billing period: Yearly
-- Price: R$ 119,90
+- Price: R$ 99,00
 - Title: Plano Anual
-- Description: Economize 50% com o plano anual
+- Description: Economize 58% com o plano anual
 
 5. Configure **Free trial**: 7 dias (opcional)
 6. Salve e aguarde aprovação
@@ -164,7 +164,51 @@ Feature desbloqueada ✅
    - **iOS**: `appl_xxxxxxxxxxxx` (Apple App-Specific Shared Secret)
    - **Android**: `goog_xxxxxxxxxxxx` (Google Service Credentials)
 
-### 4. Atualizar Variáveis de Ambiente (5 min)
+### 4. Deploy da Edge Function Webhook (10 min)
+
+A Edge Function `webhook` processa eventos do RevenueCat para sincronizar o status de assinatura com o Supabase.
+
+#### 4.1 Deploy da função
+
+```bash
+# Deploy da Edge Function webhook
+npx supabase functions deploy webhook --project-ref SEU_PROJECT_REF
+
+# Ou deploy de todas as funções
+npx supabase functions deploy --project-ref SEU_PROJECT_REF
+```
+
+#### 4.2 Configurar secret do webhook
+
+```bash
+# Gerar um secret seguro para autenticação do webhook
+# Exemplo: usar openssl para gerar
+openssl rand -base64 32
+
+# Configurar no Supabase
+npx supabase secrets set REVENUECAT_WEBHOOK_SECRET=seu_secret_gerado --project-ref SEU_PROJECT_REF
+```
+
+#### 4.3 Configurar URL do webhook no RevenueCat
+
+1. No RevenueCat Dashboard, vá em **Project Settings** → **Integrations** → **Webhooks**
+2. Clique **+ Add Webhook**
+3. Configure:
+   - **Webhook URL**: `https://SEU_PROJECT_REF.supabase.co/functions/v1/webhook/revenuecat`
+   - **Authorization Header**: `Bearer SEU_SECRET_AQUI` (mesmo valor de REVENUECAT_WEBHOOK_SECRET)
+   - **Events**: Selecione todos os eventos de subscription
+4. Clique **Save**
+5. Clique **Test** para enviar evento de teste
+
+#### 4.4 Verificar funcionamento
+
+No Supabase Dashboard → Logs → Edge Functions → webhook, você deve ver:
+```
+✅ [WEBHOOK] RevenueCat event: TEST for test_user
+✅ Test event acknowledged
+```
+
+### 5. Atualizar Variáveis de Ambiente (5 min)
 
 Criar/editar arquivo `.env.local` (ou adicionar no EAS Secrets):
 
@@ -176,7 +220,7 @@ EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_xxxxxxxxxxxx
 
 **IMPORTANTE**: As API keys do RevenueCat são **públicas** e seguras para serem incluídas no código. Elas identificam apenas o app, não dão acesso a dados sensíveis.
 
-### 5. Testar em Sandbox (30 min)
+### 6. Testar em Sandbox (30 min)
 
 #### iOS Sandbox
 
@@ -426,20 +470,52 @@ Criar códigos promocionais:
 
 ## Checklist de Produção
 
-Antes do lançamento (06/01/2026):
+Antes do lançamento:
 
-- [ ] Produtos criados e aprovados nas lojas (iOS + Android)
-- [ ] RevenueCat configurado (entitlement "premium" + offering "default")
-- [ ] API keys adicionadas no EAS Secrets
+### RevenueCat Dashboard
+- [ ] Conta RevenueCat criada (https://app.revenuecat.com)
+- [ ] Projeto "Nossa Maternidade" criado
+- [ ] App Store Connect conectado (API Key .p8)
+- [ ] Google Play Console conectado (Service Account JSON)
+- [ ] Produtos adicionados (monthly + yearly)
+- [ ] Entitlement "premium" criado e vinculado aos produtos
+- [ ] Offering "default" criado com packages monthly + annual
+
+### App Store Connect (iOS)
+- [ ] Subscription Group criado
+- [ ] Produto `nossa_maternidade_monthly` (R$ 19,90/mês)
+- [ ] Produto `nossa_maternidade_yearly` (R$ 99,00/ano)
+- [ ] Free trial configurado (7-14 dias)
+- [ ] Produtos aprovados (aguardar até 24h)
+
+### Google Play Console (Android)
+- [ ] Subscription `nossa_maternidade_monthly` (R$ 19,90/mês)
+- [ ] Subscription `nossa_maternidade_yearly` (R$ 99,00/ano)
+- [ ] Free trial configurado (7-14 dias)
+- [ ] License testing emails configurados
+
+### Supabase (Backend)
+- [ ] Migration 020_premium_subscriptions.sql aplicada
+- [ ] Edge Function `webhook` deployada
+- [ ] Secret REVENUECAT_WEBHOOK_SECRET configurado
+- [ ] Webhook URL configurado no RevenueCat Dashboard
+
+### App (React Native)
+- [ ] API keys adicionadas (.env.local ou EAS Secrets)
 - [ ] Build de produção testado em device físico
-- [ ] Compra sandbox funciona
+- [ ] Compra sandbox iOS funciona
+- [ ] Compra sandbox Android funciona
 - [ ] Restaurar compras funciona
-- [ ] Paywall aprovado pela Apple (iOS review)
-- [ ] Privacy Policy e Terms of Service atualizados (mencionar assinaturas)
-- [ ] Suporte preparado para cancelamentos/refunds
+- [ ] Sync Supabase ↔ RevenueCat validado
+
+### Compliance
+- [ ] Privacy Policy atualizada (mencionar assinaturas)
+- [ ] Terms of Service atualizados
+- [ ] Botão "Restaurar Compras" visível (requisito Apple)
+- [ ] Preços exibidos corretamente
 
 ---
 
-**Última atualização**: 15 de dezembro de 2025
-**Versão**: 1.0.0
+**Última atualização**: 24 de dezembro de 2025
+**Versão**: 1.1.0
 **Autor**: Lion (Claude Code)

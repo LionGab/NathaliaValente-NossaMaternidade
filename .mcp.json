@@ -1,0 +1,54 @@
+{
+  "$schema": "https://claude.ai/mcp/schema.json",
+  "mcpServers": {
+    "expo-mcp": {
+      "transport": "http",
+      "url": "https://mcp.expo.dev/mcp",
+      "description": "Expo SDK documentation, EAS builds, project management"
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "description": "Up-to-date documentation for React Navigation, Supabase, Reanimated, etc."
+    },
+    "memory-keeper": {
+      "command": "npx",
+      "args": ["-y", "mcp-memory-keeper"],
+      "env": {
+        "MCP_MEMORY_DB_PATH": ".claude/context.db"
+      },
+      "description": "Persistent context between sessions"
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-sequential-thinking"],
+      "description": "Step-by-step reasoning for complex tasks"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-playwright"],
+      "description": "Visual testing for Expo Web"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-filesystem", "."],
+      "description": "Enhanced file operations"
+    },
+    "supabase": {
+      "command": "npx",
+      "args": ["supabase", "mcp", "serve"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+      },
+      "description": "Supabase project management, migrations, and logs"
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-github"],
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "description": "GitHub issues, PRs, and repository management"
+    }
+  }
+}

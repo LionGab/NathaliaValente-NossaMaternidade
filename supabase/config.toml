@@ -28,7 +28,7 @@ max_rows = 1000
 # Port to use for the local database URL (default: 54322)
 port = 54322
 # Database name (default: postgres)
-major_version = 15
+major_version = 17
 
 [studio]
 enabled = true

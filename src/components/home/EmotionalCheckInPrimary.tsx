@@ -47,13 +47,13 @@ const MOOD_OPTIONS: MoodOption[] = [
   {
     id: "cansada",
     label: "Cansada",
-    emoji: "😴",
+    emoji: "🥱",
     message: "Você está fazendo o seu melhor. Isso já é suficiente.",
   },
   {
     id: "indisposta",
-    label: "Indisposta",
-    emoji: "😔",
+    label: "Enjoada",
+    emoji: "🤢",
     message: "Vamos com calma. Um passo pequeno já conta.",
   },
   {
@@ -302,9 +302,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   moodLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "700",
     fontFamily: "Manrope_700Bold",
+    textAlign: "center",
   },
   feedbackContainer: {
     marginTop: SPACING.sm,

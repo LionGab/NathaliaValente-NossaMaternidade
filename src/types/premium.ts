@@ -149,22 +149,23 @@ export const PREMIUM_FEATURES: PremiumFeature[] = [
 ];
 
 // Precos padrao (fallback se API falhar)
+// NOTA: Preços reais são definidos nas stores (App Store Connect / Play Console)
 export const DEFAULT_PRICING: PricingConfig = {
   monthly: {
     productId: PRODUCT_IDS.MONTHLY,
-    price: 19.99,
-    priceString: "R$ 19,99",
+    price: 19.90,
+    priceString: "R$ 19,90",
     currency: "BRL",
     period: "mes",
   },
   yearly: {
     productId: PRODUCT_IDS.YEARLY,
-    price: 119.90,
-    priceString: "R$ 119,90",
+    price: 99.00,
+    priceString: "R$ 99,00",
     currency: "BRL",
     period: "ano",
-    savingsPercent: 50,
-    monthlyEquivalent: 9.99,
+    savingsPercent: 58,
+    monthlyEquivalent: 8.25,
   },
   trialDays: 7,
 };
