@@ -4,8 +4,10 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 // Root Stack Navigator
 export type RootStackParamList = {
-  // Auth Flow (new)
-  Login: undefined;
+  // Auth Flow
+  AuthLanding: undefined;
+  EmailAuth: undefined;
+  Login: undefined; // Legacy, kept for compatibility
   NotificationPermission: undefined;
   NathIAOnboarding: undefined;
 

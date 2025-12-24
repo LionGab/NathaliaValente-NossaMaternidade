@@ -18,7 +18,8 @@ import { COLORS } from "../theme/tokens";
 import { RootStackParamList } from "../types/navigation";
 
 // Auth & Onboarding Screens
-import LoginScreen from "../screens/LoginScreen";
+import { AuthLandingScreen, EmailAuthScreen } from "../screens/auth";
+import LoginScreen from "../screens/LoginScreen"; // Legacy fallback
 import NathIAOnboardingScreen from "../screens/NathIAOnboardingScreen";
 import NotificationPermissionScreen from "../screens/NotificationPermissionScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
@@ -140,9 +141,29 @@ export default function RootNavigator() {
         contentStyle: { backgroundColor: COLORS.background.primary },
       }}
     >
-      {/* Stage 1: Login */}
+      {/* Stage 1: Auth (Landing + Email) */}
       {shouldShowLogin && (
-        <Stack.Screen name="Login" component={LoginScreen} options={{ animation: "fade" }} />
+        <>
+          <Stack.Screen
+            name="AuthLanding"
+            component={AuthLandingScreen}
+            options={{ animation: "fade" }}
+          />
+          <Stack.Screen
+            name="EmailAuth"
+            component={EmailAuthScreen}
+            options={{
+              animation: "slide_from_right",
+              presentation: "card",
+            }}
+          />
+          {/* Legacy Login screen kept for deep link compatibility */}
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ animation: "fade" }}
+          />
+        </>
       )}
 
       {/* Stage 2: Notification Permission */}

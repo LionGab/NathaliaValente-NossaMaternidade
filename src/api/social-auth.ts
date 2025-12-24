@@ -42,14 +42,15 @@ function getRedirectUri(): string {
   }
 
   // Native: usar o scheme do app (deve corresponder ao app.config.js)
-  // CRÍTICO: O formato deve ser exatamente: scheme://path (sem barras extras)
+  // CRÍTICO: O formato deve ser exatamente: scheme://path
+  // IMPORTANTE: Usar mesmo path que auth.ts para consistência
   const uri = AuthSession.makeRedirectUri({
     scheme: "nossamaternidade",
-    path: "auth-callback",
+    path: "auth/callback",
   });
 
   // Log para debug
-  const finalUri = uri || "nossamaternidade://auth-callback";
+  const finalUri = uri || "nossamaternidade://auth/callback";
   logger.info("Redirect URI gerado", "SocialAuth", { uri: finalUri, platform: Platform.OS });
 
   return finalUri;
