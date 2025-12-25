@@ -77,3 +77,9 @@ docs/ANALISE_*.md
 supabase/.temp/
 
 .env.local
+
+# Playwright MCP (screenshots temporários)
+.playwright-mcp/
+
+# Downloads incompletos
+*.part
