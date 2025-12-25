@@ -2,20 +2,18 @@
  * Nossa Maternidade - RestSoundsScreen
  * Relaxation sounds categorized by nature, meditation, and sleep
  *
- * ⚠️ NOTA: expo-av está deprecated e será removido no SDK 54.
- * Migração para expo-audio planejada para versão futura.
+ * Uses expo-audio for audio playback (migrated from expo-av)
  */
 
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { AudioPlayer } from "expo-audio";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
-// expo-av deprecated, será migrado para expo-audio em versão futura
-import { Audio } from "expo-av";
 import { useTheme } from "../hooks/useTheme";
 import { Tokens } from "../theme/tokens";
 
@@ -182,7 +180,7 @@ export default function RestSoundsScreen() {
   const restColors = useMemo(() => getRestColors(isDark), [isDark]);
   const [selectedCategory, setSelectedCategory] = useState<SoundCategory>("nature");
   const [playingSound, setPlayingSound] = useState<string | null>(null);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
 
   const filteredSounds = SOUNDS.filter((s) => s.category === selectedCategory);
 
@@ -195,10 +193,14 @@ export default function RestSoundsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     // Stop currently playing sound
-    if (sound) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
-      setSound(null);
+    if (playerRef.current) {
+      try {
+        playerRef.current.pause();
+        playerRef.current.release();
+      } catch {
+        // Ignore cleanup errors
+      }
+      playerRef.current = null;
     }
 
     if (playingSound === soundId) {
@@ -209,14 +211,22 @@ export default function RestSoundsScreen() {
 
     // In production, load and play the actual audio file
     // For now, just simulate playing
+    // Example: const player = createAudioPlayer({ uri: soundItem.audioUri });
+    // player.play();
+    // playerRef.current = player;
     setPlayingSound(soundId);
   };
 
-  const handleClose = async () => {
+  const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (sound) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
+    if (playerRef.current) {
+      try {
+        playerRef.current.pause();
+        playerRef.current.release();
+      } catch {
+        // Ignore cleanup errors
+      }
+      playerRef.current = null;
     }
     navigation.goBack();
   };

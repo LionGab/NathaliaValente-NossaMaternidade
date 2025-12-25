@@ -1,16 +1,3 @@
-import { StatusBar } from "expo-status-bar";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer } from "@react-navigation/native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import * as Sentry from "@sentry/react-native";
-import {
-  useFonts,
-  Manrope_400Regular,
-  Manrope_500Medium,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-  Manrope_800ExtraBold,
-} from "@expo-google-fonts/manrope";
 import {
   DMSans_400Regular,
   DMSans_500Medium,
@@ -18,22 +5,35 @@ import {
   DMSans_700Bold,
 } from "@expo-google-fonts/dm-sans";
 import { DMSerifDisplay_400Regular } from "@expo-google-fonts/dm-serif-display";
-import RootNavigator from "./src/navigation/RootNavigator";
-import { View, ActivityIndicator, Platform } from "react-native";
+import {
+  Manrope_400Regular,
+  Manrope_500Medium,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+  Manrope_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/manrope";
+import { NavigationContainer } from "@react-navigation/native";
+import * as Sentry from "@sentry/react-native";
+import Constants from "expo-constants";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { ActivityIndicator, Platform, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { supabase } from "./src/api/supabase";
 import { ErrorBoundary } from "./src/components/ErrorBoundary";
 import { OfflineBanner } from "./src/components/OfflineBanner";
 import { ToastProvider } from "./src/context/ToastContext";
-import { useNetworkStatus } from "./src/hooks/useNetworkStatus";
-import { useTheme } from "./src/hooks/useTheme";
 import { useDeepLinking } from "./src/hooks/useDeepLinking";
+import { useNetworkStatus } from "./src/hooks/useNetworkStatus";
 import { useNotifications } from "./src/hooks/useNotifications";
+import { useTheme } from "./src/hooks/useTheme";
 import { navigationRef } from "./src/navigation/navigationRef";
+import RootNavigator from "./src/navigation/RootNavigator";
 import { usePremiumStore } from "./src/state/premium-store";
-import { logger } from "./src/utils/logger";
 import { isExpoGo } from "./src/utils/expo";
-import { supabase } from "./src/api/supabase";
-import Constants from "expo-constants";
+import { logger } from "./src/utils/logger";
 
 // Initialize Sentry for error tracking (production only)
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn || process.env.EXPO_PUBLIC_SENTRY_DSN;
@@ -121,29 +121,22 @@ function App() {
     };
     initPremium();
 
-    // Web: Detectar sessão OAuth na URL após redirect
-    if (Platform.OS === "web" && supabase) {
-      const handleOAuthCallback = async () => {
-        try {
-          // Supabase detecta automaticamente a sessão na URL quando detectSessionInUrl: true
-          // Mas precisamos verificar se há hash na URL
-          if (typeof window !== "undefined" && window.location.hash) {
-            const hash = window.location.hash;
-            // Se há tokens na URL, o Supabase já processou via detectSessionInUrl
-            // Limpar hash da URL após processamento
-            if (hash.includes("access_token") || hash.includes("error")) {
-              // Aguardar um pouco para o Supabase processar
-              setTimeout(() => {
-                window.history.replaceState(null, "", window.location.pathname);
-              }, 1000);
-            }
-          }
-        } catch (error) {
-          logger.error("Erro ao processar OAuth callback", "App", error as Error);
-        }
-      };
+    // Web: Detectar callback OAuth na URL inicial (apenas uma vez)
+    // O useDeepLinking já processa callbacks, então apenas logamos aqui
+    if (Platform.OS === "web" && supabase && typeof window !== "undefined") {
+      const url = window.location.href;
+      const hasCallback =
+        url.includes("/auth/callback") ||
+        url.includes("?code=") ||
+        url.includes("#access_token=") ||
+        url.includes("token_hash=");
 
-      handleOAuthCallback();
+      if (hasCallback) {
+        logger.info("Callback OAuth detectado na URL inicial (web)", "App", { url });
+        // O Supabase com detectSessionInUrl: true processa automaticamente
+        // O useDeepLinking também processa via handleInitialURL
+        // Não precisamos fazer nada aqui, apenas logar
+      }
     }
   }, [syncWithRevenueCat]);
 

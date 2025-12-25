@@ -1,11 +1,11 @@
 /**
  * VideoPlayer - Player de vídeo para onboarding
- * Usa Expo AV com controles simples (play/pause, mute)
+ * Usa expo-video com controles simples (play/pause, mute)
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Pressable, ActivityIndicator } from "react-native";
-import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
+import { VideoView, useVideoPlayer } from "expo-video";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../hooks/useTheme";
 import { Tokens } from "../../theme/tokens";
@@ -31,55 +31,91 @@ export function VideoPlayer({
   style,
 }: VideoPlayerProps) {
   const theme = useTheme();
-  const videoRef = useRef<Video>(null);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isMuted, setIsMuted] = useState(muted);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
+  // Convert source format for expo-video
+  const source = typeof videoSource === "number" ? videoSource : videoSource.uri;
+
+  // Create video player using expo-video hook
+  const player = useVideoPlayer(source, (player) => {
+    player.loop = loop;
+    player.muted = muted;
+    if (autoPlay) {
+      player.play();
+    }
+  });
+
+  // Listen to player status changes
   useEffect(() => {
-    if (autoPlay && videoRef.current) {
-      videoRef.current.playAsync().catch((error) => {
-        logger.error("Erro ao iniciar vídeo", "VideoPlayer", error instanceof Error ? error : new Error(String(error)));
+    if (!player) return;
+
+    const statusListener = player.addListener("statusChange", (event) => {
+      if (event.status === "loading") {
+        setIsLoading(true);
+      } else if (event.status === "readyToPlay") {
+        setIsLoading(false);
+      } else if (event.status === "error") {
         setHasError(true);
-      });
+        setIsLoading(false);
+        logger.error("Video error", "VideoPlayer", new Error(event.error?.message || "Unknown error"));
+      }
+    });
+
+    const endListener = player.addListener("playToEnd", () => {
+      if (!loop) {
+        setIsPlaying(false);
+        onVideoEnd?.();
+      }
+    });
+
+    const playingListener = player.addListener("playingChange", (event) => {
+      setIsPlaying(event.isPlaying);
+    });
+
+    return () => {
+      statusListener.remove();
+      endListener.remove();
+      playingListener.remove();
+    };
+  }, [player, loop, onVideoEnd]);
+
+  // Sync muted state with player
+  useEffect(() => {
+    if (player) {
+      player.muted = isMuted;
     }
-  }, [autoPlay]);
+  }, [player, isMuted]);
 
-  const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    if (!status.isLoaded) {
-      setIsLoading(true);
-      return;
-    }
-
-    setIsLoading(false);
-
-    if (status.didJustFinish && !loop) {
-      setIsPlaying(false);
-      onVideoEnd?.();
-    }
-  };
-
-  const togglePlayPause = async () => {
+  const togglePlayPause = () => {
     try {
       if (isPlaying) {
-        await videoRef.current?.pauseAsync();
+        player.pause();
         setIsPlaying(false);
       } else {
-        await videoRef.current?.playAsync();
+        player.play();
         setIsPlaying(true);
       }
     } catch (error) {
-      logger.error("Erro ao controlar vídeo", "VideoPlayer", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Error controlling video",
+        "VideoPlayer",
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   };
 
-  const toggleMute = async () => {
+  const toggleMute = () => {
     try {
-      await videoRef.current?.setIsMutedAsync(!isMuted);
       setIsMuted(!isMuted);
     } catch (error) {
-      logger.error("Erro ao mutar vídeo", "VideoPlayer", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Error muting video",
+        "VideoPlayer",
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   };
 
@@ -93,20 +129,7 @@ export function VideoPlayer({
 
   return (
     <View style={[styles.container, style]}>
-      <Video
-        ref={videoRef}
-        source={videoSource}
-        style={styles.video}
-        resizeMode={ResizeMode.COVER}
-        isLooping={loop}
-        isMuted={isMuted}
-        shouldPlay={isPlaying}
-        onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-        onError={(error: string) => {
-          logger.error("Erro no vídeo", "VideoPlayer", new Error(error));
-          setHasError(true);
-        }}
-      />
+      <VideoView player={player} style={styles.video} contentFit="cover" nativeControls={false} />
 
       {isLoading && (
         <View style={styles.loadingOverlay}>
@@ -122,11 +145,7 @@ export function VideoPlayer({
             accessibilityLabel={isPlaying ? "Pausar vídeo" : "Reproduzir vídeo"}
             accessibilityRole="button"
           >
-            <Ionicons
-              name={isPlaying ? "pause" : "play"}
-              size={32}
-              color={Tokens.neutral[0]}
-            />
+            <Ionicons name={isPlaying ? "pause" : "play"} size={32} color={Tokens.neutral[0]} />
           </Pressable>
 
           <Pressable
@@ -185,4 +204,3 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
 });
-

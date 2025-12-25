@@ -26,7 +26,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -34,34 +34,34 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Image as RNImage,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   View,
-  StatusBar,
-  Image as RNImage,
 } from "react-native";
 import Animated, {
+  Easing,
   FadeIn,
   FadeInDown,
   FadeInUp,
   SlideInUp,
+  cancelAnimation,
+  interpolate,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
-  withTiming,
+  withDelay,
   withRepeat,
   withSequence,
-  withDelay,
-  interpolate,
-  Easing,
-  cancelAnimation,
+  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { signInWithMagicLink } from "../api/auth";
-import { signInWithApple, signInWithGoogle } from "../api/social-auth";
-import { brand, premium, typography, semantic } from "../theme/tokens";
+import { signInWithApple, signInWithFacebook, signInWithGoogle } from "../api/social-auth";
+import { brand, premium, semantic, typography } from "../theme/tokens";
 import { RootStackScreenProps } from "../types/navigation";
 
 type Props = RootStackScreenProps<"Login">;
@@ -140,80 +140,75 @@ const generateParticles = (count: number): Particle[] => {
   }));
 };
 
-const FloatingParticle: React.FC<{ particle: Particle }> = React.memo(
-  ({ particle }) => {
-    const translateY = useSharedValue(0);
-    const opacity = useSharedValue(particle.opacity);
-    const scale = useSharedValue(1);
+const FloatingParticle: React.FC<{ particle: Particle }> = React.memo(({ particle }) => {
+  const translateY = useSharedValue(0);
+  const opacity = useSharedValue(particle.opacity);
+  const scale = useSharedValue(1);
 
-    useEffect(() => {
-      // Gentle floating animation
-      translateY.value = withDelay(
-        particle.delay,
-        withRepeat(
-          withSequence(
-            withTiming(-20, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
-            withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) })
-          ),
-          -1,
-          true
-        )
-      );
-
-      // Gentle pulsing
-      opacity.value = withDelay(
-        particle.delay,
-        withRepeat(
-          withSequence(
-            withTiming(particle.opacity * 1.5, { duration: 2000 }),
-            withTiming(particle.opacity * 0.5, { duration: 2000 })
-          ),
-          -1,
-          true
-        )
-      );
-
-      // Subtle scale
-      scale.value = withDelay(
-        particle.delay,
-        withRepeat(
-          withSequence(
-            withTiming(1.2, { duration: 2500 }),
-            withTiming(0.8, { duration: 2500 })
-          ),
-          -1,
-          true
-        )
-      );
-
-      return () => {
-        cancelAnimation(translateY);
-        cancelAnimation(opacity);
-        cancelAnimation(scale);
-      };
-    }, [translateY, opacity, scale, particle]);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-      transform: [{ translateY: translateY.value }, { scale: scale.value }],
-      opacity: opacity.value,
-    }));
-
-    return (
-      <Animated.View
-        style={[
-          styles.particle,
-          {
-            left: particle.x,
-            top: particle.y,
-            width: particle.size,
-            height: particle.size,
-          },
-          animatedStyle,
-        ]}
-      />
+  useEffect(() => {
+    // Gentle floating animation
+    translateY.value = withDelay(
+      particle.delay,
+      withRepeat(
+        withSequence(
+          withTiming(-20, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      )
     );
-  }
-);
+
+    // Gentle pulsing
+    opacity.value = withDelay(
+      particle.delay,
+      withRepeat(
+        withSequence(
+          withTiming(particle.opacity * 1.5, { duration: 2000 }),
+          withTiming(particle.opacity * 0.5, { duration: 2000 })
+        ),
+        -1,
+        true
+      )
+    );
+
+    // Subtle scale
+    scale.value = withDelay(
+      particle.delay,
+      withRepeat(
+        withSequence(withTiming(1.2, { duration: 2500 }), withTiming(0.8, { duration: 2500 })),
+        -1,
+        true
+      )
+    );
+
+    return () => {
+      cancelAnimation(translateY);
+      cancelAnimation(opacity);
+      cancelAnimation(scale);
+    };
+  }, [translateY, opacity, scale, particle]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }, { scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.particle,
+        {
+          left: particle.x,
+          top: particle.y,
+          width: particle.size,
+          height: particle.size,
+        },
+        animatedStyle,
+      ]}
+    />
+  );
+});
 
 FloatingParticle.displayName = "FloatingParticle";
 
@@ -282,31 +277,38 @@ const PressableScale: React.FC<{
 // ============================================
 
 const SocialButton: React.FC<{
-  type: "apple" | "google";
+  type: "apple" | "google" | "facebook";
   onPress: () => void;
   loading: boolean;
   disabled: boolean;
 }> = React.memo(({ type, onPress, loading, disabled }) => {
   const isApple = type === "apple";
+  const isFacebook = type === "facebook";
 
   return (
     <PressableScale onPress={onPress} disabled={disabled || loading}>
       <View
         style={[
           styles.socialButton,
-          isApple ? styles.socialButtonApple : styles.socialButtonGoogle,
+          isApple
+            ? styles.socialButtonApple
+            : isFacebook
+              ? styles.socialButtonFacebook
+              : styles.socialButtonGoogle,
           disabled && styles.socialButtonDisabled,
         ]}
       >
         {loading ? (
           <ActivityIndicator
-            color={isApple ? COLORS.textPrimary : COLORS.textPrimary}
+            color={isApple || isFacebook ? COLORS.textPrimary : COLORS.textPrimary}
             size="small"
           />
         ) : (
           <>
             {isApple ? (
               <Ionicons name="logo-apple" size={20} color={COLORS.textPrimary} />
+            ) : isFacebook ? (
+              <Ionicons name="logo-facebook" size={20} color={COLORS.textPrimary} />
             ) : (
               <RNImage
                 source={require("../../assets/google-logo.jpg")}
@@ -315,7 +317,11 @@ const SocialButton: React.FC<{
               />
             )}
             <Text style={styles.socialButtonText}>
-              {isApple ? "Continuar com Apple" : "Continuar com Google"}
+              {isApple
+                ? "Continuar com Apple"
+                : isFacebook
+                  ? "Continuar com Facebook"
+                  : "Continuar com Google"}
             </Text>
           </>
         )}
@@ -344,16 +350,15 @@ const EmailInput: React.FC<{
   }, [focused, borderColor]);
 
   const animatedBorderStyle = useAnimatedStyle(() => ({
-    borderColor: interpolate(
-      borderColor.value,
-      [0, 1],
-      [0, 1]
-    ) === 1 ? COLORS.inputFocus : COLORS.inputBorder,
+    borderColor:
+      interpolate(borderColor.value, [0, 1], [0, 1]) === 1 ? COLORS.inputFocus : COLORS.inputBorder,
   }));
 
   return (
     <View>
-      <Animated.View style={[styles.inputContainer, animatedBorderStyle, error && styles.inputError]}>
+      <Animated.View
+        style={[styles.inputContainer, animatedBorderStyle, error && styles.inputError]}
+      >
         <Ionicons
           name="mail-outline"
           size={18}
@@ -376,10 +381,7 @@ const EmailInput: React.FC<{
         />
       </Animated.View>
       {error && (
-        <Animated.View
-          entering={FadeInDown.duration(200)}
-          style={styles.errorContainer}
-        >
+        <Animated.View entering={FadeInDown.duration(200)} style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={14} color={COLORS.error} />
           <Text style={styles.errorText}>{error}</Text>
         </Animated.View>
@@ -437,9 +439,7 @@ const CTAButton: React.FC<{
           {loading ? (
             <ActivityIndicator color={COLORS.textPrimary} size="small" />
           ) : (
-            <Text style={[styles.ctaText, disabled && styles.ctaTextDisabled]}>
-              {label}
-            </Text>
+            <Text style={[styles.ctaText, disabled && styles.ctaTextDisabled]}>{label}</Text>
           )}
         </LinearGradient>
       </Animated.View>
@@ -464,11 +464,12 @@ export default function LoginScreenRedesign({ navigation }: Props): React.JSX.El
   const [success, setSuccess] = useState<string | null>(null);
   const [appleLoading, setAppleLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
 
   // Generate particles once
   const [particles] = useState(() => generateParticles(20));
 
-  const anyLoading = loading || appleLoading || googleLoading;
+  const anyLoading = loading || appleLoading || googleLoading || facebookLoading;
   const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
   // Handlers
@@ -495,6 +496,19 @@ export default function LoginScreenRedesign({ navigation }: Props): React.JSX.El
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setGoogleLoading(false);
+    }
+  };
+
+  const handleFacebook = async () => {
+    try {
+      setFacebookLoading(true);
+      setError(null);
+      const res = await signInWithFacebook();
+      if (!res.success) setError(res.error || "Erro ao entrar com Facebook");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setFacebookLoading(false);
     }
   };
 
@@ -601,10 +615,7 @@ export default function LoginScreenRedesign({ navigation }: Props): React.JSX.El
             </View>
 
             {/* Stats */}
-            <Animated.View
-              entering={FadeInUp.delay(750).duration(500)}
-              style={styles.statsRow}
-            >
+            <Animated.View entering={FadeInUp.delay(750).duration(500)} style={styles.statsRow}>
               <View style={styles.stat}>
                 <Text style={styles.statValue}>40M+</Text>
                 <Text style={styles.statLabel}>seguidoras</Text>
@@ -630,18 +641,34 @@ export default function LoginScreenRedesign({ navigation }: Props): React.JSX.El
             <GlassCard>
               {/* Social buttons */}
               <View style={styles.socialSection}>
-                <SocialButton
-                  type="apple"
-                  onPress={handleApple}
-                  loading={appleLoading}
-                  disabled={anyLoading && !appleLoading}
-                />
+                {Platform.OS === "ios" && (
+                  <SocialButton
+                    type="apple"
+                    onPress={handleApple}
+                    loading={appleLoading}
+                    disabled={anyLoading && !appleLoading}
+                  />
+                )}
                 <SocialButton
                   type="google"
                   onPress={handleGoogle}
                   loading={googleLoading}
                   disabled={anyLoading && !googleLoading}
                 />
+                <SocialButton
+                  type="facebook"
+                  onPress={handleFacebook}
+                  loading={facebookLoading}
+                  disabled={anyLoading && !facebookLoading}
+                />
+                {Platform.OS !== "ios" && (
+                  <SocialButton
+                    type="apple"
+                    onPress={handleApple}
+                    loading={appleLoading}
+                    disabled={anyLoading && !appleLoading}
+                  />
+                )}
               </View>
 
               {/* Divider */}
@@ -665,10 +692,7 @@ export default function LoginScreenRedesign({ navigation }: Props): React.JSX.El
 
               {/* Success message */}
               {success && (
-                <Animated.View
-                  entering={FadeInDown.duration(300)}
-                  style={styles.successContainer}
-                >
+                <Animated.View entering={FadeInDown.duration(300)} style={styles.successContainer}>
                   <Ionicons name="checkmark-circle" size={18} color={COLORS.success} />
                   <Text style={styles.successText}>{success}</Text>
                 </Animated.View>
@@ -686,9 +710,8 @@ export default function LoginScreenRedesign({ navigation }: Props): React.JSX.El
 
               {/* Legal */}
               <Text style={styles.legal}>
-                Ao continuar, você concorda com nossos{" "}
-                <Text style={styles.legalLink}>Termos</Text> e{" "}
-                <Text style={styles.legalLink}>Privacidade</Text>
+                Ao continuar, você concorda com nossos <Text style={styles.legalLink}>Termos</Text>{" "}
+                e <Text style={styles.legalLink}>Privacidade</Text>
               </Text>
             </GlassCard>
           </Animated.View>
@@ -855,6 +878,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.ctaSecondary,
     borderWidth: 1,
     borderColor: COLORS.glassBorder,
+  },
+  socialButtonFacebook: {
+    backgroundColor: "#1877F2", // Facebook brand color
   },
   socialButtonDisabled: {
     opacity: 0.5,

@@ -187,13 +187,25 @@ export const useAppStore = create<AppState>()(
 
 // Initialize auth state listener (only if Supabase is configured)
 try {
-  onAuthStateChange((authUser) => {
+  onAuthStateChange(async (authUser) => {
     const store = useAppStore.getState();
     if (authUser) {
       store.setAuthUserId(authUser.id);
       store.setAuthenticated(true);
       // Load full profile from database
       store.loadUserProfile(authUser.id);
+      
+      // CRÍTICO: Sincronizar RevenueCat após login (inclui login social)
+      try {
+        const revenuecat = await import("../services/revenuecat");
+        await revenuecat.loginUser(authUser.id);
+        logger.info("RevenueCat sincronizado após login", "Store", { userId: authUser.id });
+      } catch (error) {
+        // Não bloquear login se RevenueCat falhar (pode ser Expo Go)
+        logger.warn("Erro ao sincronizar RevenueCat após login", "Store", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     } else {
       store.clearUser();
     }

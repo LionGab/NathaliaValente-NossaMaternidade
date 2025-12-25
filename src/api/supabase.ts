@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import type { Database } from "@/types/database.types";
 
 // Re-export Database type for backward compatibility
@@ -40,9 +41,9 @@ if (supabaseUrl && supabaseAnonKey) {
       storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
-      // CRÍTICO: detectSessionInUrl deve ser false em native (Expo)
-      // O fluxo OAuth manual via createSessionFromRedirect() cuida da sessão
-      detectSessionInUrl: false, // Padrão recomendado para React Native/Expo
+      // CRÍTICO: No web, habilitar detectSessionInUrl para processar callbacks OAuth automaticamente
+      // No native, manter false e usar fluxo manual via createSessionFromRedirect()
+      detectSessionInUrl: Platform.OS === "web",
     },
   });
 }

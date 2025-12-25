@@ -138,6 +138,14 @@ module.exports = {
     },
     web: {
       favicon: "./assets/favicon.png",
+      // Mobile-first viewport configuration
+      meta: {
+        viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+        "mobile-web-app-capable": "yes",
+        "apple-mobile-web-app-capable": "yes",
+        "apple-mobile-web-app-status-bar-style": "default",
+        "theme-color": COLORS.primary,
+      },
     },
     notification: {
       icon: "./assets/notification-icon.png",

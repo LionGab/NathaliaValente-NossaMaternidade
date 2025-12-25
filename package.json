@@ -106,7 +106,6 @@
     "expo-asset": "~12.0.12",
     "expo-audio": "~1.1.1",
     "expo-auth-session": "~7.0.10",
-    "expo-av": "~16.0.8",
     "expo-background-fetch": "~14.0.9",
     "expo-battery": "~10.0.8",
     "expo-blur": "~15.0.8",

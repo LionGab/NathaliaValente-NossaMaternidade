@@ -9,21 +9,22 @@
  */
 
 import { Ionicons } from "@expo/vector-icons";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import * as Haptics from "expo-haptics";
 import { Image as ExpoImage } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   Image,
+  Linking,
   Platform,
   Pressable,
+  StatusBar,
   StyleSheet,
   Text,
   View,
-  StatusBar,
-  Linking,
 } from "react-native";
 import Animated, {
   FadeIn,
@@ -34,10 +35,9 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { signInWithApple, signInWithGoogle } from "../../api/social-auth";
+import { signInWithApple, signInWithFacebook, signInWithGoogle } from "../../api/social-auth";
 import { Tokens, brand, neutral, shadows, typography } from "../../theme/tokens";
 import { logger } from "../../utils/logger";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 // Navigation types
 type AuthStackParamList = {
@@ -71,7 +71,7 @@ const DS = {
 
   // Brand (from tokens) - Pink Clean + Blue Clean
   primary: brand.primary[500], // #1AB8FF - Blue Clean
-  accent: brand.accent[500],   // #FF5C94 - Pink Clean
+  accent: brand.accent[500], // #FF5C94 - Pink Clean
 
   // Text (from tokens)
   text: {
@@ -93,8 +93,8 @@ const DS = {
 
   // Gradients for hero overlay
   gradient: {
-    blueClean: "rgba(26, 184, 255, 0.15)",   // Blue Clean overlay
-    pinkClean: "rgba(255, 92, 148, 0.08)",   // Pink Clean subtle
+    blueClean: "rgba(26, 184, 255, 0.15)", // Blue Clean overlay
+    pinkClean: "rgba(255, 92, 148, 0.08)", // Pink Clean subtle
   },
 };
 
@@ -150,19 +150,24 @@ const SocialButton = ({
   loading,
   disabled,
 }: {
-  type: "apple" | "google";
+  type: "apple" | "google" | "facebook";
   onPress: () => void;
   loading: boolean;
   disabled: boolean;
 }) => {
   const isApple = type === "apple";
+  const isFacebook = type === "facebook";
 
   return (
     <PressableScale onPress={onPress} disabled={disabled || loading}>
       <View
         style={[
           styles.socialBtn,
-          isApple ? styles.socialBtnApple : styles.socialBtnGoogle,
+          isApple
+            ? styles.socialBtnApple
+            : isFacebook
+              ? styles.socialBtnFacebook
+              : styles.socialBtnGoogle,
           disabled && styles.socialBtnDisabled,
         ]}
         accessibilityLabel={`Continuar com ${isApple ? "Apple" : "Google"}`}
@@ -174,6 +179,8 @@ const SocialButton = ({
           <>
             {isApple ? (
               <Ionicons name="logo-apple" size={22} color={DS.white} />
+            ) : isFacebook ? (
+              <Ionicons name="logo-facebook" size={22} color={DS.white} />
             ) : (
               <Image
                 source={require("../../../assets/google-logo.jpg")}
@@ -181,8 +188,14 @@ const SocialButton = ({
                 resizeMode="contain"
               />
             )}
-            <Text style={[styles.socialBtnText, isApple && styles.socialBtnTextWhite]}>
-              Continuar com {isApple ? "Apple" : "Google"}
+            <Text
+              style={[
+                styles.socialBtnText,
+                isApple && styles.socialBtnTextWhite,
+                isFacebook && styles.socialBtnTextWhite,
+              ]}
+            >
+              Continuar com {isApple ? "Apple" : isFacebook ? "Facebook" : "Google"}
             </Text>
           </>
         )}
@@ -192,13 +205,7 @@ const SocialButton = ({
 };
 
 // Email button - Outline style
-const EmailButton = ({
-  onPress,
-  disabled,
-}: {
-  onPress: () => void;
-  disabled: boolean;
-}) => (
+const EmailButton = ({ onPress, disabled }: { onPress: () => void; disabled: boolean }) => (
   <PressableScale onPress={onPress} disabled={disabled}>
     <View
       style={[styles.emailBtn, disabled && styles.socialBtnDisabled]}
@@ -220,9 +227,10 @@ export default function AuthLandingScreen({ navigation }: Props) {
   // Loading states
   const [appleLoading, setAppleLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const anyLoading = appleLoading || googleLoading;
+  const anyLoading = appleLoading || googleLoading || facebookLoading;
 
   // Handlers
   const handleApple = useCallback(async () => {
@@ -234,11 +242,24 @@ export default function AuthLandingScreen({ navigation }: Props) {
       if (!res.success) {
         setError(res.error || "Erro ao entrar com Apple");
         logger.warn("Login Apple falhou", "AuthLanding", { error: res.error });
+      } else {
+        // Login bem-sucedido
+        // No web: redirect acontece automaticamente, sessão será processada via detectSessionInUrl
+        // No native: sessão já foi criada, onAuthStateChange vai disparar automaticamente
+        logger.info("Login Apple iniciado com sucesso", "AuthLanding", {
+          platform: Platform.OS,
+          hasUser: !!res.user,
+        });
+        // Não fazer nada aqui - aguardar onAuthStateChange atualizar o estado
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : String(e);
       setError(errorMsg);
-      logger.error("Exceção no login Apple", "AuthLanding", e instanceof Error ? e : new Error(errorMsg));
+      logger.error(
+        "Exceção no login Apple",
+        "AuthLanding",
+        e instanceof Error ? e : new Error(errorMsg)
+      );
     } finally {
       setAppleLoading(false);
     }
@@ -253,13 +274,58 @@ export default function AuthLandingScreen({ navigation }: Props) {
       if (!res.success) {
         setError(res.error || "Erro ao entrar com Google");
         logger.warn("Login Google falhou", "AuthLanding", { error: res.error });
+      } else {
+        // Login bem-sucedido
+        // No web: redirect acontece automaticamente, sessão será processada via detectSessionInUrl
+        // No native: sessão já foi criada, onAuthStateChange vai disparar automaticamente
+        logger.info("Login Google iniciado com sucesso", "AuthLanding", {
+          platform: Platform.OS,
+          hasUser: !!res.user,
+        });
+        // Não fazer nada aqui - aguardar onAuthStateChange atualizar o estado
       }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : String(e);
       setError(errorMsg);
-      logger.error("Exceção no login Google", "AuthLanding", e instanceof Error ? e : new Error(errorMsg));
+      logger.error(
+        "Exceção no login Google",
+        "AuthLanding",
+        e instanceof Error ? e : new Error(errorMsg)
+      );
     } finally {
       setGoogleLoading(false);
+    }
+  }, []);
+
+  const handleFacebook = useCallback(async () => {
+    try {
+      setFacebookLoading(true);
+      setError(null);
+      logger.info("Iniciando login com Facebook", "AuthLanding");
+      const res = await signInWithFacebook();
+      if (!res.success) {
+        setError(res.error || "Erro ao entrar com Facebook");
+        logger.warn("Login Facebook falhou", "AuthLanding", { error: res.error });
+      } else {
+        // Login bem-sucedido
+        // No web: redirect acontece automaticamente, sessão será processada via detectSessionInUrl
+        // No native: sessão já foi criada, onAuthStateChange vai disparar automaticamente
+        logger.info("Login Facebook iniciado com sucesso", "AuthLanding", {
+          platform: Platform.OS,
+          hasUser: !!res.user,
+        });
+        // Não fazer nada aqui - aguardar onAuthStateChange atualizar o estado
+      }
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      setError(errorMsg);
+      logger.error(
+        "Exceção no login Facebook",
+        "AuthLanding",
+        e instanceof Error ? e : new Error(errorMsg)
+      );
+    } finally {
+      setFacebookLoading(false);
     }
   }, []);
 
@@ -294,9 +360,9 @@ export default function AuthLandingScreen({ navigation }: Props) {
         {/* Gradient overlay - Pink Clean + Blue Clean ✨ */}
         <LinearGradient
           colors={[
-            DS.gradient.blueClean,        // Blue Clean no topo
-            DS.gradient.pinkClean,        // Pink Clean sutil
-            "rgba(10, 21, 32, 0.90)",     // Dark blue clean embaixo
+            DS.gradient.blueClean, // Blue Clean no topo
+            DS.gradient.pinkClean, // Pink Clean sutil
+            "rgba(10, 21, 32, 0.90)", // Dark blue clean embaixo
           ]}
           locations={[0, 0.35, 1]}
           style={StyleSheet.absoluteFillObject}
@@ -368,7 +434,15 @@ export default function AuthLandingScreen({ navigation }: Props) {
             disabled={anyLoading && !googleLoading}
           />
 
-          {/* Android: Apple after Google */}
+          {/* Facebook */}
+          <SocialButton
+            type="facebook"
+            onPress={handleFacebook}
+            loading={facebookLoading}
+            disabled={anyLoading && !facebookLoading}
+          />
+
+          {/* Android: Apple after Google and Facebook */}
           {Platform.OS !== "ios" && (
             <SocialButton
               type="apple"
@@ -484,7 +558,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "rgba(255, 92, 148, 0.15)", // Pink Clean subtle bg
     borderWidth: 1,
-    borderColor: "rgba(255, 92, 148, 0.3)",      // Pink Clean border
+    borderColor: "rgba(255, 92, 148, 0.3)", // Pink Clean border
   },
   badgeText: {
     fontSize: 12,
@@ -543,6 +617,9 @@ const styles = StyleSheet.create({
     backgroundColor: DS.white,
     borderWidth: 1.5,
     borderColor: DS.border,
+  },
+  socialBtnFacebook: {
+    backgroundColor: "#1877F2", // Facebook brand color
   },
   socialBtnDisabled: {
     opacity: 0.5,

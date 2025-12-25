@@ -4,21 +4,33 @@
  * Inclui handler de callback OAuth/Magic Link para auth
  */
 
-import { useEffect, useCallback, useRef } from "react";
-import * as Linking from "expo-linking";
 import * as QueryParams from "expo-auth-session/build/QueryParams";
+import * as Linking from "expo-linking";
+import { useCallback, useEffect, useRef } from "react";
+import { Platform } from "react-native";
+import { supabase } from "../api/supabase";
+import { navigationRef } from "../navigation/navigationRef";
 import { RootStackParamList } from "../types/navigation";
 import { logger } from "../utils/logger";
-import { navigationRef } from "../navigation/navigationRef";
-import { supabase } from "../api/supabase";
 
 const SCHEME = "nossamaternidade";
 
 /**
  * Verifica se a URL é um callback de autenticação (OAuth ou Magic Link)
  */
-function isAuthCallback(path: string): boolean {
-  return path === "/auth/callback" || path === "/auth-callback" || path.startsWith("/auth/callback");
+function isAuthCallback(path: string, url?: string): boolean {
+  const pathMatch =
+    path === "/auth/callback" || path === "/auth-callback" || path.startsWith("/auth/callback");
+
+  // CRÍTICO: No web, também verificar query params/hash na URL completa
+  if (Platform.OS === "web" && url) {
+    const hasCode = url.includes("?code=") || url.includes("&code=");
+    const hasTokens = url.includes("#access_token=") || url.includes("?access_token=");
+    const hasTokenHash = url.includes("token_hash=");
+    return pathMatch || hasCode || hasTokens || hasTokenHash;
+  }
+
+  return pathMatch;
 }
 
 /**
@@ -182,7 +194,15 @@ export function useDeepLinking() {
     try {
       const parsed = Linking.parse(url);
 
-      if (parsed.scheme !== SCHEME && !url.includes("nossamaternidade.com.br")) {
+      // CRÍTICO: No web, processar URLs HTTP/HTTPS também (localhost, etc)
+      // Verificar se é callback OAuth mesmo sem scheme customizado
+      const isWebCallback =
+        Platform.OS === "web" &&
+        (url.includes("/auth/callback") ||
+          url.includes("?code=") ||
+          url.includes("#access_token="));
+
+      if (parsed.scheme !== SCHEME && !url.includes("nossamaternidade.com.br") && !isWebCallback) {
         return;
       }
 
@@ -190,7 +210,7 @@ export function useDeepLinking() {
 
       // PRIORIDADE 1: Auth callbacks (OAuth, Magic Link)
       // Não requer navegação pronta - apenas criar sessão
-      if (isAuthCallback(path)) {
+      if (isAuthCallback(path, url)) {
         // Evitar processamento duplicado
         if (processingAuthRef.current) {
           logger.info("Auth callback já em processamento, ignorando duplicado", "DeepLinking");
@@ -204,11 +224,27 @@ export function useDeepLinking() {
             logger.info("Auth callback processado com sucesso", "DeepLinking");
             // A navegação será tratada automaticamente pelo RootNavigator
             // quando o onAuthStateChange disparar
+
+            // CRÍTICO: Limpar URL após processamento bem-sucedido (evitar reprocessamento)
+            if (Platform.OS === "web" && typeof window !== "undefined") {
+              // Aguardar um pouco para garantir que a sessão foi criada
+              setTimeout(() => {
+                const cleanUrl = window.location.pathname;
+                // Só limpar se ainda tem params na URL
+                if (window.location.href !== cleanUrl) {
+                  window.history.replaceState(null, "", cleanUrl);
+                  logger.info("URL limpa após processamento OAuth", "DeepLinking", { cleanUrl });
+                }
+              }, 500);
+            }
           } else {
             logger.warn("Auth callback não criou sessão", "DeepLinking");
           }
         } finally {
-          processingAuthRef.current = false;
+          // Reset após delay para evitar processamento imediato de eventos subsequentes
+          setTimeout(() => {
+            processingAuthRef.current = false;
+          }, 1000);
         }
         return;
       }
@@ -228,9 +264,7 @@ export function useDeepLinking() {
         const queryId =
           typeof parsed.queryParams?.id === "string" ? parsed.queryParams.id : undefined;
 
-        const params = route.getParams
-          ? route.getParams(queryId)
-          : route.staticParams || {};
+        const params = route.getParams ? route.getParams(queryId) : route.staticParams || {};
 
         // Type-safe navigation
         if (route.screen === "PostDetail" && "postId" in params) {
@@ -249,7 +283,11 @@ export function useDeepLinking() {
         logger.warn(`Unknown deep link path: ${path}`, "DeepLinking");
       }
     } catch (error) {
-      logger.error("Error handling deep link", "DeepLinking", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Error handling deep link",
+        "DeepLinking",
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }, []);
 
@@ -260,6 +298,23 @@ export function useDeepLinking() {
       if (initialUrl) {
         handleDeepLink(initialUrl);
       }
+
+      // CRÍTICO: No web, também verificar URL atual (pode ter callback OAuth)
+      // Mas apenas se não foi processado ainda (evitar loop)
+      if (Platform.OS === "web" && typeof window !== "undefined" && !processingAuthRef.current) {
+        const currentUrl = window.location.href;
+        if (
+          currentUrl.includes("/auth/callback") ||
+          currentUrl.includes("?code=") ||
+          currentUrl.includes("#access_token=") ||
+          currentUrl.includes("token_hash=")
+        ) {
+          logger.info("Processando callback OAuth da URL atual (web)", "DeepLinking", {
+            url: currentUrl,
+          });
+          handleDeepLink(currentUrl);
+        }
+      }
     };
 
     handleInitialURL();
@@ -268,6 +323,37 @@ export function useDeepLinking() {
     const subscription = Linking.addEventListener("url", (event) => {
       handleDeepLink(event.url);
     });
+
+    // CRÍTICO: No web, também escutar mudanças de hash/query params
+    // Mas apenas para callbacks OAuth (evitar processar navegação normal)
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      const handleHashChange = () => {
+        // Evitar processamento duplicado
+        if (processingAuthRef.current) {
+          return;
+        }
+
+        const url = window.location.href;
+        // Apenas processar se for callback OAuth E não foi limpo ainda
+        if (
+          (url.includes("/auth/callback") ||
+            url.includes("?code=") ||
+            url.includes("#access_token=")) &&
+          !url.endsWith("/auth/callback") && // URL já foi limpa
+          url !== window.location.pathname
+        ) {
+          // URL ainda tem params
+          handleDeepLink(url);
+        }
+      };
+
+      window.addEventListener("hashchange", handleHashChange);
+
+      return () => {
+        subscription.remove();
+        window.removeEventListener("hashchange", handleHashChange);
+      };
+    }
 
     return () => {
       subscription.remove();

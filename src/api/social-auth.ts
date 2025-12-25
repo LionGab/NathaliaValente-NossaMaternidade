@@ -370,12 +370,20 @@ export async function signInWithApple(): Promise<SocialAuthResult> {
   try {
     const client = checkSupabase();
 
-    // iOS: Usar autenticação nativa
-    if (Platform.OS === "ios") {
+    // iOS: Usar autenticação nativa (exceto Expo Go - audience mismatch)
+    if (Platform.OS === "ios" && !isExpoGo()) {
       return await signInWithAppleNative(client);
     }
 
-    // Android/Web: Usar OAuth
+    // Expo Go no iOS: Avisar que native não funciona e usar OAuth
+    if (Platform.OS === "ios" && isExpoGo()) {
+      logger.warn(
+        "Apple Sign In nativo não funciona no Expo Go (audience mismatch). Usando OAuth.",
+        "SocialAuth"
+      );
+    }
+
+    // Android/Web/Expo Go: Usar OAuth
     return await signInWithAppleOAuth(client);
   } catch (error) {
     logger.error("Exceção no login Apple", "SocialAuth", error as Error);
