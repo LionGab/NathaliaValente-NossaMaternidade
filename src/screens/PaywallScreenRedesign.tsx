@@ -895,21 +895,21 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: 36, // MAIOR: mais impacto visual
     fontFamily: FONTS.display,
     color: COLORS.textPrimary,
     textAlign: "center",
-    lineHeight: 40,
-    letterSpacing: -0.5,
+    lineHeight: 44, // Mais breathing room
+    letterSpacing: -0.8, // Tighter para premium
   },
   heroSubtitle: {
-    fontSize: 15,
+    fontSize: 16, // Maior para legibilidade
     fontFamily: FONTS.body,
     color: COLORS.textSecondary,
     textAlign: "center",
-    marginTop: 12,
-    lineHeight: 22,
-    paddingHorizontal: 16,
+    marginTop: 16, // Mais espaço
+    lineHeight: 24, // Mais breathing room
+    paddingHorizontal: 20,
   },
   trialBadge: {
     flexDirection: "row",
@@ -947,21 +947,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: COLORS.glassBg,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    borderRadius: 16, // Mais arredondado
+    paddingVertical: 14, // Mais padding
+    paddingHorizontal: 16,
     width: "48%",
-    borderWidth: 1,
-    borderColor: COLORS.glassBorder,
+    borderWidth: 0, // SEM borda - mais clean
+    // Sombra sutil
+    shadowColor: "rgba(0,0,0,0.1)",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   featureIcon: {
     marginRight: 10,
   },
   featureText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14, // Maior para legibilidade
     fontFamily: FONTS.body,
     color: COLORS.textSecondary,
+    lineHeight: 20,
   },
 
   // Plans
@@ -975,15 +981,22 @@ const styles = StyleSheet.create({
   planCard: {
     flex: 1,
     backgroundColor: COLORS.glassBg,
-    borderRadius: 20,
+    borderRadius: 24, // Mais arredondado
     borderWidth: 2,
     borderColor: COLORS.glassBorder,
-    padding: 16,
+    padding: 20, // Mais padding: mais premium
     position: "relative",
+    minHeight: 140, // Altura mínima para consistência
   },
   planCardSelected: {
     backgroundColor: COLORS.glassSelected,
     borderColor: COLORS.glassSelectedBorder,
+    // Sombra rosa quando selecionado - destaca escolha
+    shadowColor: COLORS.textAccent,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 6,
   },
   popularBadge: {
     position: "absolute",
@@ -1018,15 +1031,15 @@ const styles = StyleSheet.create({
   planHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 16, // Mais espaço entre header e preço
   },
   radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22, // Ligeiramente maior
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     borderColor: COLORS.textMuted,
-    marginRight: 8,
+    marginRight: 10, // Mais espaço
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1034,9 +1047,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.textAccent,
   },
   radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 12, // Maior
+    height: 12,
+    borderRadius: 6,
     backgroundColor: COLORS.textAccent,
   },
   planType: {
@@ -1045,20 +1058,22 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   planPrice: {
-    fontSize: 28,
+    fontSize: 32, // MAIOR: destaca preço
     fontFamily: FONTS.display,
     color: COLORS.textPrimary,
+    letterSpacing: -0.6,
   },
   planPeriod: {
-    fontSize: 14,
+    fontSize: 15, // Ligeiramente maior
     fontFamily: FONTS.body,
     color: COLORS.textMuted,
+    marginLeft: 4,
   },
   planEquivalent: {
-    fontSize: 12,
+    fontSize: 13, // Maior para melhor legibilidade
     fontFamily: FONTS.accent,
     color: COLORS.textAccent,
-    marginTop: 6,
+    marginTop: 8,
   },
 
   // Guarantee
@@ -1086,48 +1101,51 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: "rgba(15, 10, 31, 0.95)",
     paddingHorizontal: 24,
-    paddingTop: 16,
+    paddingTop: 20, // Mais espaço no topo
     borderTopWidth: 1,
     borderTopColor: COLORS.glassBorder,
   },
   ctaShadow: {
     shadowColor: COLORS.ctaGradientStart,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
-    borderRadius: 16,
+    shadowOffset: { width: 0, height: 6 }, // Sombra mais profunda
+    shadowOpacity: 0.5, // Mais visível
+    shadowRadius: 20, // Mais suave
+    elevation: 10, // Android elevation maior
+    borderRadius: 18,
   },
   ctaButton: {
-    height: 56,
-    borderRadius: 16,
+    height: 60, // MAIOR: mais presença visual
+    borderRadius: 18, // Mais arredondado
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 10, // Mais espaço entre texto e ícone
+    paddingHorizontal: 24, // Mais padding horizontal
   },
   ctaText: {
-    fontSize: 17,
+    fontSize: 18, // MAIOR: mais legível e chamativo
     fontFamily: FONTS.headline,
     color: COLORS.textPrimary,
+    letterSpacing: 0.3, // Ligeiramente espaçado para premium
   },
   ctaTextDisabled: {
     color: COLORS.textMuted,
   },
   ctaArrow: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    width: 30, // Ligeiramente maior
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "rgba(255, 255, 255, 0.25)", // Mais visível
     alignItems: "center",
     justifyContent: "center",
   },
   footerNote: {
-    fontSize: 12,
+    fontSize: 13, // Maior para legibilidade
     fontFamily: FONTS.light,
     color: COLORS.textMuted,
     textAlign: "center",
-    marginTop: 12,
+    marginTop: 14,
+    lineHeight: 18,
   },
   footerLinks: {
     flexDirection: "row",

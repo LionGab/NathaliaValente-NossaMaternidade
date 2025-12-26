@@ -117,7 +117,6 @@ const FeatureCard: React.FC<{
 }> = React.memo(
   ({ icon, iconBgColor, iconColor, title, subtitle, badge, onPress, isDark, index = 0 }) => {
     const cardBg = isDark ? brand.primary[900] : neutral[0];
-    const borderColor = isDark ? brand.primary[700] : neutral[100];
     const textMain = isDark ? neutral[100] : neutral[900];
     const textMuted = isDark ? neutral[400] : neutral[500];
 
@@ -131,8 +130,12 @@ const FeatureCard: React.FC<{
               styles.featureCard,
               {
                 backgroundColor: cardBg,
-                borderColor,
-                ...shadows.md,
+                // Sombra mais premium - sem borda
+                shadowColor: isDark ? brand.primary[900] : neutral[900],
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: isDark ? 0.4 : 0.08,
+                shadowRadius: 16,
+                elevation: 4,
               },
             ]}
           >
@@ -480,24 +483,23 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
                 flexDirection: "row",
                 alignItems: "center",
                 backgroundColor: isDark ? brand.primary[900] : neutral[0],
-                borderColor: isDark ? brand.primary[700] : neutral[100],
-                borderWidth: 1,
-                borderRadius: 20,
-                paddingVertical: 16,
-                paddingHorizontal: 16,
-                shadowColor: neutral[900],
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.05,
-                shadowRadius: 3,
-                elevation: 1,
+                borderWidth: 0, // SEM borda - mais clean
+                borderRadius: 24, // Mais arredondado
+                paddingVertical: 20, // Aumentado
+                paddingHorizontal: 20, // Aumentado
+                shadowColor: isDark ? brand.primary[900] : neutral[900],
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: isDark ? 0.4 : 0.08,
+                shadowRadius: 16,
+                elevation: 4,
               }}
             >
               {/* Progress Ring */}
-              <View style={{ width: 56, height: 56, marginRight: 16, alignItems: "center", justifyContent: "center" }}>
+              <View style={{ width: 60, height: 60, marginRight: 18, alignItems: "center", justifyContent: "center" }}>
                 <ProgressRing
                   progress={habitsProgress}
-                  size={56}
-                  strokeWidth={5}
+                  size={60}
+                  strokeWidth={6}
                   isDark={isDark}
                 />
                 <View style={{ position: "absolute", flexDirection: "row", alignItems: "baseline" }}>
@@ -512,10 +514,10 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
 
               {/* Progress Info */}
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 15, fontWeight: "700", fontFamily: "Manrope_700Bold", color: textMain }}>
+                <Text style={{ fontSize: 16, fontWeight: "700", fontFamily: "Manrope_700Bold", color: textMain, letterSpacing: -0.2 }}>
                   Seus cuidados de hoje
                 </Text>
-                <Text style={{ fontSize: 13, fontWeight: "500", fontFamily: "Manrope_500Medium", color: textMuted, marginTop: 2 }}>
+                <Text style={{ fontSize: 14, fontWeight: "500", fontFamily: "Manrope_500Medium", color: textMuted, marginTop: 4, lineHeight: 20 }}>
                   {completedHabits === 0
                     ? "Comece quando se sentir pronta"
                     : completedHabits === totalHabits
@@ -537,8 +539,12 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
             styles.sectionCard,
             {
               backgroundColor: isDark ? brand.primary[900] : neutral[0],
-              borderColor: isDark ? brand.primary[700] : neutral[100],
-              ...shadows.sm,
+              // Sombra premium
+              shadowColor: isDark ? brand.primary[900] : neutral[900],
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: isDark ? 0.4 : 0.08,
+              shadowRadius: 16,
+              elevation: 4,
             },
           ]}
         >
@@ -585,7 +591,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing["2xl"],
-    gap: spacing.lg,
+    gap: spacing.xl, // Aumentado de lg (16) para xl (20) - mais breathing room
   },
 
   // Header
@@ -593,8 +599,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.xl, // Aumentado: mais ar no topo
+    paddingBottom: spacing.lg, // Aumentado: mais separação do conteúdo
   },
   headerLeft: {
     flex: 1,
@@ -621,16 +627,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 2.5,
   },
-  // Hero Card - Premium Design
+  // Hero Card - Premium Design ELEVATED
   heroCard: {
-    height: 220,
-    borderRadius: 24,
+    height: 240, // Aumentado: mais imersivo
+    borderRadius: 28, // Mais arredondado (premium)
     overflow: "hidden",
-    shadowColor: "#F8B4C4",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowColor: brand.accent[400], // Rosa premium
+    shadowOffset: { width: 0, height: 12 }, // Sombra mais profunda
+    shadowOpacity: 0.25, // Mais visível
+    shadowRadius: 24, // Mais suave
+    elevation: 10, // Android elevation maior
   },
   heroImage: {
     ...StyleSheet.absoluteFillObject,
@@ -641,25 +647,31 @@ const styles = StyleSheet.create({
   heroContent: {
     flex: 1,
     justifyContent: "flex-end",
-    padding: spacing.xl,
-    gap: spacing.md,
+    padding: spacing["2xl"], // Aumentado: mais breathing room
+    gap: spacing.lg, // Aumentado: mais espaço entre texto e botão
   },
   heroTextContainer: {
     gap: 4,
   },
   heroTitle: {
-    fontSize: 24,
+    fontSize: 28, // Maior: mais impacto
     fontWeight: "700",
     fontFamily: "Manrope_700Bold",
     color: neutral[0],
-    letterSpacing: -0.4,
+    letterSpacing: -0.6, // Tighter: mais sofisticado
+    textShadowColor: "rgba(0,0,0,0.3)", // Sombra no texto para legibilidade
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   heroSubtitle: {
-    fontSize: 14,
+    fontSize: 15, // Ligeiramente maior
     fontWeight: "500",
     fontFamily: "Manrope_500Medium",
-    color: "rgba(255,255,255,0.85)",
-    lineHeight: 20,
+    color: "rgba(255,255,255,0.92)", // Mais legível
+    lineHeight: 22, // Mais espaçamento
+    textShadowColor: "rgba(0,0,0,0.2)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   heroCTA: {
     alignSelf: "flex-start",
@@ -670,55 +682,57 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
+    paddingVertical: 14, // Aumentado: botão mais robusto
+    paddingHorizontal: spacing["2xl"], // Mais largo: mais premium
+    minHeight: 48, // Garantir tap target
   },
   heroCTAText: {
-    fontSize: 14,
+    fontSize: 15, // Maior: mais legível
     fontWeight: "700",
     fontFamily: "Manrope_700Bold",
     color: neutral[0],
+    letterSpacing: 0.2, // Ligeiramente espaçado para premium
   },
 
 
-  // Section Card
+  // Section Card - Emotional Check-in
   sectionCard: {
-    padding: spacing.xl,
-    borderRadius: radius.xl,
-    borderWidth: 1,
+    padding: spacing["2xl"], // Aumentado
+    borderRadius: 24, // Mais arredondado
+    borderWidth: 0, // SEM borda
   },
 
   // Discovery Section
   discoverySection: {
-    gap: spacing.md,
+    gap: spacing.lg, // Aumentado: mais espaço entre cards
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20, // Maior: hierarquia mais clara
     fontWeight: "700",
     fontFamily: "Manrope_700Bold",
-    letterSpacing: -0.3,
-    marginBottom: spacing.xs,
+    letterSpacing: -0.4,
+    marginBottom: spacing.sm, // Mais espaço abaixo
   },
 
-  // Feature Card - Premium Design
+  // Feature Card - Premium Design GLASSMORPHISM
   featureCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    padding: spacing.lg + 2,
-    borderRadius: 20,
-    borderWidth: 1,
+    gap: spacing.lg, // Aumentado: mais espaço entre ícone e texto
+    padding: spacing.xl, // Aumentado: mais breathing room
+    borderRadius: 24, // Mais arredondado
+    borderWidth: 0, // SEM borda dura - mais clean
   },
   featureIconContainer: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 56, // Ligeiramente maior
+    height: 56,
+    borderRadius: 18, // Mais arredondado
     alignItems: "center",
     justifyContent: "center",
   },
   featureContent: {
     flex: 1,
-    gap: 2,
+    gap: 4, // Aumentado: mais espaço entre título e subtitle
   },
   featureTitleRow: {
     flexDirection: "row",
@@ -726,15 +740,16 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   featureTitle: {
-    fontSize: 15,
+    fontSize: 16, // Maior: hierarquia mais clara
     fontWeight: "700",
     fontFamily: "Manrope_700Bold",
+    letterSpacing: -0.2,
   },
   featureSubtitle: {
-    fontSize: 13,
+    fontSize: 14, // Ligeiramente maior
     fontWeight: "500",
     fontFamily: "Manrope_500Medium",
-    lineHeight: 18,
+    lineHeight: 20, // Mais espaçamento
   },
   badge: {
     paddingHorizontal: spacing.xs + 2,

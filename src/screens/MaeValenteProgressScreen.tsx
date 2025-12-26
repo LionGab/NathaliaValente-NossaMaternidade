@@ -14,12 +14,28 @@ import { useAppStore, useCheckInStore } from "../state/store";
 import {
   Tokens,
   streak,
-  COLORS,
-  RADIUS,
-  SPACING,
-  SHADOWS,
-  TYPOGRAPHY,
+  brand,
+  neutral,
+  spacing as SPACING,
+  radius as RADIUS,
+  shadows as SHADOWS,
+  typography as TYPOGRAPHY,
+  text,
 } from "../theme/tokens";
+
+// Backward compatibility aliases
+const COLORS = {
+  primary: brand.primary,
+  secondary: brand.secondary,
+  neutral,
+  text: text.light,
+  background: {
+    primary: Tokens.surface.light.base,
+    card: Tokens.surface.light.card,
+  },
+  accent: brand.accent,
+  mood: Tokens.mood, // Add mood colors
+};
 
 // Overlay compatibility mapping
 const OVERLAY = {
