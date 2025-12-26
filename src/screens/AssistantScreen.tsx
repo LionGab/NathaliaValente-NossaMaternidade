@@ -660,7 +660,12 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
         >
           <View style={styles.headerContent}>
             {/* Menu Button */}
-            <Pressable onPress={() => setShowHistory(true)} style={styles.headerButton}>
+            <Pressable
+              onPress={() => setShowHistory(true)}
+              style={styles.headerButton}
+              accessibilityLabel="Abrir histórico de conversas"
+              accessibilityRole="button"
+            >
               <Ionicons name="menu-outline" size={24} color={THEME.textSecondary} />
             </Pressable>
 
@@ -673,11 +678,21 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
             {/* Actions */}
             <View style={styles.headerActions}>
               {currentMessages.length > 0 && (
-                <Pressable onPress={handlers.handleClearChat} style={styles.headerButton}>
+                <Pressable
+                  onPress={handlers.handleClearChat}
+                  style={styles.headerButton}
+                  accessibilityLabel="Limpar conversa"
+                  accessibilityRole="button"
+                >
                   <Ionicons name="trash-outline" size={22} color={THEME.textMuted} />
                 </Pressable>
               )}
-              <Pressable onPress={handleNewChat} style={styles.headerButton}>
+              <Pressable
+                onPress={handleNewChat}
+                style={styles.headerButton}
+                accessibilityLabel="Nova conversa"
+                accessibilityRole="button"
+              >
                 <Ionicons name="create-outline" size={22} color={THEME.textSecondary} />
               </Pressable>
             </View>
@@ -780,7 +795,12 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
               ]}
             >
               {/* Attachment */}
-              <Pressable onPress={handleAttachment} style={styles.inputButton}>
+              <Pressable
+                onPress={handleAttachment}
+                style={styles.inputButton}
+                accessibilityLabel="Anexar imagem"
+                accessibilityRole="button"
+              >
                 <Ionicons
                   name="add-circle-outline"
                   size={26}
@@ -842,7 +862,12 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
                   <Ionicons name="send" size={18} color={DS_COLORS.text.inverse} />
                 </Pressable>
               ) : (
-                <Pressable onPress={handleMicPress} style={styles.micButton}>
+                <Pressable
+                  onPress={handleMicPress}
+                  style={styles.micButton}
+                  accessibilityLabel="Gravar mensagem de voz"
+                  accessibilityRole="button"
+                >
                   <Ionicons name="mic-outline" size={22} color={THEME.textMuted} />
                 </Pressable>
               )}

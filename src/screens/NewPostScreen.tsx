@@ -1,294 +1,277 @@
 /**
- * Nossa Maternidade - NewPostScreen
+ * NewPostScreen - Criar novo post na comunidade
  *
- * Create a new community post with optional image upload
- *
- * Features:
- * - Text content with character limit (500)
- * - Image upload from gallery or camera
- * - Image preview with remove option
- * - Upload progress indicator
- * - Error handling with user feedback
- *
- * @version 2.0.0 - Image upload support (2025-01)
+ * Versão Fase 2 com suporte a Vídeo e Imagem + Moderação
  */
 
-import React, { useState, useCallback, useEffect } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
+  ActivityIndicator,
+  Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import * as Haptics from "expo-haptics";
-import { RootStackScreenProps, Post } from "../types/navigation";
-import { useCommunityStore, useAppStore } from "../state/store";
-import { useImageUpload } from "../hooks/useImageUpload";
-import { logger } from "../utils/logger";
-import { Tokens } from "../theme/tokens";
-import { useToast } from "../context/ToastContext";
+import { useTheme } from "../hooks/useTheme";
+import { communityService } from "../services/community";
+import { Tokens, radius, spacing, surface } from "../theme/tokens";
+import { RootStackScreenProps } from "../types/navigation";
+import { MediaType } from "../types/community";
 
-const MAX_CONTENT_LENGTH = 500;
-const IMAGE_RESIZE = { width: 1200, height: 1200, maintainAspectRatio: true };
+const SPACING = spacing;
+const RADIUS = radius;
 
 export default function NewPostScreen({ navigation }: RootStackScreenProps<"NewPost">) {
   const insets = useSafeAreaInsets();
-  const [content, setContent] = useState("");
-  const [isPosting, setIsPosting] = useState(false);
-  const { showError } = useToast();
+  const { isDark } = useTheme();
+  const [text, setText] = useState("");
+  const [mediaUri, setMediaUri] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<MediaType>("text");
+  const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  const addPost = useCommunityStore((s) => s.addPost);
-  const user = useAppStore((s) => s.user);
+  const bgPrimary = isDark ? surface.dark.base : surface.light.base;
+  const textPrimary = isDark ? Tokens.neutral[100] : Tokens.neutral[900];
+  const textSecondary = isDark ? Tokens.neutral[400] : Tokens.neutral[600];
+  const borderColor = isDark ? Tokens.neutral[700] : Tokens.neutral[200];
 
-  // Image upload hook
-  const {
-    isLoading: isImageLoading,
-    error: imageError,
-    progress: uploadProgress,
-    selectedImage,
-    uploadedImage,
-    pickFromGallery,
-    takePhoto,
-    uploadImage,
-    clearImage,
-    clearError,
-  } = useImageUpload({
-    folder: "posts",
-    resize: IMAGE_RESIZE,
-    quality: 0.8,
-    allowsEditing: true,
-    aspect: [4, 3],
-  });
+  const handlePickMedia = async (type: "image" | "video") => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes:
+        type === "video"
+          ? ImagePicker.MediaTypeOptions.Videos
+          : ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: type === "image",
+      quality: 0.8,
+      videoMaxDuration: 60,
+    });
 
-  // Handle posting
-  const handlePost = useCallback(async () => {
-    if (!content.trim() && !selectedImage) return;
+    if (!result.canceled && result.assets[0]) {
+      setMediaUri(result.assets[0].uri);
+      setMediaType(type);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!text.trim() && !mediaUri) {
+      Alert.alert("Erro", "O post precisa ter texto ou mídia.");
+      return;
+    }
+    if (!acceptedTerms) {
+      Alert.alert("Termos", "Você precisa aceitar os termos da comunidade.");
+      return;
+    }
 
     try {
-      setIsPosting(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setLoading(true);
+      const { success, error } = await communityService.createPost(text, mediaUri, mediaType, []);
 
-      let imageUrl: string | undefined;
+      if (!success) throw new Error(error);
 
-      // Upload image if selected but not yet uploaded
-      if (selectedImage && !uploadedImage) {
-        const result = await uploadImage();
-        if (!result) {
-          setIsPosting(false);
-          return;
-        }
-        imageUrl = result.url;
-      } else if (uploadedImage) {
-        imageUrl = uploadedImage.url;
-      }
-
-      const newPost: Post = {
-        id: Date.now().toString(),
-        authorId: user?.id || "me",
-        authorName: user?.name || "Você",
-        content: content.trim(),
-        imageUrl,
-        likesCount: 0,
-        commentsCount: 0,
-        createdAt: new Date().toISOString(),
-        isLiked: false,
-      };
-
-      addPost(newPost);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      navigation.goBack();
-    } catch (error) {
-      logger.error(
-        "Error posting to community",
-        "NewPostScreen",
-        error instanceof Error ? error : new Error(String(error))
+      Alert.alert(
+        "Enviado para Revisão",
+        "Seu post foi enviado e será analisado. Você será notificada quando for aprovado.",
+        [{ text: "OK", onPress: () => navigation.goBack() }]
       );
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showError("Não foi possível publicar. Tente novamente.");
+    } catch (e) {
+      Alert.alert("Erro", "Não foi possível enviar o post. Tente novamente.");
     } finally {
-      setIsPosting(false);
+      setLoading(false);
     }
-  }, [content, selectedImage, uploadedImage, user, addPost, navigation, uploadImage, showError]);
-
-  // Handle photo from gallery
-  const handlePhotoPress = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    clearError();
-    await pickFromGallery();
-  }, [pickFromGallery, clearError]);
-
-  // Handle photo from camera
-  const handleCameraPress = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    clearError();
-    await takePhoto();
-  }, [takePhoto, clearError]);
-
-  // Handle remove image
-  const handleRemoveImage = useCallback(async () => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    clearImage();
-  }, [clearImage]);
-
-  // Show error toast
-  useEffect(() => {
-    if (imageError) {
-      showError(imageError);
-      clearError();
-    }
-  }, [imageError, clearError, showError]);
-
-  const canPost = content.trim().length > 0 || selectedImage;
-  const isLoading = isImageLoading || isPosting;
+  };
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1 bg-cream-50"
+      style={{ flex: 1, backgroundColor: bgPrimary }}
     >
-      {/* Header Actions */}
-      <View className="flex-row items-center justify-between px-4 py-3 border-b border-blush-100">
-        <Pressable onPress={() => navigation.goBack()} disabled={isLoading}>
-          <Text className="text-warmGray-500 text-base">Cancelar</Text>
-        </Pressable>
-        <Pressable
-          onPress={handlePost}
-          disabled={!canPost || isLoading}
-          className={`px-5 py-2 rounded-full ${canPost && !isLoading ? "bg-rose-500" : "bg-warmGray-200"}`}
-        >
-          {isLoading ? (
-            <ActivityIndicator size="small" color={Tokens.neutral[0]} />
-          ) : (
-            <Text className={`text-base font-semibold ${canPost ? "text-white" : "text-warmGray-400"}`}>
-              Publicar
-            </Text>
-          )}
-        </Pressable>
-      </View>
+      <ScrollView
+        contentContainerStyle={{ padding: SPACING.lg, paddingBottom: insets.bottom + 100 }}
+      >
+        <TextInput
+          style={[
+            styles.input,
+            {
+              color: textPrimary,
+              backgroundColor: isDark ? Tokens.neutral[800] : Tokens.neutral[50],
+              borderColor: borderColor,
+            },
+          ]}
+          placeholder="O que você quer compartilhar?"
+          placeholderTextColor={textSecondary}
+          multiline
+          value={text}
+          onChangeText={setText}
+          maxLength={1000}
+        />
 
-      {/* Content */}
-      <View className="flex-1 px-4 pt-4">
-        <View className="flex-row items-start">
-          <View className="w-11 h-11 rounded-full bg-blush-200 items-center justify-center mr-3">
-            <Ionicons name="person" size={22} color={Tokens.brand.primary[600]} />
-          </View>
-          <View className="flex-1">
-            <Text className="text-warmGray-800 text-base font-semibold">{user?.name || "Você"}</Text>
-            <TextInput
-              value={content}
-              onChangeText={(text) => setContent(text.slice(0, MAX_CONTENT_LENGTH))}
-              placeholder="O que você quer compartilhar?"
-              placeholderTextColor={Tokens.neutral[400]}
-              multiline
-              autoFocus
-              editable={!isLoading}
-              className="text-warmGray-700 text-base leading-6 mt-2"
-              style={{ minHeight: 100 }}
-            />
-
-            {/* Image Preview */}
-            {selectedImage && (
-              <View className="mt-4 relative">
-                <Image
-                  source={{ uri: selectedImage }}
-                  style={{
-                    width: "100%",
-                    aspectRatio: 4 / 3,
-                    borderRadius: Tokens.radius.lg,
-                    backgroundColor: Tokens.neutral[100],
-                  }}
-                  contentFit="cover"
-                  transition={200}
-                />
-
-                {/* Remove button */}
-                <Pressable
-                  onPress={handleRemoveImage}
-                  disabled={isLoading}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 items-center justify-center"
-                  style={{ opacity: isLoading ? 0.5 : 1 }}
-                >
-                  <Ionicons name="close" size={20} color={Tokens.neutral[0]} />
-                </Pressable>
-
-                {/* Upload progress overlay */}
-                {isImageLoading && (
-                  <View
-                    className="absolute inset-0 bg-black/40 items-center justify-center"
-                    style={{ borderRadius: Tokens.radius.lg }}
-                  >
-                    <ActivityIndicator size="large" color={Tokens.neutral[0]} />
-                    <Text className="text-white text-sm mt-2 font-medium">
-                      {uploadProgress < 30 ? "Preparando..." : uploadProgress < 80 ? "Enviando..." : "Finalizando..."}
-                    </Text>
-                    <View className="w-32 h-1 bg-white/30 rounded-full mt-2 overflow-hidden">
-                      <View
-                        className="h-full bg-white rounded-full"
-                        style={{ width: `${uploadProgress}%` }}
-                      />
-                    </View>
-                  </View>
-                )}
-
-                {/* Uploaded indicator */}
-                {uploadedImage && !isImageLoading && (
-                  <View className="absolute bottom-2 left-2 flex-row items-center bg-black/50 px-2 py-1 rounded-full">
-                    <Ionicons name="checkmark-circle" size={14} color={Tokens.semantic.light.success} />
-                    <Text className="text-white text-xs ml-1">Enviado</Text>
-                  </View>
-                )}
+        {mediaUri ? (
+          <View style={styles.mediaPreview}>
+            {mediaType === "video" ? (
+              <View style={[styles.videoPlaceholder, { borderColor }]}>
+                <Ionicons name="videocam" size={48} color={Tokens.brand.primary[500]} />
+                <Text style={{ color: textPrimary, marginTop: 8 }}>Vídeo selecionado</Text>
               </View>
+            ) : (
+              <Image source={{ uri: mediaUri }} style={styles.image} resizeMode="cover" />
             )}
+            <Pressable
+              style={styles.removeMedia}
+              onPress={() => {
+                setMediaUri(null);
+                setMediaType("text");
+              }}
+            >
+              <Ionicons name="close" size={20} color="white" />
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.mediaButtons}>
+            <Pressable
+              style={[styles.mediaBtn, { borderColor }]}
+              onPress={() => handlePickMedia("image")}
+            >
+              <Ionicons name="image-outline" size={24} color={Tokens.brand.primary[500]} />
+              <Text style={[styles.mediaBtnText, { color: textPrimary }]}>Foto</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.mediaBtn, { borderColor }]}
+              onPress={() => handlePickMedia("video")}
+            >
+              <Ionicons name="videocam-outline" size={24} color={Tokens.brand.primary[500]} />
+              <Text style={[styles.mediaBtnText, { color: textPrimary }]}>Vídeo</Text>
+            </Pressable>
+          </View>
+        )}
+
+        <View
+          style={[
+            styles.termsBox,
+            { backgroundColor: isDark ? Tokens.neutral[800] : Tokens.neutral[50], borderColor },
+          ]}
+        >
+          <View style={styles.warningRow}>
+            <Ionicons name="shield-checkmark-outline" size={20} color={Tokens.brand.primary[500]} />
+            <Text style={[styles.warningTitle, { color: textPrimary }]}>Segurança</Text>
+          </View>
+          <Text style={[styles.warningText, { color: textSecondary }]}>
+            Seu post será revisado antes de aparecer para outras mães. Evite dados sensíveis.
+          </Text>
+          <View style={styles.switchRow}>
+            <Switch
+              value={acceptedTerms}
+              onValueChange={setAcceptedTerms}
+              trackColor={{ false: Tokens.neutral[300], true: Tokens.brand.primary[500] }}
+            />
+            <Text style={[styles.switchLabel, { color: textPrimary }]}>
+              Aceito as regras da comunidade.
+            </Text>
           </View>
         </View>
-      </View>
+      </ScrollView>
 
-      {/* Bottom Actions */}
       <View
-        className="flex-row items-center px-4 py-3 border-t border-blush-100 bg-white"
-        style={{ paddingBottom: insets.bottom + 8 }}
+        style={[
+          styles.footer,
+          {
+            backgroundColor: bgPrimary,
+            borderTopColor: borderColor,
+            paddingBottom: insets.bottom || SPACING.lg,
+          },
+        ]}
       >
         <Pressable
-          onPress={handlePhotoPress}
-          disabled={isLoading}
-          className="flex-row items-center mr-6"
-          style={{ opacity: isLoading ? 0.5 : 1 }}
+          onPress={handleSubmit}
+          disabled={loading || (!text.trim() && !mediaUri) || !acceptedTerms}
+          style={[
+            styles.submitBtn,
+            {
+              backgroundColor:
+                (!text.trim() && !mediaUri) || !acceptedTerms
+                  ? Tokens.neutral[300]
+                  : Tokens.brand.primary[500],
+            },
+          ]}
         >
-          <Ionicons
-            name={selectedImage ? "image" : "image-outline"}
-            size={24}
-            color={selectedImage ? Tokens.brand.primary[600] : Tokens.brand.primary[500]}
-          />
-          <Text className="ml-2 text-warmGray-500 text-sm">Foto</Text>
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.submitBtnText}>Publicar</Text>
+          )}
         </Pressable>
-        <Pressable
-          onPress={handleCameraPress}
-          disabled={isLoading}
-          className="flex-row items-center"
-          style={{ opacity: isLoading ? 0.5 : 1 }}
-        >
-          <Ionicons name="camera-outline" size={24} color={Tokens.brand.primary[500]} />
-          <Text className="ml-2 text-warmGray-500 text-sm">Câmera</Text>
-        </Pressable>
-        <View className="flex-1" />
-        <Text
-          className="text-sm"
-          style={{
-            color:
-              content.length > MAX_CONTENT_LENGTH * 0.9
-                ? Tokens.semantic.light.error
-                : Tokens.neutral[400],
-          }}
-        >
-          {content.length}/{MAX_CONTENT_LENGTH}
-        </Text>
       </View>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  input: {
+    minHeight: 150,
+    textAlignVertical: "top",
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    fontSize: 16,
+    marginBottom: SPACING.lg,
+  },
+  mediaButtons: { flexDirection: "row", gap: SPACING.md, marginBottom: SPACING.lg },
+  mediaBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    gap: SPACING.sm,
+  },
+  mediaBtnText: { fontSize: 14, fontWeight: "600" },
+  mediaPreview: { position: "relative", marginBottom: SPACING.lg },
+  image: { width: "100%", height: 250, borderRadius: RADIUS.lg },
+  videoPlaceholder: {
+    width: "100%",
+    height: 250,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  removeMedia: {
+    position: "absolute",
+    top: SPACING.sm,
+    right: SPACING.sm,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    padding: 6,
+    borderRadius: RADIUS.full,
+  },
+  termsBox: {
+    padding: SPACING.lg,
+    borderRadius: RADIUS.lg,
+    borderWidth: 1,
+    marginBottom: SPACING.xl,
+  },
+  warningRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: SPACING.sm,
+    gap: SPACING.sm,
+  },
+  warningTitle: { fontSize: 16, fontWeight: "700" },
+  warningText: { fontSize: 14, lineHeight: 20, marginBottom: SPACING.lg },
+  switchRow: { flexDirection: "row", alignItems: "center", gap: SPACING.md },
+  switchLabel: { flex: 1, fontSize: 14 },
+  footer: { padding: SPACING.lg, borderTopWidth: 1 },
+  submitBtn: { padding: SPACING.lg, borderRadius: RADIUS.full, alignItems: "center" },
+  submitBtnText: { color: "white", fontSize: 16, fontWeight: "700" },
+});

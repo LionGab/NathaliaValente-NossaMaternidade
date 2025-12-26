@@ -101,6 +101,31 @@ export const brand = {
 } as const;
 
 // ===========================================
+// NATH ACCENT TOKENS - Conteúdo exclusivo Nath
+// Cores para Mundo da Nath, badges premium, highlights especiais
+// ===========================================
+
+export const nathAccent = {
+  /**
+   * Rose: Tom principal Nath/NAVA
+   * - Uso: CTAs especiais, badges premium, Mundo da Nath
+   * - Contraste: AA com texto dark (#1F2937)
+   */
+  rose: "#F4A5B8",
+  roseLight: "#FAD4DE",
+  roseDark: "#E88BA0",
+
+  /**
+   * Coral: Tom vibrante para highlights
+   * - Uso: Hover states, active elements, notifications
+   * - Contraste: AA com texto dark
+   */
+  coral: "#FF6B6B",
+  coralLight: "#FF9E9E",
+  coralDark: "#E85555",
+} as const;
+
+// ===========================================
 // MATERNAL TOKENS - Auto-cuidado & Acolhimento
 // Cores que transmitem: segurança, amor, cuidado, crescimento
 // ===========================================
@@ -1063,6 +1088,7 @@ export const GRADIENTS = gradients;
  */
 export const Tokens = {
   brand,
+  nathAccent,
   maternal,
   neutral,
   text,

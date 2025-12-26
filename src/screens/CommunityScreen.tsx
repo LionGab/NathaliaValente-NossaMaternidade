@@ -1,202 +1,206 @@
 /**
- * CommunityScreen - Feed "Mães Valente"
+ * CommunityScreen - Feed principal da comunidade Mães Valente
  *
- * Feed único tipo Instagram (sem grupos, sem stories)
- * Posts são enviados para revisão antes de serem publicados
- * Suporta: texto, imagem, vídeo
- *
- * Design: Calm FemTech 2025 - Espaçamentos generosos, hierarquia clara
+ * Fase 2: Feed seguro com moderação prévia.
+ * - Lista apenas posts aprovados
+ * - Botão para criar novo post (NewPost)
+ * - Acesso a "Meus Posts"
  */
 
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import { FlatList, Image, StyleSheet, Text, TextInput, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { ComposerCard, NewPostModal, PostCard } from "../components/community";
-import { FAB, ScreenHeader } from "../components/ui";
-import { useCommunity } from "../hooks/useCommunity";
+import { CommunityPostCard } from "../components/community/CommunityPostCard";
 import { useTheme } from "../hooks/useTheme";
-import { Tokens, radius, spacing } from "../theme/tokens";
-import type { MainTabScreenProps } from "../types/navigation";
+import { communityService } from "../services/community";
+import { brand, neutral, radius, shadows, spacing, surface } from "../theme/tokens";
+import { CommunityPost } from "../types/community";
+import { MainTabScreenProps } from "../types/navigation";
+import { logger } from "../utils/logger";
 
-// Aliases de compatibilidade
-const RADIUS = radius;
+// Aliases
 const SPACING = spacing;
-
-// Logo Comunidade Mães Valente
-const MAES_VALENTE_LOGO_URL = "https://i.imgur.com/U5ttbqK.jpg";
+const RADIUS = radius;
+const SHADOWS = shadows;
 
 export default function CommunityScreen({ navigation }: MainTabScreenProps<"Community">) {
   const insets = useSafeAreaInsets();
-  const { isDark, spacing } = useTheme();
+  const { isDark } = useTheme();
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Hook com toda a lógica
-  const community = useCommunity(navigation);
+  // Theme colors
+  const bgPrimary = isDark ? surface.dark.base : surface.light.base;
+  const textPrimary = isDark ? neutral[100] : neutral[900];
+  const textSecondary = isDark ? neutral[400] : neutral[600];
 
-  // Theme colors usando Tokens
-  const bgPrimary = isDark ? Tokens.surface.dark.base : Tokens.surface.light.base;
-  const textMain = isDark ? Tokens.neutral[100] : Tokens.neutral[900];
-  const textMuted = isDark ? Tokens.neutral[400] : Tokens.neutral[500];
-  const textSecondary = isDark ? Tokens.neutral[400] : Tokens.text.light.secondary;
-  const borderColor = isDark ? Tokens.neutral[700] : Tokens.neutral[200];
+  const loadFeed = useCallback(async () => {
+    try {
+      const data = await communityService.getFeed();
+      setPosts(data);
+    } catch (e) {
+      logger.error("Erro ao carregar feed da comunidade", "CommunityScreen", e as Error);
+    }
+  }, []);
+
+  // Recarrega ao focar na tela
+  useFocusEffect(
+    useCallback(() => {
+      loadFeed().finally(() => setLoading(false));
+    }, [loadFeed])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadFeed();
+    setRefreshing(false);
+  };
+
+  const handleCreatePost = () => {
+    navigation.navigate("NewPost");
+  };
+
+  const handleMyPosts = () => {
+    // Vamos usar a mesma tela NewPost ou criar uma MyPostsScreen.
+    // Como não mapeei MyPostsScreen no RootNavigator, vou navegar para NewPost por enquanto
+    // ou idealmente criar uma tela de perfil de comunidade.
+    // Para MVP, vou usar um filtro local nesta tela ou navegar para uma tela temporária.
+    // Melhor: Criar rota MyPosts no Navigator depois.
+    // Por hora, vou deixar sem ação ou logger.
+    logger.info("Funcionalidade 'Meus Posts' em breve!", "CommunityScreen");
+  };
+
+  const renderHeader = () => (
+    <View style={[styles.header, { paddingTop: SPACING.md }]}>
+      <View>
+        <Text style={[styles.headerTitle, { color: textPrimary }]}>Comunidade</Text>
+        <Text style={[styles.headerSubtitle, { color: textSecondary }]}>
+          Mães Valente conectadas
+        </Text>
+      </View>
+      <Pressable
+        onPress={handleMyPosts}
+        style={{
+          padding: SPACING.sm,
+          backgroundColor: isDark ? neutral[800] : neutral[100],
+          borderRadius: RADIUS.full,
+        }}
+      >
+        <Ionicons name="person-circle-outline" size={24} color={brand.primary[500]} />
+      </Pressable>
+    </View>
+  );
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: bgPrimary }]} edges={["top"]}>
-      <View style={[styles.container, { backgroundColor: bgPrimary }]}>
-        {/* Header - Using ScreenHeader component */}
-        <ScreenHeader
-          title="Mães Valente"
-          subtitle="Comunidade de apoio e inspiração"
-          logo={
-            <Image
-              source={{ uri: MAES_VALENTE_LOGO_URL }}
-              style={{ width: 36, height: 36, borderRadius: 18 }}
-            />
-          }
-          rightActions={[
-            {
-              icon: community.isSearchVisible ? "close" : "search",
-              onPress: community.handleSearchToggle,
-              label: community.isSearchVisible ? "Fechar busca" : "Buscar posts",
-            },
-          ]}
-        />
-
-        {/* Search Input */}
-        {community.isSearchVisible && (
-          <Animated.View
-            entering={FadeIn.duration(200)}
-            style={[
-              styles.searchInput,
-              {
-                backgroundColor: isDark ? Tokens.neutral[800] : Tokens.neutral[0],
-                borderColor,
-                marginHorizontal: spacing.xl,
-                marginBottom: SPACING.lg,
-              },
-            ]}
-          >
-            <Ionicons name="search" size={20} color={textSecondary} />
-            <TextInput
-              value={community.searchQuery}
-              onChangeText={community.setSearchQuery}
-              placeholder="Buscar posts..."
-              placeholderTextColor={textSecondary}
-              autoFocus
-              style={[styles.searchTextInput, { color: textMain }]}
-            />
-          </Animated.View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgPrimary }} edges={["top"]}>
+      <View style={{ flex: 1 }}>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={brand.primary[500]} />
+          </View>
+        ) : (
+          <FlatList
+            data={posts}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item, index }) => (
+              <View style={{ paddingHorizontal: SPACING.lg }}>
+                <CommunityPostCard
+                  post={item}
+                  index={index}
+                  onLike={() => {}}
+                  onComment={() => {}}
+                  onShare={() => {}}
+                  onPress={() => {}}
+                />
+              </View>
+            )}
+            ListHeaderComponent={renderHeader}
+            ListFooterComponent={<View style={{ height: 100 }} />}
+            contentContainerStyle={{ paddingBottom: insets.bottom }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={brand.primary[500]}
+              />
+            }
+            ListEmptyComponent={
+              <View style={[styles.center, { padding: SPACING["2xl"], marginTop: SPACING["2xl"] }]}>
+                <Ionicons name="heart-outline" size={48} color={neutral[300]} />
+                <Text style={{ marginTop: SPACING.md, color: textSecondary, textAlign: "center" }}>
+                  Ainda não há posts aprovados.
+                </Text>
+                <Text style={{ marginTop: SPACING.xs, color: textSecondary, textAlign: "center" }}>
+                  Seja a primeira a compartilhar!
+                </Text>
+              </View>
+            }
+          />
         )}
 
-        {/* Feed */}
-        <FlatList
-          data={community.filteredPosts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <PostCard
-              post={item}
-              index={index}
-              onLike={community.handleLike}
-              onComment={community.handleCommentPress}
-              onShare={community.handleSharePress}
-              onPress={community.handlePostPress}
-            />
-          )}
-          ListHeaderComponent={
-            <View>
-              <ComposerCard onPress={community.openNewPostModal} />
-              {/* Separador de seção - MELHORADO */}
-              <View style={styles.sectionDivider}>
-                <View style={[styles.dividerLine, { backgroundColor: borderColor }]} />
-                <Text style={[styles.sectionLabel, { color: textMuted }]}>
-                  PUBLICAÇÕES RECENTES
-                </Text>
-                <View style={[styles.dividerLine, { backgroundColor: borderColor }]} />
-              </View>
-            </View>
-          }
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.listContent,
+        {/* FAB: Criar Post */}
+        <Pressable
+          onPress={handleCreatePost}
+          style={[
+            styles.fab,
             {
-              paddingHorizontal: spacing.xl,
-              paddingBottom: 140 + insets.bottom, // Mais espaço para FAB
+              bottom: insets.bottom + SPACING.lg,
+              backgroundColor: brand.primary[500],
+              shadowColor: brand.primary[500],
             },
           ]}
-          initialNumToRender={5}
-          maxToRenderPerBatch={5}
-          windowSize={5}
-          removeClippedSubviews={true}
-        />
-
-        {/* FAB - Using FAB component */}
-        <View style={[styles.fabContainer, { bottom: insets.bottom + SPACING["2xl"] }]}>
-          <FAB
-            icon="add"
-            onPress={community.openNewPostModal}
-            variant="accent"
-            size="md"
-            accessibilityLabel="Criar novo post"
-          />
-        </View>
-
-        {/* Modal */}
-        <NewPostModal
-          visible={community.isNewPostModalVisible}
-          onClose={community.closeNewPostModal}
-          onSubmit={community.handleNewPost}
-        />
+        >
+          <Ionicons name="add" size={32} color="white" />
+        </Pressable>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  center: {
     flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  searchInput: {
-    flexDirection: "row",
     alignItems: "center",
-    borderRadius: RADIUS.xl, // Aumentado de lg
+    justifyContent: "center",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    borderWidth: 1,
+    paddingBottom: SPACING.xl,
   },
-  searchTextInput: {
-    flex: 1,
-    marginLeft: SPACING.md,
-    fontSize: 16, // Aumentado de 15
-    paddingVertical: SPACING.sm,
-    fontFamily: "Manrope_500Medium",
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "800",
+    fontFamily: "Manrope_800ExtraBold",
   },
-  listContent: {
-    paddingTop: SPACING.xl, // Aumentado de lg
+  headerSubtitle: {
+    fontSize: 14,
+    marginTop: 4,
   },
-  sectionDivider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: SPACING["2xl"], // Espaço acima do separador
-    marginBottom: SPACING.xl, // Espaço abaixo do separador
-    gap: SPACING.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  sectionLabel: {
-    fontSize: 11, // Reduzido de 12
-    fontWeight: "700", // Aumentado de 600
-    fontFamily: "Manrope_700Bold",
-    textTransform: "uppercase",
-    letterSpacing: 1.2, // Aumentado de 0.5
-  },
-  fabContainer: {
+  fab: {
     position: "absolute",
-    right: SPACING["2xl"], // Aumentado de xl
+    right: SPACING.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    ...SHADOWS.lg,
+    shadowOpacity: 0.4,
+    elevation: 8,
   },
 });

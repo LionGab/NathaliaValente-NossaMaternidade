@@ -72,6 +72,15 @@ module.exports = {
           800: "#115E59",
           900: "#134E4A",
         },
+        // NathAccent: Conteúdo exclusivo Nath (Mundo da Nath, badges premium)
+        nath: {
+          rose: "#F4A5B8",
+          "rose-light": "#FAD4DE",
+          "rose-dark": "#E88BA0",
+          coral: "#FF6B6B",
+          "coral-light": "#FF9E9E",
+          "coral-dark": "#E85555",
+        },
         // Rose (legacy compat - aponta para accent)
         rose: {
           50: "#FFF5F8",

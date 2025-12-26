@@ -228,6 +228,8 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
             <Text style={{ color: textMain, fontSize: typography.headlineLarge.fontSize, fontFamily: "DMSerifDisplay_400Regular" }}>Perfil</Text>
             <Pressable
               onPress={handleSettingsPress}
+              accessibilityLabel="Abrir configurações"
+              accessibilityRole="button"
               style={{
                 padding: 8,
                 backgroundColor: colors.background.card,
@@ -487,6 +489,8 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
               <Pressable
                 key={item.id}
                 onPress={() => handleMenuItemPress(item.id)}
+                accessibilityLabel={`Menu: ${item.label}`}
+                accessibilityRole="menuitem"
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -523,6 +527,8 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
         >
           <Pressable
             onPress={handleLogout}
+            accessibilityLabel="Sair da conta"
+            accessibilityRole="button"
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -550,6 +556,8 @@ export default function ProfileScreen({ navigation }: RootStackScreenProps<"Edit
           </Text>
           <Pressable
             onPress={handleDeleteAccountPress}
+            accessibilityLabel="Deletar minha conta permanentemente"
+            accessibilityRole="button"
             style={{
               flexDirection: "row",
               alignItems: "center",
