@@ -208,7 +208,7 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = memo(
               className="absolute -bottom-0.5 -right-0.5 bg-white rounded-full"
               style={{ padding: 1 }}
             >
-              <Ionicons name="lock-closed" size={iconSize * 0.5} color="#9CA3AF" />
+              <Ionicons name="lock-closed" size={iconSize * 0.5} color={Tokens.neutral[400]} />
             </View>
           </View>
         );
@@ -269,12 +269,12 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = memo(
           }}
         >
           {isLoading ? (
-            <ActivityIndicator size="small" color={isPlaying ? "#fff" : iconColor} />
+            <ActivityIndicator size="small" color={isPlaying ? Tokens.neutral[0] : iconColor} />
           ) : (
             <Ionicons
               name={isPlaying ? "pause" : "play"}
               size={iconSize}
-              color={isPlaying ? "#fff" : iconColor}
+              color={isPlaying ? Tokens.neutral[0] : iconColor}
             />
           )}
         </Pressable>
@@ -287,7 +287,7 @@ export const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = memo(
           <View className="flex-row items-center ml-2">
             <Ionicons name="mic-outline" size={14} color={iconColor} />
             {!hasAccess && (
-              <Ionicons name="lock-closed" size={10} color="#9CA3AF" className="ml-0.5" />
+              <Ionicons name="lock-closed" size={10} color={Tokens.neutral[400]} className="ml-0.5" />
             )}
           </View>
         )}

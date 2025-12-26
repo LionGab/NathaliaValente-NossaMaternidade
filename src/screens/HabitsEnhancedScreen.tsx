@@ -20,6 +20,7 @@ import {
   SHADOWS,
   premium,
   streak,
+  neutral,
 } from "../theme/tokens";
 
 type ViewMode = "today" | "week" | "month";
@@ -459,7 +460,7 @@ function HabitCard({ habit, index, onToggle }: HabitCardProps) {
               <Ionicons
                 name={habit.icon as keyof typeof Ionicons.glyphMap}
                 size={26}
-                color={habit.completed ? "#FFF" : habit.color}
+                color={habit.completed ? neutral[0] : habit.color}
               />
             </View>
 

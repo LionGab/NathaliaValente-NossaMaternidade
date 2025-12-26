@@ -46,6 +46,7 @@ import {
   radius,
   spacing,
   typography,
+  semantic,
 } from "../../theme/tokens";
 import { useTheme } from "../../hooks/useTheme";
 
@@ -215,9 +216,9 @@ export function AnimatedBadge({
     switch (type) {
       case "streak":
         return {
-          bg: isDark ? "rgba(251, 191, 36, 0.15)" : streakTokens.background,
+          bg: isDark ? semantic.dark.warningLight : streakTokens.background,
           border: streakTokens.icon,
-          text: isDark ? "#FCD34D" : streakTokens.text,
+          text: isDark ? semantic.dark.warning : streakTokens.text,
           icon: streakTokens.icon,
           glow: streakTokens.icon,
         };
@@ -239,11 +240,11 @@ export function AnimatedBadge({
         };
       case "notification":
         return {
-          bg: isDark ? "rgba(239, 68, 68, 0.15)" : "#FEE2E2",
-          border: "#EF4444",
-          text: isDark ? "#FCA5A5" : "#B91C1C",
-          icon: "#EF4444",
-          glow: "#EF4444",
+          bg: isDark ? semantic.dark.errorLight : semantic.light.errorLight,
+          border: semantic.light.error,
+          text: isDark ? semantic.dark.errorText : semantic.light.errorText,
+          icon: semantic.light.error,
+          glow: semantic.light.error,
         };
       default:
         return {

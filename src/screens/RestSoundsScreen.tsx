@@ -134,8 +134,8 @@ const SOUNDS: SoundItem[] = [
  */
 const getRestColors = (_isDark: boolean) => ({
   // Backgrounds - always dark for relaxation
-  bgPrimary: "#1F2937",
-  bgSecondary: "#111827",
+  bgPrimary: Tokens.neutral[800],
+  bgSecondary: Tokens.neutral[900],
   cardBg: Tokens.overlay.light,
   cardBgActive: (color: string) => `${color}20`,
   // Text
@@ -143,20 +143,20 @@ const getRestColors = (_isDark: boolean) => ({
   textSecondary: Tokens.neutral[400],
   textMuted: Tokens.overlay.heavy,
   // UI elements
-  iconBg: "#374151",
+  iconBg: Tokens.neutral[700],
   iconBgActive: (color: string) => color,
   border: Tokens.overlay.light,
   borderActive: (color: string) => color,
   // Info card
   infoBg: Tokens.overlay.light,
-  infoIconBg: "rgba(192, 132, 252, 0.2)", // Purple theme for rest screen
-  infoIcon: "#C084FC",
+  infoIconBg: `${Tokens.brand.secondary[400]}33`, // Purple theme with 20% opacity
+  infoIcon: Tokens.brand.secondary[400],
   // Tab
   tabBg: Tokens.overlay.light,
   tabActive: Tokens.overlay.heavy,
   // Tip - Purple theme for rest screen
-  tipBg: "rgba(168, 85, 247, 0.1)",
-  tipBorder: "rgba(168, 85, 247, 0.2)",
+  tipBg: `${Tokens.brand.secondary[500]}1A`, // 10% opacity
+  tipBorder: `${Tokens.brand.secondary[500]}33`, // 20% opacity
 });
 
 const CATEGORIES = [

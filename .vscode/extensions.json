@@ -1,8 +1,35 @@
 {
   "recommendations": [
+    // ============================================
+    // Essenciais (Obrigatórias)
+    // ============================================
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
     "bradlc.vscode-tailwindcss",
-    "eamodio.gitlens"
+
+    // ============================================
+    // Git (Recomendado)
+    // ============================================
+    "eamodio.gitlens",
+
+    // ============================================
+    // React Native / Expo (Recomendado)
+    // ============================================
+    "expo.vscode-expo-tools",
+
+    // ============================================
+    // TypeScript (Opcional - Melhorias)
+    // ============================================
+    "ms-vscode.vscode-typescript-next",
+
+    // ============================================
+    // Qualidade de Código (Opcional)
+    // ============================================
+    "usernamehw.errorlens"
+  ],
+  "unwantedRecommendations": [
+    // Remover extensões desnecessárias
+    "mhutchie.git-graph", // Duplicado com GitLens
+    "ms-vscode.vscode-react-native" // Substituído por expo-tools
   ]
 }

@@ -1,105 +1,54 @@
 {
-  // ===========================================
-  // Otimizações para MacBook M1 8GB RAM
-  // ===========================================
+  // ============================================
+  // Editor & Formatação
+  // ============================================
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.codeActions.triggerOnFocusChange": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.rulers": [100],
+  "editor.wordWrap": "on",
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
 
-  // Desabilitar HTTP/2 se houver problemas de rede
-  "cursor.general.disableHttp2": true,
-
-  // ===========================================
-  // TypeScript & Performance
-  // ===========================================
-
+  // ============================================
+  // TypeScript
+  // ============================================
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.preferences.importModuleSpecifier": "relative",
   "typescript.updateImportsOnFileMove.enabled": "always",
   "typescript.suggest.autoImports": true,
   "typescript.preferences.quoteStyle": "single",
 
-  // Otimizar performance do TypeScript
-  "typescript.disableAutomaticTypeAcquisition": false,
-  "typescript.tsserver.maxTsServerMemory": 4096,
-  "typescript.tsserver.watchOptions": {
-    "excludeDirectories": ["**/node_modules", "**/.expo", "**/dist", "**/build", "**/.git"]
-  },
+  // ============================================
+  // ESLint
+  // ============================================
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.format.enable": false, // Prettier cuida da formatação
+  "eslint.lintTask.enable": true,
 
-  // ===========================================
-  // Editor Performance
-  // ===========================================
-
-  "editor.semanticHighlighting.enabled": true,
-  "editor.bracketPairColorization.enabled": true,
-  "editor.guides.bracketPairs": "active",
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "explicit"
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-
-  // Reduzir uso de recursos (otimizado para reduzir Renderer de 831MB)
-  "editor.minimap.enabled": false,
-  "editor.renderWhitespace": "selection",
-  "editor.renderControlCharacters": false,
-  "editor.smoothScrolling": false,
-  "editor.cursorBlinking": "solid",
-  "editor.cursorSmoothCaretAnimation": "off",
-
-  // ===========================================
-  // File Watcher (otimizar para M1)
-  // ===========================================
-
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/.expo/**": true,
-    "**/dist/**": true,
-    "**/build/**": true,
-    "**/.expo-shared/**": true,
-    "**/.next/**": true,
-    "**/.vscode/**": true,
-    "**/bun.lock": true,
-    "**/package-lock.json": true
-  },
-
-  "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/node_modules": true,
-    "**/.expo": true,
-    "**/.expo-shared": true
-  },
-
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/.expo": true,
-    "**/dist": true,
-    "**/build": true,
-    "**/bun.lock": true,
-    "**/package-lock.json": true
-  },
-
-  // ===========================================
-  // Extensions & Language Specific
-  // ===========================================
-
+  // ============================================
+  // Prettier
+  // ============================================
+  "prettier.requireConfig": true,
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -107,120 +56,154 @@
   "[jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-
-  // ===========================================
-  // ESLint
-  // ===========================================
-
-  "eslint.enable": true,
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-  "eslint.workingDirectories": ["."],
-  "eslint.options": {
-    "cache": true,
-    "cacheLocation": ".eslintcache"
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
-  // ===========================================
-  // Prettier
-  // ===========================================
-
-  "prettier.requireConfig": true,
-  "prettier.useEditorConfig": false,
-
-  // ===========================================
-  // Tailwind CSS IntelliSense
-  // ===========================================
-
+  // ============================================
+  // Tailwind CSS / NativeWind
+  // ============================================
   "tailwindCSS.experimental.classRegex": [
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"]
+    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^\"'`]*)(?:'|\"|`)"],
+    ["className\\s*[:=]\\s*[\"'`]([^\"'`]*)[\"'`]"]
   ],
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
     "typescriptreact": "javascript"
   },
+  "tailwindCSS.files.exclude": ["**/.git/**", "**/node_modules/**", "**/.expo/**"],
 
-  // ===========================================
-  // Git (reduzir overhead)
-  // ===========================================
-
-  "git.enabled": true,
-  "git.autofetch": false,
-  "git.autoRepositoryDetection": false,
-  "git.decorations.enabled": true,
+  // ============================================
+  // Git & GitLens (Otimizado)
+  // ============================================
+  "git.autofetch": false, // Desabilitado para melhor performance
+  "git.confirmSync": false,
   "git.enableSmartCommit": true,
+  "git.suggestSmartCommit": true,
 
-  // ===========================================
-  // GitLens (otimizado para M1 8GB RAM)
-  // ===========================================
-
-  "gitlens.views.home.enabled": false,
+  // GitLens - Configuração otimizada
   "gitlens.codeLens.enabled": true,
   "gitlens.currentLine.enabled": true,
   "gitlens.hovers.enabled": true,
+  "gitlens.statusBar.enabled": true,
+  "gitlens.statusBar.format": "${author} • ${message}",
+  // Desabilitar features pesadas do GitLens
+  "gitlens.views.repositories.files.layout": "tree",
+  "gitlens.views.fileHistory.files.layout": "tree",
+  "gitlens.views.lineHistory.files.layout": "tree",
+  "gitlens.codeLens.authors.enabled": false, // Reduz overhead
+  "gitlens.codeLens.recentChange.enabled": true,
+  "gitlens.codeLens.scopes": ["document", "containers"],
 
-  // ===========================================
-  // Terminal (otimizado para M1)
-  // ===========================================
-
-  "terminal.integrated.fontSize": 13,
-  "terminal.integrated.cursorBlinking": true,
-  "terminal.integrated.cursorStyle": "line",
-  "terminal.integrated.gpuAcceleration": "off",
-  "terminal.integrated.profiles.osx": {
-    "zsh": {
-      "path": "/bin/zsh",
-      "args": ["-l"]
-    }
+  // ============================================
+  // Performance - File Watchers
+  // ============================================
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.expo/**": true,
+    "**/ios/Pods/**": true,
+    "**/ios/build/**": true,
+    "**/android/.gradle/**": true,
+    "**/android/build/**": true,
+    "**/android/app/build/**": true,
+    "**/.metro/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/web-build/**": true
   },
 
-  // ===========================================
-  // Workbench (reduzir uso de recursos)
-  // ===========================================
+  // ============================================
+  // Search - Excluir arquivos desnecessários
+  // ============================================
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bun.lock": true,
+    "**/.expo": true,
+    "**/ios/Pods": true,
+    "**/ios/build": true,
+    "**/android/.gradle": true,
+    "**/android/build": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/web-build": true,
+    "**/.git": true
+  },
+  "search.useIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": true,
 
-  "workbench.editor.enablePreview": false,
-  "workbench.startupEditor": "none",
-  "workbench.iconTheme": "vs-seti",
-  "workbench.colorTheme": "Default Dark+",
-
-  // ===========================================
+  // ============================================
   // React Native / Expo
-  // ===========================================
-
+  // ============================================
   "files.associations": {
     "*.tsx": "typescriptreact",
     "*.ts": "typescript"
   },
+  "emmet.includeLanguages": {
+    "typescript": "html",
+    "typescriptreact": "html"
+  },
+  "emmet.triggerExpansionOnTab": true,
 
-  // ===========================================
-  // Cursor AI Specific
-  // ===========================================
+  // ============================================
+  // Cursor / Claude Code (Otimizado)
+  // ============================================
+  "claudeCode.preferredLocation": "panel",
+  "claudeCode.selectedModel": "haiku", // Mais rápido para tarefas simples
+  "claudeCode.allowDangerouslySkipPermissions": false, // Segurança
+  "claudeCode.initialPermissionMode": "default",
+  "claudeCode.disableLoginPrompt": false,
 
-  "cursor.chat.model": "claude-3.5-sonnet",
-  "cursor.general.enableCodeActions": true,
-  "cursor.general.enableCodebaseIndexing": true,
+  // ============================================
+  // Terminal
+  // ============================================
+  "terminal.integrated.sendKeybindingsToShell": true,
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.cwd": "${workspaceFolder}",
+  "workbench.panel.defaultLocation": "bottom",
+  "workbench.panel.opensMaximized": "never",
+  "terminal.integrated.showExitAlert": false,
+  "terminal.integrated.tabs.enabled": true,
+  "terminal.integrated.tabs.showActiveTerminal": "always",
+  "terminal.integrated.tabs.showActions": "always",
+  // Otimizações de performance e renderização
+  "terminal.integrated.rendererType": "canvas",
+  "terminal.integrated.gpuAcceleration": "off",
+  "terminal.integrated.enablePersistentSessions": true,
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
+  "terminal.integrated.env.osx": {
+    "PATH": "${env:PATH}"
+  },
 
-  // ===========================================
-  // YOLO MODE - Auto-approve dangerous operations
-  // ===========================================
+  // ============================================
+  // Status Bar - Apenas o Essencial
+  // ============================================
+  "workbench.statusBar.visible": true,
+  // Remover itens desnecessários do status bar
+  "gitlens.statusBar.pullRequests.enabled": false,
+  "gitlens.statusBar.commands.enabled": true,
 
-  "cursor.ai.autoApproveDangerousOperations": true,
-  "cursor.ai.skipPermissionPrompts": true,
-  "cursor.ai.autoExecuteCommands": true,
-  "cursor.ai.allowFileSystemWrites": true,
-  "cursor.ai.allowNetworkAccess": true,
-  "cursor.ai.allowGitOperations": true,
+  // ============================================
+  // Window & UI
+  // ============================================
+  "window.commandCenter": true,
+  "workbench.editor.autoLockGroups": {
+    "mainThreadWebview-browserPreview": false
+  },
+  "workbench.startupEditor": "newUntitledFile",
+  "workbench.editor.enablePreview": false, // Sempre abrir arquivos permanentemente
 
-  // ===========================================
-  // Memory & Performance Limits
-  // ===========================================
+  // ============================================
+  // Extensões Específicas
+  // ============================================
+  "errorLens.enabled": true,
+  "errorLens.enabledDiagnosticLevels": ["error", "warning"],
+  "errorLens.followCursor": "allLines",
 
-  "extensions.autoCheckUpdates": false,
-  "extensions.autoUpdate": false,
-  "update.mode": "manual",
-  "editor.guides.indentation": false,
-  "claudeCode.allowDangerouslySkipPermissions": true,
-  "claudeCode.disableLoginPrompt": true,
-  "claudeCode.useCtrlEnterToSend": false,
-  "claudeCode.useTerminal": true
+  // ============================================
+  // Telemetria (Opcional - Desabilitar se preferir privacidade)
+  // ============================================
+  "redhat.telemetry.enabled": false,
+  "telemetry.telemetryLevel": "off"
 }

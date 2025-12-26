@@ -30,7 +30,7 @@ const COLORS = {
 module.exports = {
   expo: {
     name: "Nossa Maternidade",
-    slug: "nossa-maternidade",
+    slug: "nossamaternidade",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",

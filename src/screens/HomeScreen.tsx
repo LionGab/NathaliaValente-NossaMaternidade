@@ -485,7 +485,7 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
                 borderRadius: 20,
                 paddingVertical: 16,
                 paddingHorizontal: 16,
-                shadowColor: "#000",
+                shadowColor: neutral[900],
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.05,
                 shadowRadius: 3,

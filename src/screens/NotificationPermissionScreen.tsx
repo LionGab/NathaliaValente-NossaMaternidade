@@ -84,9 +84,9 @@ const TYPOGRAPHY = Tokens.typography;
 const GRADIENTS = {
   nathiaOnboarding: Tokens.gradients.heroAccent,
   notification: {
-    morning: "#F59E0B",
-    checkIn: "#10B981",
-    evening: "#6366F1",
+    morning: Tokens.semantic.light.warning,
+    checkIn: Tokens.semantic.light.success,
+    evening: Tokens.brand.secondary[600],
   },
 };
 
