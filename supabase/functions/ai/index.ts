@@ -332,6 +332,74 @@ const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 const GEMINI_KEY = Deno.env.get("GEMINI_API_KEY")!;
 const OPENAI_KEY = Deno.env.get("OPENAI_API_KEY")!;
 
+// Modelo Gemini pode variar por conta/região/versão da API.
+// Evita hardcode de preview que pode não existir para algumas API keys.
+const GEMINI_MODEL = Deno.env.get("GEMINI_MODEL") || "models/gemini-1.5-flash";
+let cachedGeminiGenerateContentModel: string | null = null;
+
+type GeminiModel = {
+  name?: string;
+  supportedGenerationMethods?: string[];
+};
+
+async function listGeminiModels(apiKey: string): Promise<GeminiModel[]> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+  const res = await fetch(url, { method: "GET" });
+  const raw = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`Gemini ListModels error (${res.status}): ${raw}`);
+  }
+
+  let json: unknown;
+  try {
+    json = JSON.parse(raw);
+  } catch {
+    throw new Error(`Gemini ListModels JSON inválido: ${raw}`);
+  }
+
+  const models = (json as { models?: unknown }).models;
+  return Array.isArray(models) ? (models as GeminiModel[]) : [];
+}
+
+function pickGeminiGenerateContentModel(models: GeminiModel[]): string | null {
+  const usable = models.filter(
+    (m) =>
+      typeof m.name === "string" &&
+      Array.isArray(m.supportedGenerationMethods) &&
+      m.supportedGenerationMethods.includes("generateContent")
+  );
+
+  // Preferências (ordem): flash mais novo disponível -> flash -> pro -> qualquer generateContent
+  const preferred = [
+    "models/gemini-2.0-flash",
+    "models/gemini-1.5-flash",
+    "models/gemini-1.5-pro",
+  ];
+
+  for (const id of preferred) {
+    if (usable.some((m) => m.name === id)) return id;
+  }
+
+  return usable[0]?.name ?? null;
+}
+
+async function getGeminiModelForGenerateContent(): Promise<string> {
+  if (cachedGeminiGenerateContentModel) return cachedGeminiGenerateContentModel;
+
+  // Primeiro: usa env (ou default estável). Se falhar com 404, faz fallback via ListModels.
+  cachedGeminiGenerateContentModel = GEMINI_MODEL;
+  return cachedGeminiGenerateContentModel;
+}
+
+function isGeminiModelNotFoundError(message: string): boolean {
+  return (
+    message.includes("is not found for API version v1beta") ||
+    message.includes("Call ListModels") ||
+    message.includes("not supported for generateContent")
+  );
+}
+
 // Upstash Redis (opcional - fallback para in-memory se não configurado)
 const UPSTASH_REDIS_URL = Deno.env.get("UPSTASH_REDIS_REST_URL");
 const UPSTASH_REDIS_TOKEN = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
@@ -1036,7 +1104,8 @@ async function callClaudeVision(
  */
 async function callGemini(messages: AIMessage[], systemPrompt?: string): Promise<ApiResponse> {
   return geminiCircuit.execute(async () => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_KEY}`;
+    const model = await getGeminiModelForGenerateContent();
+    let url = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${GEMINI_KEY}`;
 
     // Converter para formato Gemini
     const contents = messages.map((msg) => ({
@@ -1065,6 +1134,46 @@ async function callGemini(messages: AIMessage[], systemPrompt?: string): Promise
 
     if (!response.ok) {
       const error = await response.text();
+
+      // Fallback automático se o modelo não existir para esta API key (404 / not supported)
+      if (response.status === 404 && isGeminiModelNotFoundError(error)) {
+        logger.warn("gemini_model_not_found", { model, action: "fallback_list_models" });
+        try {
+          const models = await listGeminiModels(GEMINI_KEY);
+          const picked = pickGeminiGenerateContentModel(models);
+          if (picked) {
+            cachedGeminiGenerateContentModel = picked;
+            url = `https://generativelanguage.googleapis.com/v1beta/${picked}:generateContent?key=${GEMINI_KEY}`;
+            const retry = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!retry.ok) {
+              const retryErr = await retry.text();
+              throw new Error(`Gemini API error (retry): ${retryErr}`);
+            }
+            const data = await retry.json();
+            const candidate = data.candidates?.[0];
+            const text = candidate?.content?.parts?.[0]?.text || "";
+            return {
+              content: text,
+              usage: {
+                promptTokens: data.usageMetadata?.promptTokenCount || 0,
+                completionTokens: data.usageMetadata?.candidatesTokenCount || 0,
+                totalTokens: data.usageMetadata?.totalTokenCount || 0,
+              },
+              provider: "gemini",
+            };
+          }
+        } catch (fallbackErr) {
+          logger.warn("gemini_model_fallback_failed", {
+            model,
+            error: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr),
+          });
+        }
+      }
+
       throw new Error(`Gemini API error: ${error}`);
     }
 
@@ -1100,7 +1209,8 @@ async function callGeminiWithGrounding(
   systemPrompt?: string
 ): Promise<ApiResponse> {
   return geminiCircuit.execute(async () => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_KEY}`;
+    const model = await getGeminiModelForGenerateContent();
+    let url = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${GEMINI_KEY}`;
 
     const contents = messages.map((msg) => ({
       role: msg.role === "assistant" ? "model" : "user",
@@ -1134,6 +1244,61 @@ async function callGeminiWithGrounding(
 
     if (!response.ok) {
       const error = await response.text();
+
+      // Fallback automático se o modelo não existir para esta API key (404 / not supported)
+      if (response.status === 404 && isGeminiModelNotFoundError(error)) {
+        logger.warn("gemini_grounding_model_not_found", { model, action: "fallback_list_models" });
+        try {
+          const models = await listGeminiModels(GEMINI_KEY);
+          const picked = pickGeminiGenerateContentModel(models);
+          if (picked) {
+            cachedGeminiGenerateContentModel = picked;
+            url = `https://generativelanguage.googleapis.com/v1beta/${picked}:generateContent?key=${GEMINI_KEY}`;
+            const retry = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            if (!retry.ok) {
+              const retryErr = await retry.text();
+              throw new Error(`Gemini grounding error (retry): ${retryErr}`);
+            }
+            const data = await retry.json();
+            const candidate = data.candidates?.[0];
+            const text = candidate?.content?.parts?.[0]?.text || "";
+
+            const groundingChunks: GroundingChunk[] =
+              candidate?.groundingMetadata?.groundingChunks || [];
+            const searchEntryPoint =
+              candidate?.groundingMetadata?.searchEntryPoint?.renderedContent;
+
+            const citations = groundingChunks.map((chunk) => ({
+              title: chunk.web?.title,
+              url: chunk.web?.uri,
+            }));
+
+            return {
+              content: text,
+              usage: {
+                promptTokens: data.usageMetadata?.promptTokenCount || 0,
+                completionTokens: data.usageMetadata?.candidatesTokenCount || 0,
+                totalTokens: data.usageMetadata?.totalTokenCount || 0,
+              },
+              provider: "gemini-grounding",
+              grounding: {
+                searchEntryPoint,
+                citations,
+              },
+            };
+          }
+        } catch (fallbackErr) {
+          logger.warn("gemini_grounding_model_fallback_failed", {
+            model,
+            error: fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr),
+          });
+        }
+      }
+
       throw new Error(`Gemini grounding error: ${error}`);
     }
 

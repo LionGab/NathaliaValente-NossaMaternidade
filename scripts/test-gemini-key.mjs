@@ -14,6 +14,53 @@ import { execSync } from 'child_process';
 
 const GEMINI_API_KEY = process.argv[2] || process.env.GEMINI_API_KEY;
 
+function safeJsonParse(text) {
+  try {
+    return { ok: true, value: JSON.parse(text) };
+  } catch (err) {
+    return { ok: false, value: null };
+  }
+}
+
+async function listModels(apiKey) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+  const response = await fetch(url, { method: 'GET' });
+  const raw = await response.text();
+
+  if (!response.ok) {
+    throw new Error(`ListModels falhou (${response.status}): ${raw}`);
+  }
+
+  const parsed = safeJsonParse(raw);
+  if (!parsed.ok) {
+    throw new Error(`ListModels retornou JSON inválido: ${raw}`);
+  }
+
+  const models = parsed.value?.models;
+  return Array.isArray(models) ? models : [];
+}
+
+function pickGenerateContentModel(models) {
+  const supportsGenerateContent = (m) =>
+    typeof m?.name === 'string' &&
+    Array.isArray(m?.supportedGenerationMethods) &&
+    m.supportedGenerationMethods.includes('generateContent');
+
+  const usable = models.filter(supportsGenerateContent);
+
+  const preferred = [
+    'models/gemini-2.0-flash',
+    'models/gemini-1.5-flash',
+    'models/gemini-1.5-pro',
+  ];
+
+  for (const id of preferred) {
+    if (usable.some((m) => m.name === id)) return id;
+  }
+
+  return usable[0]?.name ?? null;
+}
+
 async function testGeminiKey(apiKey) {
   if (!apiKey) {
     console.error('❌ API key não fornecida');
@@ -35,8 +82,20 @@ async function testGeminiKey(apiKey) {
   console.log(`   Key: ${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}\n`);
 
   try {
-    // Teste simples: gerar conteúdo com modelo básico
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+    // Descobrir um modelo disponível para esta key (evita hardcode quebrar quando o modelo muda)
+    const models = await listModels(apiKey);
+    const modelId = pickGenerateContentModel(models);
+
+    if (!modelId) {
+      console.error('❌ Nenhum modelo com generateContent disponível para esta API key');
+      console.log('\n💡 Dica: confira os modelos disponíveis com:');
+      console.log('   curl "https://generativelanguage.googleapis.com/v1beta/models?key=YOUR_KEY"');
+      process.exit(1);
+    }
+
+    console.log(`🧠 Modelo selecionado: ${modelId}\n`);
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/${modelId}:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -57,13 +116,8 @@ async function testGeminiKey(apiKey) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      let errorJson;
-      try {
-        errorJson = JSON.parse(errorText);
-      } catch {
-        // Se não for JSON, usar texto direto
-        errorJson = { error: { message: errorText } };
-      }
+      const parsed = safeJsonParse(errorText);
+      const errorJson = parsed.ok ? parsed.value : { error: { message: errorText } };
 
       const error = errorJson.error || errorJson[0]?.error;
 
@@ -84,6 +138,12 @@ async function testGeminiKey(apiKey) {
         console.error('❌ API key sem permissões');
         console.log('\n💡 A chave existe mas não tem acesso ao Gemini API');
         console.log('   Verifique em: https://console.cloud.google.com/apis/credentials');
+        process.exit(1);
+      } else if (response.status === 404 && (error?.message || errorText).includes('Call ListModels')) {
+        console.error('❌ Modelo não encontrado para esta API key');
+        console.log('\n💡 Isso costuma acontecer quando o modelo hardcoded não existe para sua conta.');
+        console.log('   Este script já faz ListModels e escolhe um modelo compatível;');
+        console.log('   se mesmo assim falhar, sua key pode ter acesso restrito.');
         process.exit(1);
       } else {
         console.error(`❌ Erro na API: ${error?.message || errorText}`);
