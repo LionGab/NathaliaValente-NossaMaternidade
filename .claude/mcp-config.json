@@ -102,6 +102,32 @@
       "capabilities": ["read_file", "write_file", "list_directory", "get_file_info"],
       "inspectorCommand": "npx -y @modelcontextprotocol/inspector npx @modelcontextprotocol/server-filesystem /Users/lion/Documents/Lion/NossaMaternidade",
       "note": "Útil para testar e debugar operações de filesystem via MCP Inspector"
+    },
+
+    "revenuecat": {
+      "description": "RevenueCat MCP Server (cloud)",
+      "transport": "http",
+      "url": "https://mcp.revenuecat.ai/mcp",
+      "status": "pending_setup",
+      "requires": ["RevenueCat API v2 Secret Key"],
+      "setupCommand": "Ver docs/REVENUECAT_MCP_SETUP.md",
+      "capabilities": [
+        "list_subscribers",
+        "get_subscriber",
+        "list_products",
+        "get_product",
+        "list_offerings",
+        "get_offering",
+        "create_entitlement",
+        "create_product",
+        "manage_subscriptions"
+      ],
+      "authentication": {
+        "method": "Bearer Token (API v2 Secret Key)",
+        "note": "Para Cursor: Pode usar OAuth (automático) ou API v2 Secret Key manual",
+        "getKey": "RevenueCat Dashboard → Project Settings → API Keys → Create API v2 Secret Key"
+      },
+      "documentation": "https://docs.revenuecat.com/mcp/setup"
     }
   },
 
