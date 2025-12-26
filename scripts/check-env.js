@@ -168,7 +168,11 @@ function checkVariables() {
     const value = getEnvValue(varInfo.name);
     const status = value && !isPlaceholder(value) ? '✅' : '⚪';
     const color = value && !isPlaceholder(value) ? colors.green : colors.reset;
-    console.log(`${color}  ${status} ${varInfo.name}${colors.reset} - ${varInfo.feature}`);
+    let output = `${color}  ${status} ${varInfo.name}${colors.reset} - ${varInfo.feature}`;
+    if (varInfo.note) {
+      output += ` ${colors.yellow}(${varInfo.note})${colors.reset}`;
+    }
+    console.log(output);
   });
 
   // Resumo final

@@ -124,7 +124,7 @@ export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({ onNavigate }) 
     },
     {
       id: "community",
-      label: "Comunidade",
+      label: "Mães Valente",
       icon: "people-outline",
       route: "Community",
     },

@@ -109,7 +109,7 @@ export default function NotificationPreferencesScreen({
       ],
     },
     {
-      title: "Comunidade",
+      title: "Mães Valente",
       icon: "people-outline",
       preferences: [
         {

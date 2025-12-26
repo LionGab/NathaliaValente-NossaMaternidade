@@ -88,6 +88,20 @@
         "Servidor MCP customizado (ver docs/TERMIUS_MCP_SETUP.md)"
       ],
       "documentation": "docs/TERMIUS_MCP_SETUP.md"
+    },
+
+    "filesystem": {
+      "description": "Filesystem MCP Server (para desenvolvimento/teste)",
+      "transport": "stdio",
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/lion/Documents/Lion/NossaMaternidade"
+      ],
+      "status": "available",
+      "capabilities": ["read_file", "write_file", "list_directory", "get_file_info"],
+      "inspectorCommand": "npx -y @modelcontextprotocol/inspector npx @modelcontextprotocol/server-filesystem /Users/lion/Documents/Lion/NossaMaternidade",
+      "note": "Útil para testar e debugar operações de filesystem via MCP Inspector"
     }
   },
 
@@ -98,8 +112,9 @@
 
     "figmaFile": {
       "name": "Nossa Maternidade Design System",
-      "fileKey": "CONFIGURE_SEU_FILE_KEY",
-      "lastSync": null
+      "fileKey": "NossaMaternidade_v1",
+      "lastSync": null,
+      "status": "ready"
     },
 
     "tokens": {

@@ -439,7 +439,7 @@ export default function OnboardingPaywall({ route, navigation }: Props) {
                   },
                 ]}
               >
-                ✓ Comunidade &quot;Mães da Nath&quot;
+                ✓ Comunidade &quot;Mães Valente&quot;
               </Text>
               <Text
                 style={[

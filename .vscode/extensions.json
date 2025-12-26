@@ -25,7 +25,8 @@
     // ============================================
     // Qualidade de Código (Opcional)
     // ============================================
-    "usernamehw.errorlens"
+    "usernamehw.errorlens",
+    "google.gemini-cli-vscode-ide-companion"
   ],
   "unwantedRecommendations": [
     // Remover extensões desnecessárias

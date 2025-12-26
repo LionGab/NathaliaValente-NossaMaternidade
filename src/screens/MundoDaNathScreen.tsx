@@ -30,38 +30,12 @@ import Animated, {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAdmin } from "../hooks/useAdmin";
 import { useTheme } from "../hooks/useTheme";
-import {
-  spacing,
-  radius,
-  shadows,
-  brand,
-  neutral,
-  surface,
-  nathAccent,
-} from "../theme/tokens";
+import { Tokens } from "../theme/tokens";
 import { RootStackScreenProps } from "../types/navigation";
 import { mundoNathService } from "../services/mundoNath";
 import { MundoNathPost } from "../types/community";
 import { logger } from "../utils/logger";
-
-// Compatibility aliases
-const RADIUS = radius;
-const SHADOWS = shadows;
-const SPACING = spacing;
-const COLORS = {
-  primary: brand.primary,
-  accent: brand.accent,
-  nath: nathAccent, // Usando os novos tokens
-  neutral: neutral,
-  background: {
-    primary: surface.light.base,
-    card: surface.light.card,
-  },
-  text: {
-    primary: neutral[900],
-    secondary: neutral[600],
-  },
-};
+import { PremiumEmptyState } from "../components/ui/PremiumEmptyState";
 
 const NATHALIA_AVATAR_URL = "https://i.imgur.com/37dbPJE.jpg";
 
@@ -102,10 +76,10 @@ const PostCard: React.FC<{
     return `há ${days} dias`;
   };
 
-  const bgCard = isDark ? COLORS.neutral[800] : COLORS.neutral[0];
-  const textPrimary = isDark ? COLORS.neutral[100] : COLORS.text.primary;
-  const textSecondary = isDark ? COLORS.neutral[400] : COLORS.text.secondary;
-  const borderColor = isDark ? COLORS.neutral[700] : COLORS.neutral[200];
+  const bgCard = isDark ? Tokens.neutral[800] : Tokens.neutral[0];
+  const textPrimary = isDark ? Tokens.neutral[100] : Tokens.neutral[900];
+  const textSecondary = isDark ? Tokens.neutral[400] : Tokens.neutral[600];
+  const borderColor = isDark ? Tokens.neutral[700] : Tokens.neutral[200];
 
   // Logic: Se locked (não premium e tem media), mostra lock
   // O backend deve retornar is_locked=true se não for premium
@@ -117,12 +91,12 @@ const PostCard: React.FC<{
       style={[
         {
           backgroundColor: bgCard,
-          borderRadius: RADIUS.xl,
-          marginBottom: SPACING.md,
+          borderRadius: Tokens.radius.xl,
+          marginBottom: Tokens.spacing.md,
           overflow: "hidden",
           borderWidth: 1,
           borderColor: borderColor,
-          shadowColor: COLORS.neutral[900],
+          shadowColor: Tokens.neutral[900],
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.06,
           shadowRadius: 8,
@@ -132,16 +106,16 @@ const PostCard: React.FC<{
       ]}
     >
       {/* Header */}
-      <View style={{ padding: SPACING.md }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: SPACING.sm }}>
+      <View style={{ padding: Tokens.spacing.md }}>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: Tokens.spacing.sm }}>
           <View
             style={{
               width: 40,
               height: 40,
               borderRadius: 20,
-              marginRight: SPACING.sm,
+              marginRight: Tokens.spacing.sm,
               borderWidth: 1,
-              borderColor: COLORS.nath.rose, // Usando rose
+              borderColor: Tokens.nathAccent.rose, // Usando rose
               overflow: "hidden",
             }}
           >
@@ -165,7 +139,7 @@ const PostCard: React.FC<{
               <Ionicons
                 name="checkmark-circle"
                 size={14}
-                color={COLORS.nath.rose}
+                color={Tokens.nathAccent.rose}
                 style={{ marginLeft: 4 }}
               />
             </View>
@@ -180,18 +154,18 @@ const PostCard: React.FC<{
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                paddingHorizontal: SPACING.sm,
+                paddingHorizontal: Tokens.spacing.sm,
                 paddingVertical: 4,
-                borderRadius: RADIUS.full,
-                backgroundColor: isDark ? COLORS.neutral[700] : COLORS.nath.roseLight, // Usando rose light
+                borderRadius: Tokens.radius.full,
+                backgroundColor: isDark ? Tokens.neutral[700] : Tokens.nathAccent.roseLight, // Usando rose light
               }}
             >
-              <Ionicons name="play-circle" size={12} color={COLORS.nath.roseDark} />
+              <Ionicons name="play-circle" size={12} color={Tokens.nathAccent.roseDark} />
               <Text
                 style={{
                   fontSize: 10,
                   fontWeight: "600",
-                  color: COLORS.nath.roseDark,
+                  color: Tokens.nathAccent.roseDark,
                   marginLeft: 4,
                 }}
               >
@@ -208,7 +182,7 @@ const PostCard: React.FC<{
               fontSize: 13,
               lineHeight: 20,
               color: textPrimary,
-              marginBottom: post.media_path ? SPACING.sm : 0,
+              marginBottom: post.media_path ? Tokens.spacing.sm : 0,
             }}
           >
             {post.text}
@@ -230,7 +204,7 @@ const PostCard: React.FC<{
             <View
               style={{
                 height: 250,
-                backgroundColor: isDark ? COLORS.neutral[900] : COLORS.neutral[100],
+                backgroundColor: isDark ? Tokens.neutral[900] : Tokens.neutral[100],
                 alignItems: "center",
                 justifyContent: "center",
               }}
@@ -241,7 +215,7 @@ const PostCard: React.FC<{
                   position: "absolute",
                   inset: 0,
                   opacity: 0.1,
-                  backgroundColor: COLORS.nath.rose,
+                  backgroundColor: Tokens.nathAccent.rose,
                 }}
               />
 
@@ -250,17 +224,17 @@ const PostCard: React.FC<{
                   width: 64,
                   height: 64,
                   borderRadius: 32,
-                  backgroundColor: COLORS.nath.rose,
+                  backgroundColor: Tokens.nathAccent.rose,
                   alignItems: "center",
                   justifyContent: "center",
-                  ...SHADOWS.md,
+                  ...Tokens.shadows.md,
                 }}
               >
                 <Ionicons name="lock-closed" size={28} color="white" />
               </View>
               <Text
                 style={{
-                  marginTop: SPACING.md,
+                  marginTop: Tokens.spacing.md,
                   fontWeight: "700",
                   color: textPrimary,
                   textAlign: "center",
@@ -303,7 +277,7 @@ const PostCard: React.FC<{
                   style={{
                     width: "100%",
                     height: 300,
-                    backgroundColor: COLORS.neutral[200],
+                    backgroundColor: Tokens.neutral[200],
                   }}
                   resizeMode="cover"
                 />
@@ -318,14 +292,14 @@ const PostCard: React.FC<{
         style={{
           flexDirection: "row",
           alignItems: "center",
-          padding: SPACING.md,
+          padding: Tokens.spacing.md,
           borderTopWidth: 1,
           borderTopColor: borderColor,
         }}
       >
         <Pressable
           onPress={handleLikePress}
-          style={{ flexDirection: "row", alignItems: "center", marginRight: SPACING.xl }}
+          style={{ flexDirection: "row", alignItems: "center", marginRight: Tokens.spacing.xl }}
         >
           <Ionicons
             name={"heart-outline"} // TODO: isLiked real
@@ -336,7 +310,7 @@ const PostCard: React.FC<{
             style={{
               fontSize: 12,
               fontWeight: "600",
-              marginLeft: SPACING.xs,
+              marginLeft: Tokens.spacing.xs,
               color: textSecondary,
             }}
           >
@@ -357,25 +331,28 @@ type Props = RootStackScreenProps<"MundoDaNath">;
 
 export default function MundoDaNathScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
   const [posts, setPosts] = useState<MundoNathPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   // Verificação de admin (Nathalia Valente)
   const { isAdmin } = useAdmin();
 
-  const bgPrimary = isDark ? colors.background.primary : COLORS.background.primary;
-  const textPrimary = isDark ? colors.neutral[100] : COLORS.text.primary;
-  const textSecondary = isDark ? colors.neutral[400] : COLORS.text.secondary;
+  const bgPrimary = isDark ? Tokens.surface.dark.base : Tokens.surface.light.base;
+  const textPrimary = isDark ? Tokens.text.dark.primary : Tokens.text.light.primary;
+  const textSecondary = isDark ? Tokens.text.dark.secondary : Tokens.text.light.secondary;
 
   const loadFeed = useCallback(async () => {
     try {
       setLoading(true);
+      setHasError(false);
       const { data, isPremium: premiumStatus } = await mundoNathService.getFeed();
       setPosts(data);
       setIsPremium(premiumStatus);
     } catch (e) {
+      setHasError(true);
       logger.error("Erro ao carregar feed", "MundoDaNathScreen", e as Error);
     } finally {
       setLoading(false);
@@ -393,13 +370,13 @@ export default function MundoDaNathScreen({ navigation }: Props) {
   const renderHeader = () => (
     <>
       <LinearGradient
-        colors={[COLORS.nath.roseLight, COLORS.background.primary]} // Gradiente usando rose
+        colors={[Tokens.nathAccent.roseLight, isDark ? Tokens.surface.dark.base : Tokens.surface.light.base]} // Gradiente usando rose
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 0.4 }}
         style={{
-          paddingTop: SPACING.md,
-          paddingHorizontal: SPACING.lg,
-          paddingBottom: SPACING.lg,
+          paddingTop: Tokens.spacing.md,
+          paddingHorizontal: Tokens.spacing.lg,
+          paddingBottom: Tokens.spacing.lg,
         }}
       >
         <Animated.View entering={FadeIn.duration(600)} style={{ alignItems: "center" }}>
@@ -408,9 +385,9 @@ export default function MundoDaNathScreen({ navigation }: Props) {
               width: 72,
               height: 72,
               borderRadius: 36,
-              marginBottom: SPACING.sm,
+              marginBottom: Tokens.spacing.sm,
               borderWidth: 2,
-              borderColor: COLORS.nath.rose,
+              borderColor: Tokens.nathAccent.rose,
               overflow: "hidden",
             }}
           >
@@ -456,17 +433,17 @@ export default function MundoDaNathScreen({ navigation }: Props) {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          marginTop: SPACING.lg,
-          marginBottom: SPACING.md,
-          paddingHorizontal: SPACING.lg,
+          marginTop: Tokens.spacing.lg,
+          marginBottom: Tokens.spacing.md,
+          paddingHorizontal: Tokens.spacing.lg,
         }}
       >
         <Text style={{ fontSize: 15, fontWeight: "700", color: textPrimary }}>Feed Exclusivo</Text>
         {isPremium && (
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Ionicons name="star" size={12} color={COLORS.nath.rose} />
+            <Ionicons name="star" size={12} color={Tokens.nathAccent.rose} />
             <Text
-              style={{ fontSize: 12, color: COLORS.nath.rose, fontWeight: "700", marginLeft: 4 }}
+              style={{ fontSize: 12, color: Tokens.nathAccent.rose, fontWeight: "700", marginLeft: 4 }}
             >
               PREMIUM
             </Text>
@@ -481,14 +458,14 @@ export default function MundoDaNathScreen({ navigation }: Props) {
       <View style={{ flex: 1, backgroundColor: bgPrimary }}>
         {loading ? (
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <ActivityIndicator size="large" color={COLORS.nath.rose} />
+            <ActivityIndicator size="large" color={Tokens.nathAccent.rose} />
           </View>
         ) : (
           <FlatList
             data={posts}
             keyExtractor={(item) => item.id}
             renderItem={({ item, index }) => (
-              <View style={{ paddingHorizontal: SPACING.lg }}>
+              <View style={{ paddingHorizontal: Tokens.spacing.lg }}>
                 <PostCard
                   post={item}
                   index={index}
@@ -506,17 +483,28 @@ export default function MundoDaNathScreen({ navigation }: Props) {
             refreshing={loading}
             onRefresh={loadFeed}
             ListEmptyComponent={
-              <View style={{ padding: SPACING["2xl"], alignItems: "center" }}>
-                <Text style={{ color: textSecondary, textAlign: "center" }}>
-                  Nenhum post ainda.
-                </Text>
-              </View>
+              hasError ? (
+                <PremiumEmptyState
+                  title="Ops, algo deu errado"
+                  subtitle="Não conseguimos carregar o Mundo da Nath. Tente novamente."
+                  type="error"
+                  actionLabel="Tentar Novamente"
+                  onAction={loadFeed}
+                />
+              ) : (
+                <PremiumEmptyState
+                  title="Mundo da Nath"
+                  subtitle="Em breve, conteúdos exclusivos dos bastidores e dicas que só compartilho com vocês aqui."
+                  image={require("../../assets/nathalia-avatar.jpg")}
+                  type="premium"
+                />
+              )
             }
           />
         )}
 
         {/* Admin FAB - Placeholder para funcionalidade futura de postagem admin */}
-        {isAdmin && (
+        {isAdmin && !hasError && (
           <Pressable
             style={{
               position: "absolute",
@@ -525,10 +513,10 @@ export default function MundoDaNathScreen({ navigation }: Props) {
               width: 56,
               height: 56,
               borderRadius: 28,
-              backgroundColor: COLORS.nath.rose,
+              backgroundColor: Tokens.nathAccent.rose,
               alignItems: "center",
               justifyContent: "center",
-              ...SHADOWS.lg,
+              ...Tokens.shadows.lg,
             }}
             onPress={() => logger.info("Feature de Admin Posting virá no próximo PR!", "MundoDaNathScreen")}
           >

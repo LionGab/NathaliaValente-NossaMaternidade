@@ -562,13 +562,13 @@ export default function HomeScreen({ navigation }: MainTabScreenProps<"Home">): 
             index={0}
           />
 
-          {/* Comunidade */}
+          {/* Mães Valente */}
           <FeatureCard
             icon="people"
             iconBgColor={isDark ? brand.primary[800] : brand.primary[50]}
             iconColor={brand.primary[500]}
-            title="Comunidade"
-            subtitle="Conecte-se com outras mães na mesma jornada"
+            title="Mães Valente"
+            subtitle="Comunidade moderada de apoio entre mães"
             onPress={handleCommunity}
             isDark={isDark}
             index={1}

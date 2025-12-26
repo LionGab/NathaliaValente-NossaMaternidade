@@ -81,16 +81,32 @@ interface RequestMetrics {
  */
 const CRISIS_KEYWORDS = [
   // Ideação suicida
-  "suicídio", "suicidio", "me matar", "quero morrer", "não quero viver",
-  "melhor morta", "vou me matar", "penso em morrer", "acabar com tudo",
-  "não aguento mais viver", "queria estar morta",
+  "suicídio",
+  "suicidio",
+  "me matar",
+  "quero morrer",
+  "não quero viver",
+  "melhor morta",
+  "vou me matar",
+  "penso em morrer",
+  "acabar com tudo",
+  "não aguento mais viver",
+  "queria estar morta",
   // Risco ao bebê
-  "machucar o bebê", "machucar meu filho", "machucar minha filha",
-  "fazer mal ao bebê", "jogar o bebê", "sufocar o bebê",
+  "machucar o bebê",
+  "machucar meu filho",
+  "machucar minha filha",
+  "fazer mal ao bebê",
+  "jogar o bebê",
+  "sufocar o bebê",
   // Automutilação
-  "me cortar", "me machucar", "me ferir",
+  "me cortar",
+  "me machucar",
+  "me ferir",
   // Desespero extremo
-  "não tenho saída", "ninguém se importa", "sou um peso",
+  "não tenho saída",
+  "ninguém se importa",
+  "sou um peso",
 ];
 
 /**
@@ -171,7 +187,7 @@ function hashUserId(userId: string): string {
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     const char = userId.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   return `user_${Math.abs(hash).toString(16).substring(0, 8)}`;
@@ -267,7 +283,13 @@ const logger = {
   /**
    * Log rate limit event
    */
-  rateLimit(userId: string, type: "requests" | "tokens", current: number, max: number, source: "redis" | "memory") {
+  rateLimit(
+    userId: string,
+    type: "requests" | "tokens",
+    current: number,
+    max: number,
+    source: "redis" | "memory"
+  ) {
     this._log("warn", "rate_limit_exceeded", {
       userId: hashUserId(userId),
       type,
@@ -389,10 +411,7 @@ const RATE_LIMIT = {
 };
 
 // In-memory fallback (para quando Redis não está disponível)
-const rateLimitsMemory = new Map<
-  string,
-  { count: number; resetAt: number; tokens: number }
->();
+const rateLimitsMemory = new Map<string, { count: number; resetAt: number; tokens: number }>();
 
 interface RateLimitResult {
   allowed: boolean;
@@ -430,7 +449,9 @@ async function checkRateLimitRedis(
 
       // Check if over limit
       if (currentRequests >= RATE_LIMIT.maxRequests) {
-        console.log(`🚫 Rate limit HIT (requests): user=${userId}, requests=${currentRequests}/${RATE_LIMIT.maxRequests}`);
+        console.log(
+          `🚫 Rate limit HIT (requests): user=${userId}, requests=${currentRequests}/${RATE_LIMIT.maxRequests}`
+        );
         return {
           allowed: false,
           remaining: 0,
@@ -440,7 +461,9 @@ async function checkRateLimitRedis(
       }
 
       if (currentTokens + estimatedTokens > RATE_LIMIT.maxTokensPerMin) {
-        console.log(`🚫 Rate limit HIT (tokens): user=${userId}, tokens=${currentTokens}+${estimatedTokens}/${RATE_LIMIT.maxTokensPerMin}`);
+        console.log(
+          `🚫 Rate limit HIT (tokens): user=${userId}, tokens=${currentTokens}+${estimatedTokens}/${RATE_LIMIT.maxTokensPerMin}`
+        );
         return {
           allowed: false,
           remaining: 0,
@@ -465,7 +488,9 @@ async function checkRateLimitRedis(
       await incrPipeline.exec();
 
       const remaining = RATE_LIMIT.maxRequests - currentRequests - 1;
-      console.log(`✅ Rate limit OK: user=${userId}, requests=${currentRequests + 1}/${RATE_LIMIT.maxRequests}, remaining=${remaining}`);
+      console.log(
+        `✅ Rate limit OK: user=${userId}, requests=${currentRequests + 1}/${RATE_LIMIT.maxRequests}, remaining=${remaining}`
+      );
 
       return {
         allowed: true,
@@ -486,10 +511,7 @@ async function checkRateLimitRedis(
 /**
  * In-memory rate limiting fallback
  */
-function checkRateLimitMemory(
-  userId: string,
-  estimatedTokens: number
-): RateLimitResult {
+function checkRateLimitMemory(userId: string, estimatedTokens: number): RateLimitResult {
   const now = Date.now();
   const limit = rateLimitsMemory.get(userId);
 
@@ -510,7 +532,9 @@ function checkRateLimitMemory(
 
   // Verificar request count
   if (limit.count >= RATE_LIMIT.maxRequests) {
-    console.log(`🚫 Rate limit HIT (memory): user=${userId}, requests=${limit.count}/${RATE_LIMIT.maxRequests}`);
+    console.log(
+      `🚫 Rate limit HIT (memory): user=${userId}, requests=${limit.count}/${RATE_LIMIT.maxRequests}`
+    );
     return {
       allowed: false,
       remaining: 0,
@@ -521,7 +545,9 @@ function checkRateLimitMemory(
 
   // Verificar token cap
   if (limit.tokens + estimatedTokens > RATE_LIMIT.maxTokensPerMin) {
-    console.log(`🚫 Rate limit HIT (memory/tokens): user=${userId}, tokens=${limit.tokens}+${estimatedTokens}/${RATE_LIMIT.maxTokensPerMin}`);
+    console.log(
+      `🚫 Rate limit HIT (memory/tokens): user=${userId}, tokens=${limit.tokens}+${estimatedTokens}/${RATE_LIMIT.maxTokensPerMin}`
+    );
     return {
       allowed: false,
       remaining: 0,
@@ -693,7 +719,13 @@ Deno.serve(async (req) => {
     rateLimitSource = rateLimitResult.source;
 
     if (!rateLimitResult.allowed) {
-      logger.rateLimit(userId, "requests", RATE_LIMIT.maxRequests, RATE_LIMIT.maxRequests, rateLimitSource);
+      logger.rateLimit(
+        userId,
+        "requests",
+        RATE_LIMIT.maxRequests,
+        RATE_LIMIT.maxRequests,
+        rateLimitSource
+      );
       return jsonResponse(
         {
           error: "Rate limit exceeded. Try again in a minute.",
@@ -705,22 +737,6 @@ Deno.serve(async (req) => {
         allowOrigin
       );
     }
-
-    // Log request start
-    logger.info("request_started", {
-      requestId,
-      userId: hashUserId(userId),
-      provider: provider || "claude",
-      messageCount,
-      estimatedTokens,
-      features: { hasImage, hasGrounding },
-    });
-
-    // 5. Call AI provider with CRISIS DETECTION + GUARDRAIL
-    // ORDEM: Crise → Claude | Normal → Gemini | Fallback → Claude → OpenAI
-    let response: ApiResponse & { fallback?: boolean };
-    const aiStartTime = Date.now();
-    const requestedProvider = provider || "gemini";
 
     // Detectar última mensagem do usuário para análise de crise
     const lastUserMessage = messages.filter((m: AIMessage) => m.role === "user").pop();
@@ -735,37 +751,80 @@ Deno.serve(async (req) => {
       });
     }
 
+    // 4.1 Fetch NathIA Context (Wellness/Sleep/Mood)
+    let contextSuffix = "";
+    if (!isCrisisMessage) {
+      try {
+        const { data: contextData, error: contextError } = await supabase.rpc(
+          "generate_nathia_context_prompt",
+          { p_user_id: userId }
+        );
+
+        if (!contextError && contextData) {
+          contextSuffix = `\n\nCONTEXTO EM TEMPO REAL:\n${contextData}`;
+          logger.info("context_injected", { userId: hashUserId(userId) });
+        }
+      } catch (err) {
+        logger.debug("context_fetch_failed", { error: err });
+      }
+    }
+
+    // Construct final system prompt
+    const baseSystemPrompt = systemPrompt || DEFAULT_SYSTEM_PROMPT;
+    const finalSystemPrompt = isCrisisMessage 
+      ? (systemPrompt || CRISIS_SYSTEM_PROMPT) 
+      : (baseSystemPrompt + contextSuffix);
+
+    // Log request start
+    logger.info("request_started", {
+      requestId,
+      userId: hashUserId(userId),
+      provider: provider || "claude",
+      messageCount,
+      estimatedTokens,
+      features: { hasImage, hasGrounding },
+      contextInjected: !!contextSuffix,
+    });
+
+    // 5. Call AI provider with CRISIS DETECTION + GUARDRAIL
+    // ORDEM: Crise → Claude | Normal → Gemini | Fallback → Claude → OpenAI
+    let response: ApiResponse & { fallback?: boolean };
+    const aiStartTime = Date.now();
+    const requestedProvider = provider || "gemini";
+
     try {
       if (isCrisisMessage) {
         // 🚨 CRISE: Usa Claude SEMPRE (modelo mais seguro para situações delicadas)
         logger.info("crisis_routing", { requestId, to: "claude" });
-        response = await callClaude(messages, systemPrompt || CRISIS_SYSTEM_PROMPT);
+        response = await callClaude(messages, finalSystemPrompt);
         providerUsed = "claude-crisis";
       } else if (grounding) {
         // Grounding sempre usa Gemini + Google Search
-        response = await callGeminiWithGrounding(messages, systemPrompt);
+        response = await callGeminiWithGrounding(messages, finalSystemPrompt);
         providerUsed = "gemini-grounding";
       } else if (imageData) {
         // Imagens usam Claude Vision (único caso onde Claude é default)
-        response = await callClaudeVision(messages, systemPrompt, imageData);
+        response = await callClaudeVision(messages, finalSystemPrompt, imageData);
         providerUsed = "claude-vision";
       } else if (provider === "claude") {
         // Claude só se explicitamente solicitado
-        response = await callClaude(messages, systemPrompt);
+        response = await callClaude(messages, finalSystemPrompt);
         providerUsed = "claude";
       } else {
         // DEFAULT: Gemini 2.5 Flash - rápido, direto, persona estável
-        response = await callGemini(messages, systemPrompt);
+        response = await callGemini(messages, finalSystemPrompt);
         providerUsed = "gemini";
 
         // 🛡️ GUARDRAIL PÓS-RESPOSTA: Se Gemini disse algo proibido, reprocessa com Claude
         if (hasBlockedPhrase(response.content)) {
           logger.warn("guardrail_triggered", {
             requestId,
-            blockedPhrases: BLOCKED_PHRASES.filter((p) => response.content.toLowerCase().includes(p)),
+            blockedPhrases: BLOCKED_PHRASES.filter((p) =>
+              response.content.toLowerCase().includes(p)
+            ),
           });
           logger.info("guardrail_reprocessing", { requestId, from: "gemini", to: "claude" });
-          response = await callClaude(messages, systemPrompt);
+          response = await callClaude(messages, finalSystemPrompt);
           providerUsed = "claude-guardrail";
           wasFallback = true;
         }
@@ -781,7 +840,7 @@ Deno.serve(async (req) => {
       // FALLBACK CHAIN: Gemini falhou → tenta Claude → depois OpenAI
       try {
         logger.info("fallback_attempt", { requestId, from: requestedProvider, to: "claude" });
-        response = await callClaude(messages, systemPrompt);
+        response = await callClaude(messages, finalSystemPrompt);
         response.fallback = true;
         wasFallback = true;
         providerUsed = "claude-fallback";
@@ -791,7 +850,7 @@ Deno.serve(async (req) => {
         logger.info("fallback_attempt", { requestId, from: "claude", to: "openai" });
 
         // Último recurso: OpenAI
-        response = await callOpenAI(messages, systemPrompt);
+        response = await callOpenAI(messages, finalSystemPrompt);
         response.fallback = true;
         wasFallback = true;
         providerUsed = "openai-fallback";
@@ -802,18 +861,21 @@ Deno.serve(async (req) => {
     actualUsage = response.usage;
 
     // 6. Log analytics to database (non-blocking)
-    supabase.from("ai_requests").insert({
-      user_id: user.id,
-      provider: response.provider,
-      tokens: response.usage.totalTokens,
-      latency_ms: latency,
-      fallback: response.fallback || false,
-      created_at: new Date().toISOString(),
-    }).then(({ error }) => {
-      if (error) {
-        logger.warn("analytics_insert_failed", { requestId, error: error.message });
-      }
-    });
+    supabase
+      .from("ai_requests")
+      .insert({
+        user_id: user.id,
+        provider: response.provider,
+        tokens: response.usage.totalTokens,
+        latency_ms: latency,
+        fallback: response.fallback || false,
+        created_at: new Date().toISOString(),
+      })
+      .then(({ error }) => {
+        if (error) {
+          logger.warn("analytics_insert_failed", { requestId, error: error.message });
+        }
+      });
 
     // 7. Log request metrics
     logger.metrics({
@@ -881,10 +943,7 @@ Deno.serve(async (req) => {
  * Claude Sonnet 4.5 (FALLBACK) - Texto apenas
  * Usado quando Gemini falha ou para casos especiais (vision)
  */
-async function callClaude(
-  messages: AIMessage[],
-  systemPrompt?: string
-): Promise<ApiResponse> {
+async function callClaude(messages: AIMessage[], systemPrompt?: string): Promise<ApiResponse> {
   return claudeCircuit.execute(async () => {
     const response = await anthropic.messages.create({
       model: "claude-sonnet-4-5-20250929",
@@ -904,8 +963,7 @@ async function callClaude(
       usage: {
         promptTokens: response.usage.input_tokens,
         completionTokens: response.usage.output_tokens,
-        totalTokens:
-          response.usage.input_tokens + response.usage.output_tokens,
+        totalTokens: response.usage.input_tokens + response.usage.output_tokens,
       },
       provider: "claude",
     };
@@ -976,10 +1034,7 @@ async function callClaudeVision(
  * Gemini 2.5 Flash (DEFAULT) - NathIA principal
  * Rápido, direto, persona estável
  */
-async function callGemini(
-  messages: AIMessage[],
-  systemPrompt?: string
-): Promise<ApiResponse> {
+async function callGemini(messages: AIMessage[], systemPrompt?: string): Promise<ApiResponse> {
   return geminiCircuit.execute(async () => {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_KEY}`;
 
@@ -1087,10 +1142,8 @@ async function callGeminiWithGrounding(
     const text = candidate?.content?.parts?.[0]?.text || "";
 
     // Extrair citations corretamente (groundingChunks)
-    const groundingChunks: GroundingChunk[] =
-      candidate?.groundingMetadata?.groundingChunks || [];
-    const searchEntryPoint =
-      candidate?.groundingMetadata?.searchEntryPoint?.renderedContent;
+    const groundingChunks: GroundingChunk[] = candidate?.groundingMetadata?.groundingChunks || [];
+    const searchEntryPoint = candidate?.groundingMetadata?.searchEntryPoint?.renderedContent;
 
     const citations = groundingChunks.map((chunk) => ({
       title: chunk.web?.title,
@@ -1117,10 +1170,7 @@ async function callGeminiWithGrounding(
  * OpenAI GPT-4o (ÚLTIMO RECURSO)
  * Só usado quando Gemini E Claude falharam
  */
-async function callOpenAI(
-  messages: AIMessage[],
-  systemPrompt?: string
-): Promise<ApiResponse> {
+async function callOpenAI(messages: AIMessage[], systemPrompt?: string): Promise<ApiResponse> {
   return openaiCircuit.execute(async () => {
     const openaiMessages = [
       ...(systemPrompt
@@ -1157,11 +1207,7 @@ async function callOpenAI(
 // HELPERS
 // =======================
 
-function jsonResponse(
-  data: Record<string, unknown>,
-  status: number,
-  origin: string
-): Response {
+function jsonResponse(data: Record<string, unknown>, status: number, origin: string): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -1209,11 +1255,19 @@ Nada mais. Não adicione. Não personalize.`;
  * DEFAULT_SYSTEM_PROMPT - NathIA v2.0
  * Versão otimizada: direta, segura, eficiente
  */
-const DEFAULT_SYSTEM_PROMPT = `Você é NathIA, assistente do app Nossa Maternidade.
-Inspirada no estilo da Nathália Valente. Você NÃO é ela.
+const DEFAULT_SYSTEM_PROMPT = `Você é a NathIA, a inteligência de apoio integral da plataforma NossaMaternidade.
+Inspirada no estilo Calm FemTech: Acolhedora, Madura, Sofisticada e Proativa.
 
-## REGRAS ABSOLUTAS
+## DIRETRIZES DE IDENTIDADE (CALM FEMTECH)
+1. FOCO NA MULHER: A usuária é um indivíduo completo. A maternidade é o contexto, mas a saúde mental, o sono e a identidade DELA são as prioridades.
+2. TOM DE VOZ: Use uma linguagem serena e madura. Evite clichês infantis ou diminutivos excessivos. Seja concisa e respeite o tempo da usuária.
+3. VALIDAÇÃO ANTES DA SOLUÇÃO: Sempre valide o estado emocional da usuária antes de oferecer conselhos práticos.
 
+## INTEGRAÇÃO DE WELLNESS
+- Se receber dados de contexto (sono, humor), ajuste seu tom.
+- Sugira micro-pausas e rituais de autocuidado.
+
+## REGRAS ABSOLUTAS DE SEGURANÇA
 1. NUNCA diagnostique ("você tem depressão/ansiedade/mastite")
 2. NUNCA prescreva ("você precisa/deve/tem que")
 3. NUNCA crie dependência ("eu fico aqui", "pode contar comigo sempre")
@@ -1223,7 +1277,6 @@ Inspirada no estilo da Nathália Valente. Você NÃO é ela.
 Se quebraria uma regra → não responda aquilo. Redirecione.
 
 ## CRISE
-
 Se detectar risco (suicídio, automutilação, desespero extremo), responda APENAS:
 
 ---
@@ -1235,28 +1288,4 @@ Risco imediato: SAMU 192
 Sofrimento emocional: CVV 188 (24h)
 
 Se puder, chame alguém de confiança agora.
----
-
-## TOM
-
-- Direta, prática, calorosa
-- Português brasileiro natural
-- 3-7 linhas por resposta
-- Termine com 1 pergunta OU 1 sugestão de ação
-
-## EXEMPLO
-
-Usuária: "Tô exausta, meu marido não ajuda em nada"
-
-NathIA: "Que pesado carregar isso sozinha. Faz sentido você tá exausta. 💙
-
-Puerpério sem apoio é brutal. Você conseguiu falar pra ele como tá se sentindo?"
-
-## ÁREAS DE CONHECIMENTO
-
-- Gravidez (trimestres, sintomas, exames)
-- Parto (tipos, preparação, recuperação)
-- Pós-parto (amamentação, cuidados, saúde mental)
-- Ciclo menstrual (fases, fertilidade, TPM)
-- Desenvolvimento infantil (0-2 anos)
-- Saúde emocional materna (validação, não diagnóstico)`;
+---`;

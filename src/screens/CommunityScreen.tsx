@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { CommunityPostCard } from "../components/community/CommunityPostCard";
+import { PremiumEmptyState } from "../components/ui/PremiumEmptyState";
 import { useTheme } from "../hooks/useTheme";
 import { communityService } from "../services/community";
 import { brand, neutral, radius, shadows, spacing, surface } from "../theme/tokens";
@@ -39,6 +40,7 @@ export default function CommunityScreen({ navigation }: MainTabScreenProps<"Comm
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   // Theme colors
   const bgPrimary = isDark ? surface.dark.base : surface.light.base;
@@ -47,9 +49,12 @@ export default function CommunityScreen({ navigation }: MainTabScreenProps<"Comm
 
   const loadFeed = useCallback(async () => {
     try {
+      setHasError(false);
       const data = await communityService.getFeed();
       setPosts(data);
     } catch (e) {
+      setHasError(true);
+      // Log silencioso para não assustar o usuário com RedBox em dev
       logger.error("Erro ao carregar feed da comunidade", "CommunityScreen", e as Error);
     }
   }, []);
@@ -72,21 +77,15 @@ export default function CommunityScreen({ navigation }: MainTabScreenProps<"Comm
   };
 
   const handleMyPosts = () => {
-    // Vamos usar a mesma tela NewPost ou criar uma MyPostsScreen.
-    // Como não mapeei MyPostsScreen no RootNavigator, vou navegar para NewPost por enquanto
-    // ou idealmente criar uma tela de perfil de comunidade.
-    // Para MVP, vou usar um filtro local nesta tela ou navegar para uma tela temporária.
-    // Melhor: Criar rota MyPosts no Navigator depois.
-    // Por hora, vou deixar sem ação ou logger.
     logger.info("Funcionalidade 'Meus Posts' em breve!", "CommunityScreen");
   };
 
   const renderHeader = () => (
     <View style={[styles.header, { paddingTop: SPACING.md }]}>
       <View>
-        <Text style={[styles.headerTitle, { color: textPrimary }]}>Comunidade</Text>
+        <Text style={[styles.headerTitle, { color: textPrimary }]}>Mães Valente</Text>
         <Text style={[styles.headerSubtitle, { color: textSecondary }]}>
-          Mães Valente conectadas
+          Comunidade moderada de apoio
         </Text>
       </View>
       <Pressable
@@ -137,33 +136,44 @@ export default function CommunityScreen({ navigation }: MainTabScreenProps<"Comm
               />
             }
             ListEmptyComponent={
-              <View style={[styles.center, { padding: SPACING["2xl"], marginTop: SPACING["2xl"] }]}>
-                <Ionicons name="heart-outline" size={48} color={neutral[300]} />
-                <Text style={{ marginTop: SPACING.md, color: textSecondary, textAlign: "center" }}>
-                  Ainda não há posts aprovados.
-                </Text>
-                <Text style={{ marginTop: SPACING.xs, color: textSecondary, textAlign: "center" }}>
-                  Seja a primeira a compartilhar!
-                </Text>
-              </View>
+              hasError ? (
+                <PremiumEmptyState
+                  title="Ops, algo deu errado"
+                  subtitle="Não conseguimos carregar o feed agora. Tente recarregar."
+                  type="error"
+                  actionLabel="Tentar Novamente"
+                  onAction={loadFeed}
+                />
+              ) : (
+                <PremiumEmptyState
+                  title="Seja a Primeira!"
+                  subtitle="A comunidade Mães Valente está esperando sua história. Compartilhe e inspire outras mães."
+                  image={require("../../assets/community-avatar.jpg")}
+                  actionLabel="Criar Primeiro Post"
+                  onAction={handleCreatePost}
+                  type="community"
+                />
+              )
             }
           />
         )}
 
         {/* FAB: Criar Post */}
-        <Pressable
-          onPress={handleCreatePost}
-          style={[
-            styles.fab,
-            {
-              bottom: insets.bottom + SPACING.lg,
-              backgroundColor: brand.primary[500],
-              shadowColor: brand.primary[500],
-            },
-          ]}
-        >
-          <Ionicons name="add" size={32} color="white" />
-        </Pressable>
+        {!hasError && (
+          <Pressable
+            onPress={handleCreatePost}
+            style={[
+              styles.fab,
+              {
+                bottom: insets.bottom + SPACING.lg,
+                backgroundColor: brand.primary[500],
+                shadowColor: brand.primary[500],
+              },
+            ]}
+          >
+            <Ionicons name="add" size={32} color="white" />
+          </Pressable>
+        )}
       </View>
     </SafeAreaView>
   );

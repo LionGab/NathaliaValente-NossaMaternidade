@@ -1,26 +1,18 @@
 /**
  * StageCard - Card premium para seleção de estágio da jornada
  * Design: Foto com overlay gradiente + título + frase da Nath
- * Animações: Scale on press, spring selection, parallax-like effect
+ * Otimizado: Pressable nativo (sem crash), imagem ajustada (center focus)
  */
 
 import React, { memo } from "react";
-import { View, Text, StyleSheet, Platform, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useTheme } from "../../hooks/useTheme";
 import { Tokens } from "../../theme/tokens";
 import { StageCardData } from "../../types/nath-journey-onboarding.types";
-
-const isWeb = Platform.OS === "web";
 
 interface StageCardProps {
   data: StageCardData;
@@ -33,31 +25,21 @@ const AnimatedView = Animated.createAnimatedComponent(View);
 function StageCardComponent({ data, isSelected, onPress }: StageCardProps) {
   const theme = useTheme();
   const scale = useSharedValue(1);
-  const pressed = useSharedValue(0);
 
-  // Gesture handling com spring physics
-  const tapGesture = Gesture.Tap()
-    .onBegin(() => {
-      scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
-      pressed.value = withTiming(1, { duration: 100 });
-    })
-    .onFinalize(() => {
-      scale.value = withSpring(1, { damping: 15, stiffness: 400 });
-      pressed.value = withTiming(0, { duration: 200 });
-    })
-    .onEnd(() => {
-      onPress();
-    });
+  const handlePressIn = () => {
+    scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
+  };
 
-  // Animated styles
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+  };
+
   const animatedCardStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
   const animatedSelectionStyle = useAnimatedStyle(() => ({
-    borderColor: isSelected
-      ? Tokens.brand.accent[300] // Rosa mais suave
-      : theme.colors.border.subtle,
+    borderColor: isSelected ? Tokens.brand.accent[300] : theme.colors.border.subtle,
     borderWidth: withSpring(isSelected ? 2 : 1, { damping: 20 }),
   }));
 
@@ -74,96 +56,69 @@ function StageCardComponent({ data, isSelected, onPress }: StageCardProps) {
     opacity: checkmarkScale.value,
   }));
 
-  // Card content (shared between web and native)
-  const cardContent = (
-    <>
-      {/* Image with gradient overlay */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={data.image}
-          style={styles.image}
-          contentFit="cover"
-          contentPosition="top"
-          placeholder={data.image}
-          accessible
-          accessibilityLabel={`${data.title}. ${data.quote}`}
-        />
-        <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.6)"]}
-          style={styles.imageOverlay}
-        />
-
-        {/* Checkmark com animação */}
-        <Animated.View style={[styles.checkmarkContainer, animatedCheckmarkStyle]}>
-          <LinearGradient
-            colors={[Tokens.brand.accent[300], Tokens.brand.accent[400]]}
-            style={styles.checkmark}
-          >
-            <Ionicons name="checkmark" size={18} color={Tokens.neutral[0]} />
-          </LinearGradient>
-        </Animated.View>
-
-        {/* Icon flutuando na imagem */}
-        <View style={styles.iconContainer}>
-          <Text style={styles.icon}>{data.icon}</Text>
-        </View>
-      </View>
-
-      {/* Content */}
-      <View style={[styles.content, { backgroundColor: theme.surface.card }]}>
-        <Text
-          style={[
-            styles.title,
-            { color: theme.text.primary },
-          ]}
-          numberOfLines={1}
-        >
-          {data.title}
-        </Text>
-        <Text
-          style={[
-            styles.quote,
-            { color: theme.text.secondary },
-          ]}
-          numberOfLines={2}
-        >
-          {'"'}{data.quote}{'"'}
-        </Text>
-      </View>
-
-      {/* Selection glow effect - mais suave */}
-      {isSelected && (
-        <View style={styles.glowEffect} pointerEvents="none">
-          <LinearGradient
-            colors={[`${Tokens.brand.accent[200]}30`, "transparent"]}
-            style={StyleSheet.absoluteFill}
-          />
-        </View>
-      )}
-    </>
-  );
-
-  // Use Pressable for web, GestureDetector for native (better animation support)
-  if (isWeb) {
-    return (
-      <Pressable onPress={onPress}>
-        <AnimatedView
-          style={[styles.card, animatedCardStyle, animatedSelectionStyle]}
-        >
-          {cardContent}
-        </AnimatedView>
-      </Pressable>
-    );
-  }
-
   return (
-    <GestureDetector gesture={tapGesture}>
-      <AnimatedView
-        style={[styles.card, animatedCardStyle, animatedSelectionStyle]}
-      >
-        {cardContent}
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={{ flex: 1 }}
+    >
+      <AnimatedView style={[styles.card, animatedCardStyle, animatedSelectionStyle]}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={data.image}
+            style={styles.image}
+            contentFit="cover"
+            contentPosition="center" // Melhor para rostos/pessoas
+            transition={200} // Suave ao carregar
+            placeholder={data.image} // Blurhash seria ideal, mas placeholder ajuda
+            accessible
+            accessibilityLabel={`${data.title}. ${data.quote}`}
+          />
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.7)"]} // Overlay um pouco mais forte para legibilidade
+            style={styles.imageOverlay}
+          />
+
+          <Animated.View style={[styles.checkmarkContainer, animatedCheckmarkStyle]}>
+            <LinearGradient
+              colors={[Tokens.brand.accent[300], Tokens.brand.accent[400]]}
+              style={styles.checkmark}
+            >
+              <Ionicons name="checkmark" size={16} color={Tokens.neutral[0]} />
+            </LinearGradient>
+          </Animated.View>
+
+          <View style={styles.iconContainer}>
+            <Text style={styles.icon}>{data.icon}</Text>
+          </View>
+        </View>
+
+        <View style={[styles.content, { backgroundColor: theme.surface.card }]}>
+          <Text
+            style={[styles.title, { color: theme.text.primary }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit // Evita corte de texto
+          >
+            {data.title}
+          </Text>
+          <Text style={[styles.quote, { color: theme.text.secondary }]} numberOfLines={2}>
+            {'"'}
+            {data.quote}
+            {'"'}
+          </Text>
+        </View>
+
+        {isSelected && (
+          <View style={styles.glowEffect} pointerEvents="none">
+            <LinearGradient
+              colors={[`${Tokens.brand.accent[200]}20`, "transparent"]}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
+        )}
       </AnimatedView>
-    </GestureDetector>
+    </Pressable>
   );
 }
 
@@ -174,11 +129,13 @@ const styles = StyleSheet.create({
     borderRadius: Tokens.radius.xl,
     overflow: "hidden",
     flex: 1,
-    ...Tokens.shadows.sm, // Sombra mais suave
+    height: 220, // Altura fixa garante consistência no grid
+    ...Tokens.shadows.sm,
+    backgroundColor: Tokens.neutral[0],
   },
   imageContainer: {
+    height: 140, // Mais espaço para a imagem
     width: "100%",
-    height: 120,
     position: "relative",
     backgroundColor: Tokens.neutral[100],
   },
@@ -220,12 +177,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: Tokens.spacing.sm,
-    gap: 2,
     justifyContent: "center",
+    gap: 2,
   },
   title: {
     fontSize: Tokens.typography.labelMedium.fontSize,
-    fontWeight: Tokens.typography.labelMedium.fontWeight,
+    fontWeight: "700",
     lineHeight: Tokens.typography.labelMedium.lineHeight,
   },
   quote: {
@@ -235,6 +192,6 @@ const styles = StyleSheet.create({
   },
   glowEffect: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: Tokens.radius["2xl"],
+    borderRadius: Tokens.radius.xl,
   },
 });

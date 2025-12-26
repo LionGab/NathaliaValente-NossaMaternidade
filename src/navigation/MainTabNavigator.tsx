@@ -1,7 +1,7 @@
 /**
  * Nossa Maternidade - Main Tab Navigator (Calm FemTech)
  *
- * Tabs: Home | Mães | NathIA (centro) | MundoNath | Hábitos
+ * Tabs: Home | Mães Valente | NathIA (centro) | Mundo da Nath | Meus Cuidados
  * Design com glassmorphism + Manrope font
  * iOS/Android compatible
  */
@@ -284,8 +284,8 @@ export default function MainTabNavigator() {
         name="Community"
         component={CommunityScreenWithBoundary}
         options={{
-          tabBarLabel: "Mães",
-          tabBarAccessibilityLabel: "Mães - Conecte-se com outras mães",
+          tabBarLabel: "Mães Valente",
+          tabBarAccessibilityLabel: "Mães Valente - Comunidade moderada de apoio",
           tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <AnimatedTabIcon
               name={focused ? "people" : "people-outline"}
@@ -325,7 +325,7 @@ export default function MainTabNavigator() {
         name="MundoNath"
         component={MundoDaNathScreen}
         options={{
-          tabBarLabel: "MundoNath",
+          tabBarLabel: "Mundo da Nath",
           tabBarAccessibilityLabel: "Mundo da Nath - Conteúdo exclusivo",
           tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
             <AnimatedTabIcon

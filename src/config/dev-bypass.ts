@@ -31,7 +31,7 @@ export const DEV_CONFIG = {
   // Granular bypass flags - set individually to test specific flows
   BYPASS_LOGIN: true,                    // Skip auth screens
   BYPASS_NOTIFICATION_PERMISSION: true,  // Skip notification permission
-  BYPASS_ONBOARDING: false,              // FALSE = Test onboarding flow!
+  BYPASS_ONBOARDING: true,              // FALSE = Test onboarding flow!
 };
 
 /**
