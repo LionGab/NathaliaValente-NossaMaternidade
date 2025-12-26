@@ -134,3 +134,69 @@ Para PRs e builds, usar: `npm run quality-gate` (ou `bun run quality-gate`)
 - **src/utils/logger.ts**: Sistema de logging centralizado
 - **src/state/store.ts**: Todos os stores Zustand
 - **docs/**: Documentação técnica completa
+- **docs/CURSOR_CLAUDE_SETUP.md**: Por que usar Claude no Cursor + configuração completa
+
+## Agents Disponíveis (Claude Code / Cursor)
+
+Use `@agent-name` para invocar:
+
+- `@launch-helper` - Guidance para App Store/Google Play launch
+- `@nathia-expert` - Validação de personalidade NathIA
+- `@code-reviewer` - Review de qualidade de código
+
+**Localização**: `.claude/agents/`
+
+## Commands Disponíveis (Claude Code / Cursor)
+
+Use `/command` para invocar:
+
+- `/launch-status` - Mostrar status de preparação para launch
+- `/design-check` - Verificar compliance com design system
+- `/audit-colors` - Encontrar cores hardcoded
+
+**Localização**: `.claude/commands/`
+
+## Hooks Disponíveis
+
+**Pre-commit Hooks**:
+- `.claude/hooks/pre-commit-quality.sh` - Quality gate antes de commit
+- `.claude/hooks/pre-commit-design.sh` - Validação de design system
+
+**Auto-executam** via Husky em `git commit`
+
+## MCP Servers Configurados
+
+- **Supabase**: Database queries, migrations, schema
+- **Context7**: Documentação atualizada de bibliotecas
+- **Memory Keeper**: Contexto de sessão, continuidade
+- **Playwright**: Automação de browser, screenshots
+- **Sequential Thinking**: Raciocínio estruturado
+
+**Configuração**: `.claude/mcp-config.json`
+
+## Launch Preparation (App Stores)
+
+Preparando lançamento no App Store + Google Play:
+
+- **Plano**: `docs/PLANO_LANCAMENTO_10_DIAS.md` (1175 linhas, ultra-detalhado)
+- **Script**: `./scripts/launch-checklist.sh` (executável CLI)
+- **Status**: Código 95% pronto, blockers: RevenueCat dashboard, legal docs
+
+**Valores Críticos (NUNCA alterar)**:
+```
+iOS Bundle: br.com.nossamaternidade.app
+Android Package: com.nossamaternidade.app
+Monthly Product: com.nossamaternidade.subscription.monthly
+Annual Product: com.nossamaternidade.subscription.annual
+Entitlement: "premium" (EXACT case-sensitive)
+Offering: "default" (EXACT case-sensitive)
+```
+
+## Windows Support
+
+Projeto suporta desenvolvimento Windows:
+- Use **Git Bash** (não CMD/PowerShell) para scripts `.sh`
+- EAS builds funcionam do Windows (cloud-based)
+- Android Emulator funciona, iOS Simulator não (somente Mac)
+
+**Guia completo**: `docs/WINDOWS_SETUP.md`
