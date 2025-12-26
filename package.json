@@ -29,7 +29,7 @@
     "download:reels": "node scripts/download-reels.js",
     "deploy-functions": "bash scripts/deploy-edge-functions.sh",
     "verify-setup": "bash scripts/verify-complete-setup.sh",
-    "clean": "node scripts/clean-cache.js",
+    "clean": "bash scripts/clean-cache.sh",
     "clean:all": "bun run clean && rm -rf node_modules bun.lock && bun install",
     "setup-dev": "bash scripts/setup-dev.sh",
     "setup-mac": "bash scripts/setup-mac.sh",

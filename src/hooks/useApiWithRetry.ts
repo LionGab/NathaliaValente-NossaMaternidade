@@ -8,7 +8,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { retryNetworkRequest } from "../utils/retry";
 import { logger } from "../utils/logger";
 import { isAppError } from "../utils/error-handler";
-import { useToast } from "./useToast";
+import { useToast } from "../context/ToastContext";
 
 export interface UseApiWithRetryOptions {
   showErrorToast?: boolean;

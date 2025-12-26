@@ -29,7 +29,7 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { preClassifyMessage } from "../ai/policies/nathia.preClassifier";
 import {
@@ -38,10 +38,10 @@ import {
   getNathIAResponse,
   imageUriToBase64,
 } from "../api/ai-service";
-import { VoiceMessagePlayer } from "../components/VoiceMessagePlayer";
 import { AIConsentModal } from "../components/chat/AIConsentModal";
 import { ChatEmptyState } from "../components/chat/ChatEmptyState";
 import { ChatHistorySidebar } from "../components/chat/ChatHistorySidebar";
+import { MessageBubble } from "../components/chat/MessageBubble";
 import { Avatar, LoadingDots } from "../components/ui";
 import {
   EmotionalMoodType,
@@ -315,14 +315,31 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
   // HANDLERS
   // ============================================
 
+  // Theme colors for MessageBubble (memoized)
+  const messageBubbleTheme = useMemo(
+    () => ({
+      userBubble: THEME.userBubble,
+      aiBubble: THEME.aiBubble,
+      textPrimary: THEME.textPrimary,
+      borderLight: THEME.borderLight,
+      primary: THEME.primary,
+    }),
+    [THEME]
+  );
+
   // Memoizar renderItem para evitar re-renders em cada digitação
   const renderMessageItem = useCallback(
     ({ item, index }: { item: ChatMessage; index: number }) => (
-      <MessageBubble message={item} index={index} maxWidth={messageMaxWidth} />
+      <MessageBubble
+        message={item}
+        index={index}
+        maxWidth={messageMaxWidth}
+        theme={messageBubbleTheme}
+        hasVoiceAccess={hasVoiceAccess}
+        onVoicePremiumRequired={handlers.handleVoicePremiumRequired}
+      />
     ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [messageMaxWidth]
-    // MessageBubble é React.memo estável definido no mesmo componente
+    [messageMaxWidth, messageBubbleTheme, hasVoiceAccess, handlers.handleVoicePremiumRequired]
   );
 
   const handleSend = useCallback(async () => {
@@ -621,62 +638,6 @@ export default function AssistantScreen({ navigation, route }: MainTabScreenProp
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate("Home");
   }, [navigation]);
-
-  const handleVoicePremiumRequired = handlers.handleVoicePremiumRequired;
-
-  // ============================================
-  // MESSAGE BUBBLE COMPONENT
-  // ============================================
-  const MessageBubble = React.memo(
-    ({ message, index, maxWidth }: { message: ChatMessage; index: number; maxWidth: number }) => {
-      const isUser = message.role === "user";
-
-      return (
-        <Animated.View
-          entering={FadeInUp.delay(index * 20).duration(300)}
-          style={[styles.messageContainer, isUser ? styles.messageUser : styles.messageAI]}
-        >
-          {/* AI Avatar */}
-          {!isUser && <Avatar size={28} isNathIA={true} style={styles.messageAvatar} />}
-
-          {/* Message Bubble */}
-          <View
-            style={[
-              styles.messageBubble,
-              { maxWidth },
-              isUser
-                ? [styles.bubbleUser, { backgroundColor: THEME.userBubble }]
-                : [styles.bubbleAI, { backgroundColor: THEME.aiBubble }],
-            ]}
-          >
-            <Text
-              style={[
-                styles.messageText,
-                isUser ? styles.textUser : [styles.textAI, { color: THEME.textPrimary }],
-              ]}
-            >
-              {message.content}
-            </Text>
-
-            {/* Voice Player - Apenas para mensagens da NathIA */}
-            {!isUser && hasVoiceAccess && (
-              <View style={[styles.voiceContainer, { borderTopColor: THEME.borderLight }]}>
-                <VoiceMessagePlayer
-                  messageId={message.id}
-                  text={message.content}
-                  onPremiumRequired={handleVoicePremiumRequired}
-                  size="small"
-                  compact
-                  iconColor={THEME.primary}
-                />
-              </View>
-            )}
-          </View>
-        </Animated.View>
-      );
-    }
-  );
-  MessageBubble.displayName = "MessageBubble";
 
   // ============================================
   // MAIN RENDER

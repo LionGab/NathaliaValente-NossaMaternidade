@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-import { View, Text, ScrollView, Pressable, Image } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -281,7 +282,8 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                     marginTop: -10,
                     marginLeft: -10,
                   }}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  transition={200}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -665,6 +667,8 @@ export default function MyCareScreen({ navigation }: MainTabScreenProps<"MyCare"
                     width: 44,
                     height: 44,
                   }}
+                  contentFit="cover"
+                  transition={200}
                 />
               </View>
               <Text

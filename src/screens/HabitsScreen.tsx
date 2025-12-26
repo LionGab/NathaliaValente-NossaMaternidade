@@ -8,8 +8,8 @@
  * - Microtextos de validação após cada toggle
  */
 
-import React, { useState, useCallback } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import React, { useState, useCallback, useMemo } from "react";
+import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, {
@@ -39,6 +39,163 @@ const FEEDBACK_MESSAGES: Record<string, string> = {
   "8": "Você não precisa dar conta sozinha.",
 };
 
+// ===========================================
+// HABIT CARD - Memoized for performance
+// ===========================================
+interface HabitCardProps {
+  habit: Habit;
+  index: number;
+  onPress: (habit: Habit) => void;
+  isDark: boolean;
+  textPrimary: string;
+  textSecondary: string;
+  bgCard: string;
+  borderColor: string;
+  neutralWhite: string;
+  neutral300: string;
+}
+
+const HabitCard = React.memo(
+  ({
+    habit,
+    index,
+    onPress,
+    isDark,
+    textPrimary,
+    textSecondary,
+    bgCard,
+    borderColor,
+    neutralWhite,
+    neutral300,
+  }: HabitCardProps) => {
+    const handlePress = useCallback(() => {
+      onPress(habit);
+    }, [onPress, habit]);
+
+    return (
+      <Animated.View entering={FadeInUp.delay(100 + index * 50).duration(500).springify()}>
+        <Pressable
+          onPress={handlePress}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: habit.completed }}
+          accessibilityLabel={`${habit.title}. ${habit.description}`}
+          accessibilityHint={habit.completed ? "Toque para desmarcar" : "Toque para marcar como feito"}
+          style={({ pressed }) => [
+            habitStyles.pressable,
+            { opacity: pressed ? 0.9 : 1, transform: [{ scale: pressed ? 0.98 : 1 }] },
+          ]}
+        >
+          <View
+            style={[
+              habitStyles.card,
+              {
+                backgroundColor: habit.completed
+                  ? isDark
+                    ? `${habit.color}25`
+                    : `${habit.color}12`
+                  : bgCard,
+                borderColor: habit.completed ? habit.color : borderColor,
+              },
+            ]}
+          >
+            <View style={habitStyles.cardContent}>
+              {/* Icon Container */}
+              <View
+                style={[
+                  habitStyles.iconContainer,
+                  { backgroundColor: habit.completed ? habit.color : `${habit.color}15` },
+                ]}
+              >
+                <Ionicons
+                  name={habit.icon as IconName}
+                  size={24}
+                  color={habit.completed ? neutralWhite : habit.color}
+                />
+              </View>
+
+              {/* Content */}
+              <View style={habitStyles.textContainer}>
+                <Text style={[habitStyles.title, { color: textPrimary }]}>{habit.title}</Text>
+                <Text style={[habitStyles.description, { color: textSecondary }]}>
+                  {habit.description}
+                </Text>
+              </View>
+
+              {/* Checkbox */}
+              <View
+                style={[
+                  habitStyles.checkbox,
+                  {
+                    backgroundColor: habit.completed ? habit.color : "transparent",
+                    borderColor: habit.completed ? habit.color : neutral300,
+                  },
+                ]}
+              >
+                {habit.completed && <Ionicons name="checkmark" size={22} color={neutralWhite} />}
+              </View>
+            </View>
+          </View>
+        </Pressable>
+      </Animated.View>
+    );
+  },
+  (prev, next) => {
+    // Custom comparison - only re-render when these specific props change
+    return (
+      prev.habit.id === next.habit.id &&
+      prev.habit.completed === next.habit.completed &&
+      prev.isDark === next.isDark
+    );
+  }
+);
+
+HabitCard.displayName = "HabitCard";
+
+const habitStyles = StyleSheet.create({
+  pressable: {
+    marginBottom: SPACING.md,
+  },
+  card: {
+    borderRadius: Tokens.radius.xl,
+    borderWidth: 1.5,
+    overflow: "hidden",
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Tokens.spacing.lg,
+  },
+  iconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: Tokens.radius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Tokens.spacing.md,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "600",
+    fontFamily: "Manrope_600SemiBold",
+    marginBottom: 2,
+  },
+  description: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  checkbox: {
+    width: Tokens.accessibility.minTapTarget,
+    height: Tokens.accessibility.minTapTarget,
+    borderRadius: Tokens.accessibility.minTapTarget / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+  },
+});
+
 export default function HabitsScreen() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
@@ -66,116 +223,22 @@ export default function HabitsScreen() {
     [toggleHabit, today]
   );
 
-  // Cores do tema
-  const textPrimary = isDark ? colors.neutral[100] : colors.neutral[800];
-  const textSecondary = isDark ? colors.neutral[400] : colors.neutral[500];
-  const bgCard = isDark ? colors.neutral[800] : colors.background.card;
-  const borderColor = isDark ? colors.neutral[700] : colors.neutral[200];
+  // Memoized theme colors for HabitCard
+  const themeProps = useMemo(
+    () => ({
+      textPrimary: isDark ? colors.neutral[100] : colors.neutral[800],
+      textSecondary: isDark ? colors.neutral[400] : colors.neutral[500],
+      bgCard: isDark ? colors.neutral[800] : colors.background.card,
+      borderColor: isDark ? colors.neutral[700] : colors.neutral[200],
+      neutralWhite: colors.neutral[0],
+      neutral300: colors.neutral[300],
+    }),
+    [isDark, colors]
+  );
 
-  const renderHabitCard = (habit: Habit, index: number) => {
-    return (
-      <Animated.View
-        key={habit.id}
-        entering={FadeInUp.delay(100 + index * 50).duration(500).springify()}
-      >
-        <Pressable
-          onPress={() => handleToggleHabit(habit)}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: habit.completed }}
-          accessibilityLabel={`${habit.title}. ${habit.description}`}
-          accessibilityHint={habit.completed ? "Toque para desmarcar" : "Toque para marcar como feito"}
-          style={({ pressed }) => ({
-            marginBottom: SPACING.md,
-            opacity: pressed ? 0.9 : 1,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}
-        >
-          <View
-            style={{
-              backgroundColor: habit.completed
-                ? isDark
-                  ? `${habit.color}25`
-                  : `${habit.color}12`
-                : bgCard,
-              borderRadius: Tokens.radius.xl,
-              borderWidth: 1.5,
-              borderColor: habit.completed ? habit.color : borderColor,
-              overflow: "hidden",
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                padding: Tokens.spacing.lg,
-              }}
-            >
-              {/* Icon Container */}
-              <View
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: Tokens.radius.lg,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginRight: Tokens.spacing.md,
-                  backgroundColor: habit.completed ? habit.color : `${habit.color}15`,
-                }}
-              >
-                <Ionicons
-                  name={habit.icon as IconName}
-                  size={24}
-                  color={habit.completed ? colors.neutral[0] : habit.color}
-                />
-              </View>
-
-              {/* Content */}
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontWeight: "600",
-                    fontFamily: "Manrope_600SemiBold",
-                    color: habit.completed ? textPrimary : textPrimary,
-                    marginBottom: 2,
-                  }}
-                >
-                  {habit.title}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 13,
-                    color: textSecondary,
-                    lineHeight: 18,
-                  }}
-                >
-                  {habit.description}
-                </Text>
-              </View>
-
-              {/* Checkbox - Using accessibility.minTapTarget for iOS HIG compliance */}
-              <View
-                style={{
-                  width: Tokens.accessibility.minTapTarget,
-                  height: Tokens.accessibility.minTapTarget,
-                  borderRadius: Tokens.accessibility.minTapTarget / 2,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: habit.completed ? habit.color : "transparent",
-                  borderWidth: 2,
-                  borderColor: habit.completed ? habit.color : colors.neutral[300],
-                }}
-              >
-                {habit.completed && (
-                  <Ionicons name="checkmark" size={22} color={colors.neutral[0]} />
-                )}
-              </View>
-            </View>
-          </View>
-        </Pressable>
-      </Animated.View>
-    );
-  };
+  // For local use in the screen
+  const textPrimary = themeProps.textPrimary;
+  const textSecondary = themeProps.textSecondary;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background.primary }}>
@@ -283,7 +346,16 @@ export default function HabitsScreen() {
 
         {/* Habits List (flat, no categories) */}
         <View style={{ paddingHorizontal: Tokens.spacing.xl }}>
-          {habits.map((habit, index) => renderHabitCard(habit, index))}
+          {habits.map((habit, index) => (
+            <HabitCard
+              key={habit.id}
+              habit={habit}
+              index={index}
+              onPress={handleToggleHabit}
+              isDark={isDark}
+              {...themeProps}
+            />
+          ))}
         </View>
 
         {/* Fixed Footer Quote - Using Card component */}

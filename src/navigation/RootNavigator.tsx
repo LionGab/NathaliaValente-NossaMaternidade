@@ -10,7 +10,8 @@
  */
 
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React from "react";
+import React, { Suspense, lazy, ComponentType } from "react";
+import { ActivityIndicator, View } from "react-native";
 import {
   isDevBypassActive,
   isLoginBypassActive,
@@ -43,24 +44,46 @@ import { useNathJourneyOnboardingStore } from "../state/nath-journey-onboarding-
 // Main Navigator
 import MainTabNavigator from "./MainTabNavigator";
 
-// Feature Screens
-import AffirmationsScreen from "../screens/AffirmationsScreen";
-import ComingSoonScreen from "../screens/ComingSoonScreen";
-import DailyLogScreen from "../screens/DailyLogScreen";
-import HabitsScreen from "../screens/HabitsScreen";
-import LegalScreen from "../screens/LegalScreen";
-import NewPostScreen from "../screens/NewPostScreen";
-import NotificationPreferencesScreen from "../screens/NotificationPreferencesScreen";
-import PostDetailScreen from "../screens/PostDetailScreen";
-import ProfileScreen from "../screens/ProfileScreen";
+// ===========================================
+// LAZY LOADING - Secondary screens (loaded on-demand)
+// ===========================================
 
-// New Premium Screens
-import BreathingExerciseScreen from "../screens/BreathingExerciseScreen";
-import HabitsEnhancedScreen from "../screens/HabitsEnhancedScreen";
-import MaeValenteProgressScreen from "../screens/MaeValenteProgressScreen";
-import MundoDaNathScreen from "../screens/MundoDaNathScreen";
-import Paywall from "../screens/PaywallScreenRedesign";
-import RestSoundsScreen from "../screens/RestSoundsScreen";
+// Loading fallback for lazy screens
+const LazyLoadingFallback = () => (
+  <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: COLORS.background.primary }}>
+    <ActivityIndicator size="large" color={COLORS.primary[500]} />
+  </View>
+);
+
+// Helper to wrap lazy components with Suspense
+function withSuspense<P extends object>(LazyComponent: React.LazyExoticComponent<ComponentType<P>>) {
+  return function SuspenseWrapper(props: P) {
+    return (
+      <Suspense fallback={<LazyLoadingFallback />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    );
+  };
+}
+
+// Feature Screens - Lazy loaded for better initial bundle size
+const AffirmationsScreen = withSuspense(lazy(() => import("../screens/AffirmationsScreen")));
+const ComingSoonScreen = withSuspense(lazy(() => import("../screens/ComingSoonScreen")));
+const DailyLogScreen = withSuspense(lazy(() => import("../screens/DailyLogScreen")));
+const HabitsScreen = withSuspense(lazy(() => import("../screens/HabitsScreen")));
+const LegalScreen = withSuspense(lazy(() => import("../screens/LegalScreen")));
+const NewPostScreen = withSuspense(lazy(() => import("../screens/NewPostScreen")));
+const NotificationPreferencesScreen = withSuspense(lazy(() => import("../screens/NotificationPreferencesScreen")));
+const PostDetailScreen = withSuspense(lazy(() => import("../screens/PostDetailScreen")));
+const ProfileScreen = withSuspense(lazy(() => import("../screens/ProfileScreen")));
+
+// Premium Screens - Lazy loaded
+const BreathingExerciseScreen = withSuspense(lazy(() => import("../screens/BreathingExerciseScreen")));
+const HabitsEnhancedScreen = withSuspense(lazy(() => import("../screens/HabitsEnhancedScreen")));
+const MaeValenteProgressScreen = withSuspense(lazy(() => import("../screens/MaeValenteProgressScreen")));
+const MundoDaNathScreen = withSuspense(lazy(() => import("../screens/MundoDaNathScreen")));
+const Paywall = withSuspense(lazy(() => import("../screens/PaywallScreenRedesign")));
+const RestSoundsScreen = withSuspense(lazy(() => import("../screens/RestSoundsScreen")));
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

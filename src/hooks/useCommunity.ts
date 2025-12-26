@@ -6,7 +6,7 @@
  */
 
 import * as Haptics from "expo-haptics";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Share } from "react-native";
 import { createPost, fetchPosts, togglePostLike } from "../api/community";
 import { supabase } from "../api/supabase";
@@ -55,12 +55,18 @@ export function useCommunity(navigation: NavigationProp): UseCommunityReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // Ref to track if initial load has been done (prevents dependency loop)
+  const hasLoadedRef = useRef(false);
+  // Ref to access current posts without causing re-renders
+  const postsRef = useRef(posts);
+  postsRef.current = posts;
+
   // Carregar posts do Supabase (com fallback para mock)
   const loadPosts = useCallback(async () => {
     // Se Supabase não estiver configurado, usar mock
     if (!supabase) {
       logger.warn("Supabase não configurado. Usando dados mock.", "useCommunity");
-      if (posts.length === 0) {
+      if (postsRef.current.length === 0) {
         setPosts(MOCK_POSTS);
       }
       return;
@@ -88,17 +94,20 @@ export function useCommunity(navigation: NavigationProp): UseCommunityReturn {
       logger.error("Erro ao carregar posts", "useCommunity", errorObj);
       setError(errorObj);
       // Fallback para mock em caso de erro
-      if (posts.length === 0) {
+      if (postsRef.current.length === 0) {
         setPosts(MOCK_POSTS);
       }
     } finally {
       setIsLoading(false);
     }
-  }, [setPosts, posts.length]);
+  }, [setPosts]); // Removed posts.length dependency - using ref instead
 
-  // Carregar posts na montagem
+  // Carregar posts na montagem (only once)
   useEffect(() => {
-    loadPosts();
+    if (!hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadPosts();
+    }
   }, [loadPosts]);
 
   // Posts filtrados pela busca
