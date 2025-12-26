@@ -163,7 +163,11 @@ export default function OnboardingPaywall({ route, navigation }: Props) {
 
   const handleStartTrial = useCallback(async () => {
     try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+      } catch {
+        // Haptics não disponível no simulador
+      }
 
       // Se needsExtraCare, pular paywall e dar acesso gratuito
       if (needsExtraCareFlag) {
@@ -234,7 +238,11 @@ export default function OnboardingPaywall({ route, navigation }: Props) {
 
   const handleRestore = useCallback(async () => {
     try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+      } catch {
+        // Haptics não disponível no simulador
+      }
       setPurchasing(true);
 
       const result = await restorePurchases();
