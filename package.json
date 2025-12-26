@@ -26,6 +26,9 @@
     "test:oauth": "node scripts/test-oauth-providers.mjs",
     "create:admin": "node scripts/create-admin-user.mjs",
     "setup-secrets": "bash scripts/setup-secrets.sh",
+    "validate-secrets": "node scripts/validate-secrets.js",
+    "audit-design": "bash scripts/audit-design-system.sh",
+    "test:edge-functions": "bash scripts/test-edge-functions.sh",
     "download:reels": "node scripts/download-reels.js",
     "deploy-functions": "bash scripts/deploy-edge-functions.sh",
     "verify-setup": "bash scripts/verify-complete-setup.sh",
@@ -67,7 +70,7 @@
     "postinstall": "node scripts/fix-lightningcss.js",
     "simulator": "concurrently -n expo,sim -c cyan,magenta \"npm run web\" \"node web-simulator/server.js\"",
     "simulator:expo": "expo start --web --port 8081",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",

@@ -1,143 +1,78 @@
 {
   "cli": {
-    "version": ">= 12.0.0",
-    "appVersionSource": "local",
-    "promptToConfigurePushNotifications": false,
-    "requireCommit": true
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
-    "base": {
-      "node": "20.11.1",
-      "cache": {
-        "key": "nossa-maternidade-v1",
-        "paths": ["node_modules"]
-      },
-      "ios": {
-        "resourceClass": "medium"
-      },
-      "android": {
-        "resourceClass": "medium"
-      }
-    },
     "development": {
-      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development",
-      "env": {
-        "APP_ENV": "development",
-        "EXPO_PUBLIC_ENABLE_AI_FEATURES": "true"
-      },
+      "node": "20.11.1",
       "ios": {
-        "simulator": true
+        "simulator": false,
+        "resourceClass": "m-medium"
       },
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleDebug"
+      },
+      "env": {
+        "EXPO_PUBLIC_ENV": "development",
+        "CI": "true"
       }
     },
-    "preview": {
-      "extends": "base",
+    "development-simulator": {
+      "developmentClient": true,
       "distribution": "internal",
-      "channel": "preview",
-      "env": {
-        "APP_ENV": "preview",
-        "EXPO_PUBLIC_ENABLE_AI_FEATURES": "true",
-        "EXPO_PUBLIC_ENABLE_ANALYTICS": "true"
-      },
       "ios": {
-        "enterpriseProvisioning": "adhoc"
+        "simulator": true
       },
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_ENV": "development"
       }
     },
-    "staging": {
-      "extends": "base",
+    "preview": {
       "distribution": "internal",
-      "channel": "staging",
-      "env": {
-        "APP_ENV": "staging",
-        "EXPO_PUBLIC_ENABLE_AI_FEATURES": "true",
-        "EXPO_PUBLIC_ENABLE_ANALYTICS": "true"
-      },
+      "node": "20.11.1",
       "ios": {
-        "enterpriseProvisioning": "adhoc",
-        "resourceClass": "medium"
+        "resourceClass": "m-medium"
       },
       "android": {
-        "buildType": "apk",
-        "resourceClass": "medium"
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_ENV": "preview",
+        "CI": "true"
       }
     },
     "production": {
-      "extends": "base",
-      "channel": "production",
       "autoIncrement": true,
-      "env": {
-        "APP_ENV": "production",
-        "EXPO_PUBLIC_ENABLE_AI_FEATURES": "true",
-        "EXPO_PUBLIC_ENABLE_ANALYTICS": "true"
-      },
+      "node": "20.11.1",
       "ios": {
-        "enterpriseProvisioning": "universal",
-        "autoIncrement": "buildNumber",
-        "resourceClass": "medium"
+        "resourceClass": "m-medium"
       },
       "android": {
-        "buildType": "app-bundle",
-        "autoIncrement": "versionCode",
-        "resourceClass": "medium",
-        "gradleCommand": ":app:bundleRelease"
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_ENV": "production",
+        "CI": "true"
       }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "language": "pt-BR",
-        "sku": "nossamaternidade001",
+        "appleId": "nath@nossamaternidade.com.br",
         "ascAppId": "6756980888",
         "appleTeamId": "KZPW4S77UH"
       },
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",
-        "track": "production",
-        "releaseStatus": "completed",
-        "changesNotSentForReview": false
-      }
-    },
-    "staging": {
-      "ios": {
-        "language": "pt-BR",
-        "sku": "nossamaternidade001"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-play-service-account.json",
-        "track": "internal",
-        "releaseStatus": "draft"
-      }
-    },
-    "internal": {
-      "ios": {
-        "language": "pt-BR",
-        "sku": "nossamaternidade001"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-play-service-account.json",
-        "track": "internal",
-        "releaseStatus": "draft"
-      }
-    },
-    "beta": {
-      "ios": {
-        "language": "pt-BR",
-        "sku": "nossamaternidade001"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./google-play-service-account.json",
-        "track": "beta",
-        "releaseStatus": "completed"
+        "track": "internal"
       }
     }
   }
