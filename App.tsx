@@ -36,6 +36,18 @@ import { usePremiumStore } from "./src/state/premium-store";
 import { isExpoGo } from "./src/utils/expo";
 import { logger } from "./src/utils/logger";
 
+// Initialize Reactotron for debugging (development only)
+if (__DEV__) {
+  import("./src/config/reactotron").then(() => {
+    logger.debug("Reactotron initialized", "App");
+
+    // Initialize fetch interceptor for network tracking
+    import("./src/utils/fetch-interceptor").then(({ initializeFetchInterceptor }) => {
+      initializeFetchInterceptor();
+    });
+  });
+}
+
 // Initialize Sentry for error tracking (production only)
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn || process.env.EXPO_PUBLIC_SENTRY_DSN;
 if (sentryDsn && !__DEV__) {

@@ -756,3 +756,33 @@ export const useCheckInStore = create<CheckInState>()(
     }
   )
 );
+
+// ==========================================
+// Reactotron Integration (DEV only)
+// ==========================================
+if (__DEV__) {
+  // Dynamically import to avoid circular dependencies
+  import("../config/reactotron").then((reactotronModule) => {
+    const { registerZustandStores } = reactotronModule;
+
+    // Import other stores and register all with Reactotron
+    Promise.all([
+      import("./premium-store"),
+      import("./nath-journey-onboarding-store"),
+      import("./nathia-onboarding-store"),
+    ]).then(([premiumModule, nathJourneyModule, nathIAModule]) => {
+      registerZustandStores({
+        app: useAppStore,
+        community: useCommunityStore,
+        chat: useChatStore,
+        cycle: useCycleStore,
+        affirmations: useAffirmationsStore,
+        habits: useHabitsStore,
+        checkIn: useCheckInStore,
+        premium: premiumModule.usePremiumStore,
+        nathJourney: nathJourneyModule.useNathJourneyOnboardingStore,
+        nathIA: nathIAModule.useNathIAOnboardingStore,
+      });
+    });
+  });
+}
