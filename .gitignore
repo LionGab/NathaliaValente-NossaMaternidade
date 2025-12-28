@@ -65,6 +65,15 @@ docs/archive/
 .cursor/
 core
 
+# SSH Keys (private keys should never be committed)
+*.rsa
+*.ed25519
+id_rsa*
+id_ed25519*
+adogo*
+*.pub
+!*.pub.sig
+
 # Claude Code export (permitir .json, bloquear arquivos sensíveis)
 .claude-export/.env
 .claude-export/.env.*
