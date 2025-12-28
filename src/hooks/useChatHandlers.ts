@@ -5,8 +5,7 @@
 
 import { useCallback } from "react";
 import * as Haptics from "expo-haptics";
-import { useChatStore, useAppStore } from "../state/store";
-import { useIsPremium } from "../state/premium-store";
+import { useChatStore } from "../state/store";
 import { MainTabScreenProps } from "../types/navigation";
 // TODO: Uncomment when implementing message limits
 // import { logger } from "../utils/logger";
@@ -25,14 +24,6 @@ interface UseChatHandlersProps {
 
 export function useChatHandlers(props: UseChatHandlersProps) {
   const { navigation, setInputText } = props;
-  // TODO: Use these for message limit feature
-  void useIsPremium();
-  void useAppStore((s) => s.user);
-  void useChatStore((s) => s.conversations);
-  void useChatStore((s) => s.currentConversationId);
-  void useChatStore((s) => s.isLoading);
-  void useChatStore((s) => s.setLoading);
-  void useChatStore((s) => s.addMessage);
   const setCurrentConversation = useChatStore((s) => s.setCurrentConversation);
   const clearCurrentChat = useChatStore((s) => s.clearCurrentChat);
   const deleteConversation = useChatStore((s) => s.deleteConversation);
